@@ -10,10 +10,10 @@ export default function Header() {
   const [isAboutOpen, setIsAboutOpen] = useState(false)
 
   const aboutItems = [
-    { name: "LEADERSHIP", href: "/about/leadership" },
-    { name: "BELIEFS", href: "/about/beliefs" },
-    { name: "OUR STORY", href: "/about/story" },
-    { name: "UKRAINIAN MINISTRY", href: "/about/ukrainian-ministry" },
+    { name: "LEADERSHIP", href: "/leadership" },
+    { name: "BELIEFS", href: "/beliefs" },
+    { name: "OUR STORY", href: "/story" },
+    { name: "UKRAINIAN MINISTRY", href: "/ukrainian-ministry" },
   ]
 
   return (
@@ -38,9 +38,9 @@ export default function Header() {
 
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center space-x-8">
-            {/* About Dropdown */}
+            {/* About Dropdown - Fixed hover behavior */}
             <div
-              className="relative"
+              className="relative group"
               onMouseEnter={() => setIsAboutOpen(true)}
               onMouseLeave={() => setIsAboutOpen(false)}
             >
@@ -49,8 +49,11 @@ export default function Header() {
                 <ChevronDown className="ml-1 h-4 w-4" />
               </button>
 
-              {isAboutOpen && (
-                <div className="absolute top-full left-0 mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50">
+              {/* Dropdown Menu - Extended hover area */}
+              <div
+                className={`absolute top-full left-0 mt-2 transition-all duration-200 ${isAboutOpen ? "opacity-100 visible" : "opacity-0 invisible"}`}
+              >
+                <div className="w-64 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50">
                   {aboutItems.map((item) => (
                     <Link
                       key={item.name}
@@ -61,7 +64,7 @@ export default function Header() {
                     </Link>
                   ))}
                 </div>
-              )}
+              </div>
             </div>
 
             <Link
