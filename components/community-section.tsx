@@ -36,7 +36,7 @@ export default function CommunitySection() {
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <div className="relative">
             <Image
-              src="/placeholder.svg?height=600&width=500&text=Community+Photo"
+              src="/images/bozhiymir.png"
               alt="Bozhiymir Church Community"
               width={500}
               height={600}
