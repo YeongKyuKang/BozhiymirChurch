@@ -8,12 +8,12 @@ export default function HeroSection() {
 
   // Array of background images for the slideshow
   const backgroundImages = [
-    "/images/hero-collage.jpeg",
-    "/placeholder.svg?height=1080&width=1920&text=Church+Community+1",
-    "/placeholder.svg?height=1080&width=1920&text=Ukrainian+Children+2",
-    "/placeholder.svg?height=1080&width=1920&text=Church+Worship+3",
-    "/placeholder.svg?height=1080&width=1920&text=Community+Fellowship+4",
-    "/placeholder.svg?height=1080&width=1920&text=Church+Activities+5",
+    "/images/안.png",
+    "/images/녕.png",
+    "/images/하.png",
+    "/images/세.png",
+    "/images/요.png",
+    "/images/!!.png",
   ]
 
   // Auto-change images every 5 seconds
@@ -26,7 +26,9 @@ export default function HeroSection() {
   }, [backgroundImages.length])
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+    // Hero 섹션의 높이를 원하는 만큼 조절. (예: h-[70vh], h-[600px] 등)
+    // 화면 높이의 70%로 설정 유지.
+    <section className="relative h-[70vh] flex items-center justify-center overflow-hidden">
       {/* Photo Slideshow Background */}
       <div className="absolute inset-0">
         {backgroundImages.map((image, index) => (
@@ -34,17 +36,19 @@ export default function HeroSection() {
             key={index}
             className={`absolute inset-0 transition-opacity duration-1000 ${
               index === currentImageIndex ? "opacity-100" : "opacity-0"
-            }`}
+            } flex items-center justify-center`} // 이미지를 중앙에 배치하기 위해 flexbox 추가
           >
             <Image
               src={image || "/placeholder.svg"}
               alt={`Bozhiymir Church community photo ${index + 1}`}
-              fill
-              className="object-cover"
+              width={1920} // 실제 이미지의 너비 또는 적절한 기준 너비
+              height={1080} // 실제 이미지의 높이 또는 적절한 기준 높이
+              className="max-w-full max-h-full object-contain" // 컨테이너 안에 이미지 전체가 보이도록
               priority={index === 0}
             />
           </div>
         ))}
+        {/* 오버레이 */}
         <div className="absolute inset-0 bg-black/50"></div>
       </div>
 
