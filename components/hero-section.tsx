@@ -26,9 +26,10 @@ export default function HeroSection() {
   }, [backgroundImages.length])
 
   return (
-    // Hero 섹션의 높이를 원하는 만큼 조절. (예: h-[70vh], h-[600px] 등)
-    // 화면 높이의 70%로 설정 유지.
-    <section className="relative h-[70vh] flex items-center justify-center overflow-hidden">
+    // 이곳을 수정했습니다: 상단 패딩 (pt-*) 클래스 추가
+    // 헤더의 높이에 따라 pt-16, md:pt-20, lg:pt-24 등의 값을 조절하세요.
+    // h-[70vh]는 Hero 섹션의 전체 높이를 화면 높이의 70%로 유지합니다.
+    <section className="relative h-[70vh] flex items-center justify-center overflow-hidden pt-16 md:pt-20 lg:pt-24">
       {/* Photo Slideshow Background */}
       <div className="absolute inset-0">
         {backgroundImages.map((image, index) => (
@@ -74,6 +75,7 @@ export default function HeroSection() {
       </div>
 
       {/* Content */}
+      {/* 이 div의 위치는 section의 pt-* 값에 영향을 받습니다. */}
       <div className="relative z-10 text-center text-white px-4 max-w-5xl mx-auto">
         <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
           Welcome to
