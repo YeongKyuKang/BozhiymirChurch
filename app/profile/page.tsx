@@ -15,6 +15,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Camera, Edit, Save, X } from "lucide-react"
 import Header from "@/components/header"
 import Footer from "@/components/footer"
+// Import the image compression library
+import imageCompression from "browser-image-compression"
 
 export default function ProfilePage() {
   const { user, userProfile, userRole, loading, updateProfile, uploadProfilePicture } = useAuth()
@@ -29,6 +31,8 @@ export default function ProfilePage() {
   const [profilePicture, setProfilePicture] = useState<File | null>(null)
   const [profilePicturePreview, setProfilePicturePreview] = useState<string>("")
   const [updateLoading, setUpdateLoading] = useState(false)
+  // New state to indicate compression is in progress
+  const [isCompressing, setIsCompressing] = useState(false) 
   const [message, setMessage] = useState("")
   const [error, setError] = useState("")
 
@@ -45,27 +49,51 @@ export default function ProfilePage() {
     }
   }, [user, loading, router, userProfile])
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Modified function to compress the image before setting it to state
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        // 5MB limit
-        setError("Profile picture must be less than 5MB")
-        return
-      }
-
+      // Check file type
       if (!file.type.startsWith("image/")) {
         setError("Please select a valid image file")
         return
       }
 
-      setProfilePicture(file)
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        setProfilePicturePreview(e.target?.result as string)
-      }
-      reader.readAsDataURL(file)
+      // Set loading state for compression
+      setIsCompressing(true)
       setError("")
+      
+      try {
+        // Set compression options: target size 500KB and max width 1024px
+        const options = {
+          maxSizeMB: 0.5, // (0.5MB = 500KB)
+          maxWidthOrHeight: 1024,
+          useWebWorker: true,
+        }
+        const compressedFile = await imageCompression(file, options)
+
+        // The file size check is now less strict, as we are compressing it
+        if (compressedFile.size > 5 * 1024 * 1024) { 
+            setError("Profile picture is too large even after compression.")
+            return
+        }
+
+        console.log('original file size', file.size, 'compressed file size', compressedFile.size) // For debugging
+        
+        setProfilePicture(compressedFile)
+        const reader = new FileReader()
+        reader.onload = (e) => {
+          setProfilePicturePreview(e.target?.result as string)
+        }
+        reader.readAsDataURL(compressedFile)
+        
+      } catch (compressionError) {
+        setError("Failed to compress the image. Please try another file.")
+        console.error(compressionError)
+      } finally {
+        // Unset loading state
+        setIsCompressing(false)
+      }
     }
   }
 
@@ -133,10 +161,6 @@ export default function ProfilePage() {
         return "Male"
       case "female":
         return "Female"
-      case "other":
-        return "Other"
-      case "prefer_not_to_say":
-        return "Prefer not to say"
       default:
         return "Not specified"
     }
@@ -207,8 +231,13 @@ export default function ProfilePage() {
                         variant="outline"
                         className="absolute -bottom-2 -right-2 rounded-full w-10 h-10 p-0"
                         onClick={() => fileInputRef.current?.click()}
+                        disabled={isCompressing} // Disable button while compressing
                       >
-                        <Camera className="w-4 h-4" />
+                        {isCompressing ? (
+                          <div className="w-4 h-4 border-2 border-gray-200 border-t-transparent rounded-full animate-spin"></div>
+                        ) : (
+                          <Camera className="w-4 h-4" />
+                        )}
                       </Button>
                     )}
                   </div>
@@ -220,9 +249,11 @@ export default function ProfilePage() {
                         accept="image/*"
                         onChange={handleFileChange}
                         className="hidden"
+                        disabled={isCompressing} // Disable input while compressing
                       />
                       <p className="text-xs text-gray-500 text-center">
                         Click the camera icon to change your profile picture
+                        {isCompressing && " (Compressing...)"}
                       </p>
                     </>
                   )}
@@ -290,11 +321,11 @@ export default function ProfilePage() {
 
                 {isEditing && (
                   <div className="flex space-x-3 pt-4">
-                    <Button onClick={handleSave} disabled={updateLoading}>
+                    <Button onClick={handleSave} disabled={updateLoading || isCompressing}>
                       <Save className="w-4 h-4 mr-2" />
                       {updateLoading ? "Saving..." : "Save Changes"}
                     </Button>
-                    <Button onClick={handleCancel} variant="outline">
+                    <Button onClick={handleCancel} variant="outline" disabled={isCompressing}>
                       <X className="w-4 h-4 mr-2" />
                       Cancel
                     </Button>
