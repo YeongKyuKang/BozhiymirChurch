@@ -8,7 +8,7 @@ export default function HeroSection() {
 
   // Array of background images for the slideshow
   const backgroundImages = [
-    "/images/안.png",
+    "/images/bozhiymir2.jpg",
     "/images/녕.png",
     "/images/하.png",
     "/images/세.png",
