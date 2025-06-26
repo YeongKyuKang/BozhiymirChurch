@@ -1,8 +1,7 @@
 "use client"
 
 import type React from "react"
-
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -10,6 +9,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Camera, Upload } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 import Header from "@/components/header"
 import Footer from "@/components/footer"
@@ -18,17 +20,65 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
+  const [nickname, setNickname] = useState("")
+  const [gender, setGender] = useState("")
+  const [profilePicture, setProfilePicture] = useState<File | null>(null)
+  const [profilePicturePreview, setProfilePicturePreview] = useState<string>("")
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
   const [loading, setLoading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const { signUp } = useAuth()
   const router = useRouter()
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        // 5MB limit
+        setError("Profile picture must be less than 5MB")
+        return
+      }
+
+      if (!file.type.startsWith("image/")) {
+        setError("Please select a valid image file")
+        return
+      }
+
+      setProfilePicture(file)
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        setProfilePicturePreview(e.target?.result as string)
+      }
+      reader.readAsDataURL(file)
+      setError("")
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError("")
     setSuccess("")
+
+    // Validation
+    if (!nickname.trim()) {
+      setError("Nickname is required")
+      setLoading(false)
+      return
+    }
+
+    if (nickname.length < 2) {
+      setError("Nickname must be at least 2 characters long")
+      setLoading(false)
+      return
+    }
+
+    if (!gender) {
+      setError("Please select your gender")
+      setLoading(false)
+      return
+    }
 
     if (password !== confirmPassword) {
       setError("Passwords do not match")
@@ -42,7 +92,7 @@ export default function RegisterPage() {
       return
     }
 
-    const { error } = await signUp(email, password)
+    const { error } = await signUp(email, password, nickname, gender)
 
     if (error) {
       setError(error.message)
@@ -54,6 +104,15 @@ export default function RegisterPage() {
     }
 
     setLoading(false)
+  }
+
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((word) => word[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2)
   }
 
   return (
@@ -82,8 +141,73 @@ export default function RegisterPage() {
                     </Alert>
                   )}
 
+                  {/* Profile Picture Upload */}
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
+                    <Label>Profile Picture (Optional)</Label>
+                    <div className="flex flex-col items-center space-y-4">
+                      <div className="relative">
+                        <Avatar className="w-24 h-24">
+                          <AvatarImage src={profilePicturePreview || "/placeholder.svg"} />
+                          <AvatarFallback className="text-lg">
+                            {nickname ? getInitials(nickname) : <Camera className="w-8 h-8" />}
+                          </AvatarFallback>
+                        </Avatar>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          className="absolute -bottom-2 -right-2 rounded-full w-8 h-8 p-0"
+                          onClick={() => fileInputRef.current?.click()}
+                        >
+                          <Upload className="w-4 h-4" />
+                        </Button>
+                      </div>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileChange}
+                        className="hidden"
+                      />
+                      <p className="text-xs text-gray-500 text-center">
+                        Click the upload button to add a profile picture
+                        <br />
+                        (Max 5MB, JPG/PNG only)
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="nickname">Nickname *</Label>
+                    <Input
+                      id="nickname"
+                      type="text"
+                      value={nickname}
+                      onChange={(e) => setNickname(e.target.value)}
+                      required
+                      placeholder="Enter your preferred nickname"
+                      maxLength={50}
+                    />
+                    <p className="text-xs text-gray-500">This is how other members will see you</p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="gender">Gender *</Label>
+                    <Select value={gender} onValueChange={setGender} required>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select your gender" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="male">Male</SelectItem>
+                        <SelectItem value="female">Female</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                        <SelectItem value="prefer_not_to_say">Prefer not to say</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email *</Label>
                     <Input
                       id="email"
                       type="email"
@@ -95,7 +219,7 @@ export default function RegisterPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="password">Password</Label>
+                    <Label htmlFor="password">Password *</Label>
                     <Input
                       id="password"
                       type="password"
@@ -103,11 +227,12 @@ export default function RegisterPage() {
                       onChange={(e) => setPassword(e.target.value)}
                       required
                       placeholder="Enter your password"
+                      minLength={6}
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="confirmPassword">Confirm Password</Label>
+                    <Label htmlFor="confirmPassword">Confirm Password *</Label>
                     <Input
                       id="confirmPassword"
                       type="password"
