@@ -43,7 +43,7 @@ export type Database = {
           email: string
           role: "admin" | "user"
           nickname: string | null
-          gender: "male" | "female" | "other" | "prefer_not_to_say" | null
+          gender: "male" | "female"| null
           profile_picture_url: string | null
           created_at: string
           updated_at: string
@@ -53,7 +53,7 @@ export type Database = {
           email: string
           role?: "admin" | "user"
           nickname?: string | null
-          gender?: "male" | "female" | "other" | "prefer_not_to_say" | null
+          gender?: "male" | "female"| null
           profile_picture_url?: string | null
           created_at?: string
           updated_at?: string
@@ -63,7 +63,7 @@ export type Database = {
           email?: string
           role?: "admin" | "user"
           nickname?: string | null
-          gender?: "male" | "female" | "other" | "prefer_not_to_say" | null
+          gender?: "male" | "female" | null
           profile_picture_url?: string | null
           created_at?: string
           updated_at?: string

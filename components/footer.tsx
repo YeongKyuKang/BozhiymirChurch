@@ -4,20 +4,24 @@ import { MapPin, Phone, Mail, Clock } from "lucide-react"
 export default function Footer() {
   return (
     <footer className="bg-gray-900 text-white py-12">
-      <div className="container mx-auto px-4">
-        <div className="grid md:grid-cols-4 gap-8">
-          <div>
-            <div className="flex items-center space-x-2 mb-4">
-              <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-                <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
-                  <div className="w-4 h-4 bg-blue-600 rounded-full"></div>
-                </div>
-              </div>
-              <span className="font-bold text-xl">Bozhiymir Church</span>
-            </div>
-            <p className="text-gray-400">A welcoming community where families grow together in faith and fellowship.</p>
+    <div className="container mx-auto px-4">
+      <div className="grid md:grid-cols-4 gap-8">
+        <div>
+          <div className="flex items-center space-x-2">
+            <div className="w-10 h-10 grid grid-cols-2 gap-1">
+            <div className="w-4 h-4 bg-white rounded-full"></div>
+            <div className="w-4 h-4 bg-blue-400 rounded-full"></div>
+            <div className="w-4 h-4 bg-yellow-400 rounded-full"></div>
+            <div className="w-4 h-4 bg-white rounded-full"></div>
           </div>
-
+          <div>
+            <span className="text-white font-bold text-xl tracking-wide">BOZHIYMIR</span>
+            <div className="text-white/80 text-xs font-medium">CHURCH</div>
+          </div>
+        </div>
+        <ul className="space-y-4"></ul>
+        <p className="text-gray-400 mt-4">A welcoming community where families grow together in faith and fellowship.</p>
+      </div>
           <div>
             <h4 className="font-bold text-lg mb-4">Quick Links</h4>
             <ul className="space-y-2">
@@ -52,7 +56,7 @@ export default function Footer() {
                 <span className="text-sm">
                   123 Community Street
                   <br />
-                  Portland, OR 97201
+                  Porland, OR 97201
                 </span>
               </div>
               <div className="flex items-center text-gray-400">
