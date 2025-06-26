@@ -42,16 +42,22 @@ CREATE POLICY "Only admins can modify content" ON content
     )
   );
 
-CREATE POLICY "Allow authenticated users to insert their own user record" ON users
-  FOR INSERT TO authenticated
-  WITH CHECK (auth.uid() = id);
-  
--- Function to handle new user registration
+-- `users` 테이블에 있는 기존 INSERT 정책을 모두 삭제합니다.
+DROP POLICY IF EXISTS "Allow authenticated users to insert their own user record" ON users;
+
+-- 트리거를 위한 새로운 정책을 추가합니다. (대시보드에서 확인된 정책)
+CREATE POLICY "Allow service role to insert user records" ON users
+  FOR INSERT TO service_role
+  WITH CHECK (true);
+
+-- Function to handle new user registration with ON CONFLICT clause
+-- 이 함수는 트리거가 여러 번 실행되어도 오류를 방지합니다.
 CREATE OR REPLACE FUNCTION handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
   INSERT INTO users (id, email, role)
-  VALUES (NEW.id, NEW.email, 'user');
+  VALUES (NEW.id, NEW.email, 'user')
+  ON CONFLICT (id) DO NOTHING; -- <-- This line prevents the duplicate key error
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
