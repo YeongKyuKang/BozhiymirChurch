@@ -2,9 +2,29 @@
 
 import { useState, useEffect } from "react"
 import Image from "next/image"
+import { useContent } from "@/lib/database-content"
 
-export default function HeroSection() {
+export default function ContentAwareHeroSection() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
+
+  // Use content hooks for dynamic content
+  const { content: title } = useContent("hero.title", "Welcome to")
+  const { content: subtitle } = useContent("hero.subtitle", "Bozhiymir Church")
+  const { content: serviceTime } = useContent("hero.serviceTime", "SUNDAY MORNINGS AT")
+  const { content: serviceTimes } = useContent("hero.serviceTimes", "9:00AM (TRADITIONAL), 10:30AM, OR 12:00PM")
+  const { content: description } = useContent(
+    "hero.description",
+    "🇺🇦 A loving community in Portland where Ukrainian children find hope and healing",
+  )
+  const { content: descriptionUkrainian } = useContent(
+    "hero.descriptionUkrainian",
+    "Любляча спільнота в Портленді, де українські діти знаходять надію",
+  )
+  const { content: callToAction } = useContent("hero.callToAction", "Join our church family this Sunday")
+  const { content: scripture } = useContent(
+    "hero.scripture",
+    '"He defends the cause of the fatherless and the widow, and loves the foreigner residing among you" - Deuteronomy 10:18',
+  )
 
   // Array of background images for the slideshow
   const backgroundImages = [
@@ -69,30 +89,27 @@ export default function HeroSection() {
         <div className="absolute bottom-60 right-32 w-3 h-3 bg-yellow-300 rounded-full animate-pulse delay-700"></div>
       </div>
 
-      {/* Content */}
+      {/* Content - Now using dynamic content */}
       <div className="relative z-10 text-center text-white px-4 max-w-5xl mx-auto">
         <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
-          Welcome to
+          {title}
           <br />
-          <span className="text-blue-300">Bozhiymir Church</span>
+          <span className="text-blue-300">{subtitle}</span>
         </h1>
 
         <div className="mb-8">
-          <p className="text-lg md:text-xl font-medium mb-2">SUNDAY MORNINGS AT</p>
-          <p className="text-xl md:text-2xl font-bold tracking-wide">9:00AM (TRADITIONAL), 10:30AM, OR 12:00PM</p>
+          <p className="text-lg md:text-xl font-medium mb-2">{serviceTime}</p>
+          <p className="text-xl md:text-2xl font-bold tracking-wide">{serviceTimes}</p>
           <p className="text-sm md:text-base text-blue-200 mt-4 font-medium">
-            🇺🇦 A loving community in Portland where Ukrainian children find hope and healing
+            {description}
             <br />
-            <span className="text-yellow-200">Любляча спільнота в Портленді, де українські діти знаходять надію</span>
+            <span className="text-yellow-200">{descriptionUkrainian}</span>
           </p>
         </div>
 
         <div className="mt-8">
-          <p className="text-lg text-white/90 mb-4">Join our church family this Sunday</p>
-          <p className="text-sm text-blue-200">
-            "He defends the cause of the fatherless and the widow, and loves the foreigner residing among you" -
-            Deuteronomy 10:18
-          </p>
+          <p className="text-lg text-white/90 mb-4">{callToAction}</p>
+          <p className="text-sm text-blue-200">{scripture}</p>
         </div>
       </div>
     </section>
