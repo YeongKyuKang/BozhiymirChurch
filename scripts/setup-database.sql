@@ -42,6 +42,10 @@ CREATE POLICY "Only admins can modify content" ON content
     )
   );
 
+CREATE POLICY "Allow authenticated users to insert their own user record" ON users
+  FOR INSERT TO authenticated
+  WITH CHECK (auth.uid() = id);
+  
 -- Function to handle new user registration
 CREATE OR REPLACE FUNCTION handle_new_user()
 RETURNS TRIGGER AS $$
