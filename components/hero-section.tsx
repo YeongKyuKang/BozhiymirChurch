@@ -8,7 +8,7 @@ export default function HeroSection() {
 
   // Array of background images for the slideshow
   const backgroundImages = [
-    "/images/hero-collage.jpeg",
+    "/images/bozhiymir.jpg",
     "/placeholder.svg?height=1080&width=1920&text=Church+Community+1",
     "/placeholder.svg?height=1080&width=1920&text=Ukrainian+Children+2",
     "/placeholder.svg?height=1080&width=1920&text=Church+Worship+3",

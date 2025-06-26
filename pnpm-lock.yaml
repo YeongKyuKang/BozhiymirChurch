@@ -10,7 +10,7 @@ importers:
     dependencies:
       '@prisma/client':
         specifier: latest
-        version: 6.10.1(prisma@5.7.0)(typescript@5.0.2)
+        version: 6.10.1(prisma@5.7.0)(typescript@5.8.3)
       bcryptjs:
         specifier: latest
         version: 3.0.2
@@ -67,8 +67,8 @@ importers:
         specifier: ^4.6.2
         version: 4.6.2
       typescript:
-        specifier: ^5
-        version: 5.0.2
+        specifier: ^5.4.5
+        version: 5.8.3
 
 packages:
 
@@ -505,9 +505,9 @@ packages:
     engines: {node: '>=18.0.0'}
     hasBin: true
 
-  typescript@5.0.2:
-    resolution: {integrity: sha512-wVORMBGO/FAs/++blGNeAVdbNKtIh1rbBL2EyQ1+J9lClJ93KiiKe8PmFIVdXhHcyv44SL9oglmfeSsndo0jRw==}
-    engines: {node: '>=12.20'}
+  typescript@5.8.3:
+    resolution: {integrity: sha512-p1diW6TqL9L07nNxvRMM7hMMw4c5XOo/1ibL4aAIGmSAt9slTE1Xgw5KWuof2uTOvCg9BY7ZRi+GaF+7sfgPeQ==}
+    engines: {node: '>=14.17'}
     hasBin: true
 
   undici-types@6.11.1:
@@ -610,10 +610,10 @@ snapshots:
   '@next/swc-win32-x64-msvc@14.2.16':
     optional: true
 
-  '@prisma/client@6.10.1(prisma@5.7.0)(typescript@5.0.2)':
+  '@prisma/client@6.10.1(prisma@5.7.0)(typescript@5.8.3)':
     optionalDependencies:
       prisma: 5.7.0
-      typescript: 5.0.2
+      typescript: 5.8.3
 
   '@prisma/debug@5.7.0': {}
 
@@ -859,6 +859,6 @@ snapshots:
     optionalDependencies:
       fsevents: 2.3.3
 
-  typescript@5.0.2: {}
+  typescript@5.8.3: {}
 
   undici-types@6.11.1: {}
