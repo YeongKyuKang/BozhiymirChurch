@@ -16,6 +16,9 @@ import { useAuth } from "@/contexts/auth-context"
 import Header from "@/components/header"
 import Footer from "@/components/footer"
 
+// Import image compression library
+import imageCompression from "browser-image-compression"
+
 export default function RegisterPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -32,7 +35,7 @@ export default function RegisterPage() {
   const { signUp } = useAuth()
   const router = useRouter()
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
@@ -46,13 +49,27 @@ export default function RegisterPage() {
         return
       }
 
-      setProfilePicture(file)
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        setProfilePicturePreview(e.target?.result as string)
-      }
-      reader.readAsDataURL(file)
       setError("")
+      
+      try {
+        const options = {
+          maxSizeMB: 0.5, // (0.5MB = 500KB)
+          maxWidthOrHeight: 1024,
+          useWebWorker: true,
+        }
+        const compressedFile = await imageCompression(file, options)
+
+        setProfilePicture(compressedFile)
+        const reader = new FileReader()
+        reader.onload = (e) => {
+          setProfilePicturePreview(e.target?.result as string)
+        }
+        reader.readAsDataURL(compressedFile)
+        
+      } catch (compressionError) {
+        setError("Failed to compress the image. Please try another file.")
+        console.error(compressionError)
+      }
     }
   }
 

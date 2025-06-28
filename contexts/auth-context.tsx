@@ -179,8 +179,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!user) return { error: new Error("No user logged in") }
 
     const fileExt = file.name.split(".").pop()
-    const fileName = `${user.id}-${Math.random()}.${fileExt}`
-    const filePath = `profile-pictures/${fileName}`
+    const fileName = `${Math.random()}.${fileExt}`
+    // Correct file path to match RLS policy: userId/filename
+    const filePath = `${user.id}/${fileName}`
 
     const { error: uploadError } = await supabase.storage.from("profile-pictures").upload(filePath, file)
 

@@ -13,6 +13,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { supabase } from "@/lib/supabase"
 import Header from "@/components/header"
 import Footer from "@/components/footer"
+import { Switch } from "@/components/ui/switch"
+import { Trash2 } from "lucide-react"
 
 interface ContentItem {
   id: string
@@ -22,10 +24,23 @@ interface ContentItem {
   value: string
 }
 
+interface UserProfile {
+  id: string
+  email: string
+  role: "admin" | "user" | "child"
+  nickname: string | null
+  gender: "male" | "female"| null
+  profile_picture_url: string | null
+  created_at: string
+  updated_at: string
+  can_comment: boolean
+}
+
 export default function AdminPage() {
   const { user, userRole, loading } = useAuth()
   const router = useRouter()
   const [content, setContent] = useState<ContentItem[]>([])
+  const [users, setUsers] = useState<UserProfile[]>([])
   const [selectedPage, setSelectedPage] = useState("home")
   const [newContent, setNewContent] = useState({
     page: "home",
@@ -44,6 +59,7 @@ export default function AdminPage() {
   useEffect(() => {
     if (user && userRole === "admin") {
       fetchContent()
+      fetchUsers()
     }
   }, [user, userRole])
 
@@ -54,6 +70,16 @@ export default function AdminPage() {
       console.error("Error fetching content:", error)
     } else {
       setContent(data || [])
+    }
+  }
+
+  const fetchUsers = async () => {
+    const { data, error } = await supabase.from("users").select("*").order("created_at", { ascending: false })
+
+    if (error) {
+      console.error("Error fetching users:", error)
+    } else {
+      setUsers(data || [])
     }
   }
 
@@ -98,6 +124,58 @@ export default function AdminPage() {
       fetchContent()
     }
   }
+  
+  const handleToggleCommentPermission = async (userId: string, currentStatus: boolean) => {
+    const { error } = await supabase
+        .from('users')
+        .update({ can_comment: !currentStatus })
+        .eq('id', userId);
+
+    if (error) {
+        console.error("Error updating comment permission:", error);
+        setMessage("Failed to update comment permission.");
+    } else {
+        setMessage("Comment permission updated successfully!");
+        fetchUsers(); // Refresh the user list
+    }
+  };
+
+  const handleDeleteUser = async (userId: string) => {
+    if (user?.id === userId) {
+      alert("You cannot delete your own account.");
+      return;
+    }
+
+    // Prompt for password before deletion
+    const adminPassword = prompt("Please enter the admin password to confirm user deletion:");
+    if (!adminPassword) {
+        setMessage("User deletion cancelled.");
+        return;
+    }
+
+    if (!confirm("Are you sure you want to delete this user? This action is irreversible.")) {
+      setMessage("User deletion cancelled.");
+      return;
+    }
+
+    // Call the API route to delete the user
+    const response = await fetch('/api/admin/delete-user', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ userId, adminPassword }), // Pass password to the API
+    });
+
+    const result = await response.json();
+    if (response.ok) {
+      setMessage(`User ${userId} deleted successfully!`);
+      fetchUsers(); // Refresh the user list
+    } else {
+      setMessage(`Failed to delete user: ${result.error}`);
+      console.error('API Error:', result.error);
+    }
+  };
 
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>
@@ -132,6 +210,7 @@ export default function AdminPage() {
               <TabsList>
                 <TabsTrigger value="content">Content Management</TabsTrigger>
                 <TabsTrigger value="add">Add New Content</TabsTrigger>
+                <TabsTrigger value="users">User Management</TabsTrigger>
               </TabsList>
 
               <TabsContent value="content" className="space-y-6">
@@ -252,6 +331,47 @@ export default function AdminPage() {
                     </div>
                     <Button onClick={handleAddContent}>Add Content</Button>
                   </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* User Management Tab */}
+              <TabsContent value="users">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>User Management</CardTitle>
+                        <CardDescription>Manage user roles and permissions</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="space-y-4">
+                            {users.map((userItem) => (
+                                <div key={userItem.id} className="flex items-center justify-between border rounded-lg p-4">
+                                    <div className="flex-1">
+                                        <p className="font-semibold">{userItem.nickname || userItem.email}</p>
+                                        <p className="text-sm text-gray-500">Role: {userItem.role}</p>
+                                    </div>
+                                    <div className="flex items-center space-x-4">
+                                        <div className="flex items-center space-x-2">
+                                            <Label htmlFor={`can-comment-${userItem.id}`}>Can Comment</Label>
+                                            <Switch
+                                                id={`can-comment-${userItem.id}`}
+                                                checked={userItem.can_comment}
+                                                onCheckedChange={() => handleToggleCommentPermission(userItem.id, userItem.can_comment)}
+                                                disabled={userItem.role === 'admin'} // Admins are always true
+                                            />
+                                        </div>
+                                        <Button
+                                            variant="destructive"
+                                            size="sm"
+                                            onClick={() => handleDeleteUser(userItem.id)}
+                                            disabled={userItem.role === 'admin'} // Cannot delete another admin
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </CardContent>
                 </Card>
               </TabsContent>
             </Tabs>
