@@ -28,10 +28,8 @@ DROP TABLE IF EXISTS public.comments CASCADE;
 DROP TABLE IF EXISTS public.likes CASCADE;
 DROP TABLE IF EXISTS public.comment_likes CASCADE;
 DROP TABLE IF EXISTS public.post_reactions CASCADE;
-
--- 기존 스토리지 버킷과 객체 삭제
-DELETE FROM storage.objects WHERE bucket_id = 'profile-pictures';
-DELETE FROM storage.buckets WHERE id = 'profile-pictures';
+DROP TABLE IF EXISTS public.registration_codes CASCADE;
+DROP TABLE IF EXISTS public.admin_settings CASCADE;
 
 
 -- ########## 2단계: 최신 스키마로 다시 생성 ##########
@@ -39,12 +37,13 @@ DELETE FROM storage.buckets WHERE id = 'profile-pictures';
 CREATE TABLE public.users (
   id UUID REFERENCES auth.users(id) PRIMARY KEY,
   email TEXT NOT NULL,
-  role TEXT DEFAULT 'user' CHECK (role IN ('admin', 'user')),
+  role TEXT DEFAULT 'user' CHECK (role IN ('admin', 'user', 'child')), -- 'child' 역할 추가
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   nickname TEXT,
   gender TEXT CHECK (gender IN ('male', 'female')),
   profile_picture_url TEXT,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  can_comment BOOLEAN DEFAULT FALSE -- 댓글 허용 여부 컬럼 추가
 );
 
 -- content 테이블 생성
@@ -107,6 +106,23 @@ CREATE TABLE public.post_reactions (
   UNIQUE (user_id, post_id, reaction_type)
 );
 
+-- registration_codes 테이블 생성
+CREATE TABLE public.registration_codes (
+  code TEXT PRIMARY KEY,
+  role TEXT NOT NULL,
+  is_used BOOLEAN DEFAULT FALSE,
+  used_by_user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  used_at TIMESTAMP WITH TIME ZONE
+);
+
+-- admin_settings 테이블 생성
+CREATE TABLE public.admin_settings (
+  id INT PRIMARY KEY DEFAULT 1 CHECK (id = 1), -- Ensure only one row
+  delete_password_hash TEXT,
+  password_set_date TIMESTAMP WITH TIME ZONE,
+  password_history_hashes JSONB DEFAULT '[]'::jsonb
+);
+
 
 -- Row Level Security (RLS) 활성화
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
@@ -116,6 +132,8 @@ ALTER TABLE public.comments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.likes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.comment_likes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.post_reactions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.registration_codes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.admin_settings ENABLE ROW LEVEL SECURITY;
 
 -- updated_at 타임스탬프를 자동으로 업데이트하는 함수 생성
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -141,8 +159,8 @@ CREATE TRIGGER update_posts_updated_at
 CREATE OR REPLACE FUNCTION handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.users (id, email, role, nickname, gender, profile_picture_url)
-  VALUES (NEW.id, NEW.email, 'user', NULL, NULL, NULL)
+  INSERT INTO public.users (id, email, role, nickname, gender, profile_picture_url, can_comment)
+  VALUES (NEW.id, NEW.email, 'user', NULL, NULL, NULL, FALSE) -- 기본값으로 role='user', can_comment=FALSE 설정
   ON CONFLICT (id) DO NOTHING;
   RETURN NEW;
 END;
@@ -191,8 +209,14 @@ CREATE POLICY "Post creators or admins can delete" ON public.posts
 -- comments 테이블에 대한 정책 생성
 CREATE POLICY "Comments are public" ON public.comments
   FOR SELECT USING (true);
-CREATE POLICY "Authenticated users can create comments" ON public.comments
-  FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
+CREATE POLICY "Authenticated users with comment permission can create comments" ON public.comments
+  FOR INSERT WITH CHECK (
+    auth.uid() IS NOT NULL 
+    AND EXISTS (
+      SELECT 1 FROM public.users
+      WHERE users.id = auth.uid() AND users.can_comment = TRUE
+    )
+  );
 CREATE POLICY "Comment creators or admins can delete" ON public.comments
   FOR DELETE USING (auth.uid() = author_id OR EXISTS(SELECT 1 FROM public.users WHERE users.id = auth.uid() AND users.role = 'admin'));
 CREATE POLICY "Comment creators or admins can update" ON public.comments
@@ -223,6 +247,19 @@ CREATE POLICY "Authenticated users can add reactions" ON public.post_reactions
 CREATE POLICY "Users can remove their own reactions" ON public.post_reactions
   FOR DELETE USING (auth.uid() = user_id);
   
+-- registration_codes 테이블에 대한 정책 생성
+CREATE POLICY "Anyone can view valid registration codes" ON public.registration_codes
+  FOR SELECT USING (is_used = FALSE); -- Unauthenticated users can check if a code is valid
+CREATE POLICY "Admin can insert and update registration codes" ON public.registration_codes
+  FOR ALL USING (EXISTS(SELECT 1 FROM public.users WHERE users.id = auth.uid() AND users.role = 'admin'))
+  WITH CHECK (EXISTS(SELECT 1 FROM public.users WHERE users.id = auth.uid() AND users.role = 'admin'));
+
+-- admin_settings 테이블에 대한 정책 생성
+CREATE POLICY "Admin can view admin settings" ON public.admin_settings
+  FOR SELECT USING (EXISTS(SELECT 1 FROM public.users WHERE users.id = auth.uid() AND users.role = 'admin'));
+CREATE POLICY "Admin can update admin settings" ON public.admin_settings
+  FOR UPDATE USING (EXISTS(SELECT 1 FROM public.users WHERE users.id = auth.uid() AND users.role = 'admin'));
+
 
 -- 'on_auth_user_created' 트리거 다시 생성
 CREATE TRIGGER on_auth_user_created
@@ -257,6 +294,21 @@ CREATE POLICY "Users can delete their own profile pictures" ON storage.objects
 
 
 -- ########## 5단계: 시드 데이터 삽입 ##########
+-- 등록 코드 시드 데이터 삽입
+INSERT INTO public.registration_codes (code, role) VALUES
+('ADMIN001', 'admin'),
+('ADMIN002', 'admin'),
+('MEMBER001', 'user'),
+('MEMBER002', 'user'),
+('MEMBER003', 'user'),
+('MEMBER004', 'user'),
+('MEMBER005', 'user'),
+('CHILD001', 'child'),
+('CHILD002', 'child'),
+('CHILD003', 'child')
+ON CONFLICT (code) DO NOTHING;
+
+
 -- 모든 페이지의 기본 콘텐츠 삽입
 INSERT INTO public.content (page, section, key, value) VALUES
 -- Home page content
