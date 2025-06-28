@@ -20,6 +20,7 @@ export function useContent(page: string, section?: string) {
   }, [page, section])
 
   const fetchContent = async () => {
+    setLoading(true)
     try {
       let query = supabase.from("content").select("*").eq("page", page)
 
@@ -29,7 +30,9 @@ export function useContent(page: string, section?: string) {
 
       const { data, error } = await query
 
-      if (error) throw error
+      if (error) {
+        throw error
+      }
 
       const contentMap: Record<string, string> = {}
       data?.forEach((item: ContentItem) => {
@@ -54,11 +57,19 @@ export function useContent(page: string, section?: string) {
         updated_at: new Date().toISOString(),
       })
 
-      if (error) throw error
+      if (error) {
+        throw error
+      }
 
-      setContent((prev) => ({ ...prev, [key]: value }))
+      // Optimistic UI update: Update state instantly without re-fetching
+      setContent((prev) => ({ ...prev, [key]: value }));
+      console.log(`Content for key "${key}" updated successfully!`);
     } catch (error) {
-      console.error("Error updating content:", error)
+      console.error("Error updating content:", error);
+      // Revert state on failure (optional)
+      // setEditedValue(content[contentKey]);
+      // You can also trigger a full re-fetch to ensure sync
+      // fetchContent();
     }
   }
 

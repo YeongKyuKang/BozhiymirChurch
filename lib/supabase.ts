@@ -69,6 +69,47 @@ export type Database = {
           updated_at?: string
         }
       }
+      events: {
+        Row: {
+          id: string
+          title: string
+          date: string
+          time: string
+          location: string
+          description: string
+          category: string
+          recurring: boolean
+          icon: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          date: string
+          time: string
+          location: string
+          description: string
+          category: string
+          recurring?: boolean
+          icon?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          date?: string
+          time?: string
+          location?: string
+          description?: string
+          category?: string
+          recurring?: boolean
+          icon?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
   }
 }

@@ -15,6 +15,7 @@ import Header from "@/components/header"
 import Footer from "@/components/footer"
 import { Switch } from "@/components/ui/switch"
 import { Trash2 } from "lucide-react"
+import { Checkbox } from "@/components/ui/checkbox"
 
 interface ContentItem {
   id: string
@@ -36,10 +37,23 @@ interface UserProfile {
   can_comment: boolean
 }
 
+interface Event {
+  id: string
+  title: string
+  date: string
+  time: string
+  location: string
+  description: string
+  category: string
+  recurring: boolean
+  icon: string
+}
+
 export default function AdminPage() {
   const { user, userRole, loading } = useAuth()
   const router = useRouter()
-  const [content, setContent] = useState<ContentItem[]>([])
+  const [content, setContent] = useState<ContentItem[]>([]) // 이벤트 상태 추가
+  const [events, setEvents] = useState<Event[]>([])
   const [users, setUsers] = useState<UserProfile[]>([])
   const [selectedPage, setSelectedPage] = useState("home")
   const [newContent, setNewContent] = useState({
@@ -47,6 +61,16 @@ export default function AdminPage() {
     section: "hero",
     key: "",
     value: "",
+  })
+  const [newEvent, setNewEvent] = useState({ // 새 이벤트 상태 추가
+    title: "",
+    date: "",
+    time: "",
+    location: "",
+    description: "",
+    category: "",
+    recurring: false,
+    icon: "",
   })
   const [message, setMessage] = useState("")
 
@@ -60,6 +84,7 @@ export default function AdminPage() {
     if (user && userRole === "admin") {
       fetchContent()
       fetchUsers()
+      fetchEvents() // 이벤트 데이터 가져오기
     }
   }, [user, userRole])
 
@@ -70,6 +95,16 @@ export default function AdminPage() {
       console.error("Error fetching content:", error)
     } else {
       setContent(data || [])
+    }
+  }
+
+  const fetchEvents = async () => {
+    const { data, error } = await supabase.from("events").select("*").order("created_at", { ascending: false })
+
+    if (error) {
+      console.error("Error fetching events:", error)
+    } else {
+      setEvents(data || [])
     }
   }
 
@@ -97,6 +132,20 @@ export default function AdminPage() {
     }
   }
 
+  const handleUpdateEvent = async (id: string, updatedEvent: Partial<Event>) => {
+    const { error } = await supabase
+        .from("events")
+        .update(updatedEvent)
+        .eq("id", id);
+    
+    if (error) {
+        setMessage("Error updating event: " + error.message);
+    } else {
+        setMessage("Event updated successfully!");
+        fetchEvents();
+    }
+  };
+
   const handleAddContent = async () => {
     if (!newContent.key || !newContent.value) {
       setMessage("Please fill in all fields")
@@ -114,6 +163,32 @@ export default function AdminPage() {
     }
   }
 
+  const handleAddEvent = async () => {
+    if (!newEvent.title || !newEvent.date || !newEvent.time || !newEvent.location || !newEvent.description || !newEvent.category) {
+        setMessage("Please fill all required event fields.");
+        return;
+    }
+
+    const { error } = await supabase.from("events").insert([newEvent]);
+
+    if (error) {
+        setMessage("Error adding event: " + error.message);
+    } else {
+        setMessage("Event added successfully!");
+        setNewEvent({
+            title: "",
+            date: "",
+            time: "",
+            location: "",
+            description: "",
+            category: "",
+            recurring: false,
+            icon: "",
+        });
+        fetchEvents();
+    }
+  };
+
   const handleDeleteContent = async (id: string) => {
     const { error } = await supabase.from("content").delete().eq("id", id)
 
@@ -124,7 +199,18 @@ export default function AdminPage() {
       fetchContent()
     }
   }
-  
+
+  const handleDeleteEvent = async (id: string) => {
+    const { error } = await supabase.from("events").delete().eq("id", id);
+    
+    if (error) {
+        setMessage("Error deleting event: " + error.message);
+    } else {
+        setMessage("Event deleted successfully!");
+        fetchEvents();
+    }
+  };
+
   const handleToggleCommentPermission = async (userId: string, currentStatus: boolean) => {
     const { error } = await supabase
         .from('users')
@@ -136,7 +222,7 @@ export default function AdminPage() {
         setMessage("Failed to update comment permission.");
     } else {
         setMessage("Comment permission updated successfully!");
-        fetchUsers(); // Refresh the user list
+        fetchUsers();
     }
   };
 
@@ -164,13 +250,13 @@ export default function AdminPage() {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ userId, adminPassword }), // Pass password to the API
+      body: JSON.stringify({ userId, adminPassword }),
     });
 
     const result = await response.json();
     if (response.ok) {
       setMessage(`User ${userId} deleted successfully!`);
-      fetchUsers(); // Refresh the user list
+      fetchUsers();
     } else {
       setMessage(`Failed to delete user: ${result.error}`);
       console.error('API Error:', result.error);
@@ -210,9 +296,11 @@ export default function AdminPage() {
               <TabsList>
                 <TabsTrigger value="content">Content Management</TabsTrigger>
                 <TabsTrigger value="add">Add New Content</TabsTrigger>
+                <TabsTrigger value="events">Event Management</TabsTrigger> {/* 이벤트 탭 추가 */}
                 <TabsTrigger value="users">User Management</TabsTrigger>
               </TabsList>
 
+              {/* Content Management Tab */}
               <TabsContent value="content" className="space-y-6">
                 <Card>
                   <CardHeader>
@@ -277,6 +365,7 @@ export default function AdminPage() {
                 </Card>
               </TabsContent>
 
+              {/* Add New Content Tab */}
               <TabsContent value="add">
                 <Card>
                   <CardHeader>
@@ -334,6 +423,67 @@ export default function AdminPage() {
                 </Card>
               </TabsContent>
 
+              {/* Event Management Tab */}
+              <TabsContent value="events" className="space-y-6">
+                  <Card>
+                      <CardHeader>
+                          <CardTitle>Manage Events</CardTitle>
+                          <CardDescription>Add, edit, or delete upcoming church events.</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                          <h3 className="text-xl font-semibold mb-4">Add New Event</h3>
+                          <div className="grid md:grid-cols-2 gap-4 mb-6">
+                              <Input placeholder="Title" value={newEvent.title} onChange={(e) => setNewEvent({...newEvent, title: e.target.value})} />
+                              <Input placeholder="Date (e.g., Every Sunday)" value={newEvent.date} onChange={(e) => setNewEvent({...newEvent, date: e.target.value})} />
+                              <Input placeholder="Time (e.g., 9:00 AM)" value={newEvent.time} onChange={(e) => setNewEvent({...newEvent, time: e.target.value})} />
+                              <Input placeholder="Location" value={newEvent.location} onChange={(e) => setNewEvent({...newEvent, location: e.target.value})} />
+                              <Input placeholder="Category" value={newEvent.category} onChange={(e) => setNewEvent({...newEvent, category: e.target.value})} />
+                              <Input placeholder="Icon Name (e.g., Star, Heart)" value={newEvent.icon} onChange={(e) => setNewEvent({...newEvent, icon: e.target.value})} />
+                              <div className="flex items-center space-x-2">
+                                <Checkbox
+                                    id="recurring"
+                                    checked={newEvent.recurring}
+                                    onCheckedChange={(checked) => setNewEvent({...newEvent, recurring: Boolean(checked)})}
+                                />
+                                <Label htmlFor="recurring">Recurring Event</Label>
+                              </div>
+                          </div>
+                          <Textarea placeholder="Description" value={newEvent.description} onChange={(e) => setNewEvent({...newEvent, description: e.target.value})} rows={4} className="mb-4" />
+                          <Button onClick={handleAddEvent}>Add Event</Button>
+                          
+                          <h3 className="text-xl font-semibold mt-10 mb-4">Edit/Delete Existing Events</h3>
+                          <div className="space-y-4">
+                              {events.map((event) => (
+                                  <div key={event.id} className="border rounded-lg p-4">
+                                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                          <Input value={event.title} onChange={(e) => handleUpdateEvent(event.id, { title: e.target.value })} />
+                                          <Input value={event.date} onChange={(e) => handleUpdateEvent(event.id, { date: e.target.value })} />
+                                          <Input value={event.time} onChange={(e) => handleUpdateEvent(event.id, { time: e.target.value })} />
+                                          <Input value={event.location} onChange={(e) => handleUpdateEvent(event.id, { location: e.target.value })} />
+                                          <Input value={event.category} onChange={(e) => handleUpdateEvent(event.id, { category: e.target.value })} />
+                                          <Input value={event.icon} onChange={(e) => handleUpdateEvent(event.id, { icon: e.target.value })} />
+                                          <div className="flex items-center space-x-2">
+                                            <Checkbox
+                                                id={`recurring-${event.id}`}
+                                                checked={event.recurring}
+                                                onCheckedChange={(checked) => handleUpdateEvent(event.id, { recurring: Boolean(checked) })}
+                                            />
+                                            <Label htmlFor={`recurring-${event.id}`}>Recurring</Label>
+                                          </div>
+                                      </div>
+                                      <Textarea value={event.description} onChange={(e) => handleUpdateEvent(event.id, { description: e.target.value })} rows={3} className="mt-4" />
+                                      <div className="flex justify-end mt-4">
+                                          <Button variant="destructive" size="sm" onClick={() => handleDeleteEvent(event.id)}>
+                                              <Trash2 className="h-4 w-4 mr-2" /> Delete
+                                          </Button>
+                                      </div>
+                                  </div>
+                              ))}
+                          </div>
+                      </CardContent>
+                  </Card>
+              </TabsContent>
+
               {/* User Management Tab */}
               <TabsContent value="users">
                 <Card>
@@ -356,14 +506,14 @@ export default function AdminPage() {
                                                 id={`can-comment-${userItem.id}`}
                                                 checked={userItem.can_comment}
                                                 onCheckedChange={() => handleToggleCommentPermission(userItem.id, userItem.can_comment)}
-                                                disabled={userItem.role === 'admin'} // Admins are always true
+                                                disabled={userItem.role === 'admin'}
                                             />
                                         </div>
                                         <Button
                                             variant="destructive"
                                             size="sm"
                                             onClick={() => handleDeleteUser(userItem.id)}
-                                            disabled={userItem.role === 'admin'} // Cannot delete another admin
+                                            disabled={userItem.role === 'admin'}
                                         >
                                             <Trash2 className="h-4 w-4" />
                                         </Button>

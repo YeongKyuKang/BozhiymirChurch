@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Menu, X, ChevronDown, User, LogOut } from "lucide-react"
+import { Menu, X, ChevronDown, User, LogOut, Settings } from "lucide-react"
 import Link from "next/link"
 import { useAuth } from "@/contexts/auth-context"
 import {
@@ -100,6 +100,15 @@ export default function Header() {
             >
               JOIN
             </Link>
+            
+            {/* Admin Settings Button */}
+            {userRole === "admin" && (
+                <Button variant="ghost" size="icon" asChild>
+                    <Link href="/admin">
+                        <Settings className="text-white hover:text-blue-300 transition-colors" />
+                    </Link>
+                </Button>
+            )}
 
             {/* Authentication Section */}
             {user ? (
