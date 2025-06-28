@@ -22,6 +22,7 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState("")
   const [nickname, setNickname] = useState("")
   const [gender, setGender] = useState("")
+  const [registrationCode, setRegistrationCode] = useState("") // New state for the registration code
   const [profilePicture, setProfilePicture] = useState<File | null>(null)
   const [profilePicturePreview, setProfilePicturePreview] = useState<string>("")
   const [error, setError] = useState("")
@@ -79,6 +80,12 @@ export default function RegisterPage() {
       setLoading(false)
       return
     }
+    
+    if (!registrationCode.trim()) {
+        setError("Registration code is required.")
+        setLoading(false)
+        return
+    }
 
     if (password !== confirmPassword) {
       setError("Passwords do not match")
@@ -92,7 +99,8 @@ export default function RegisterPage() {
       return
     }
 
-    const { error } = await signUp(email, password, nickname, gender)
+    // Pass the registration code to the signUp function
+    const { error } = await signUp(email, password, nickname, gender, registrationCode)
 
     if (error) {
       setError(error.message)
@@ -202,6 +210,21 @@ export default function RegisterPage() {
                         <SelectItem value="female">Female</SelectItem>
                       </SelectContent>
                     </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="registrationCode">Registration Code *</Label>
+                    <Input
+                        id="registrationCode"
+                        type="text"
+                        value={registrationCode}
+                        onChange={(e) => setRegistrationCode(e.target.value)}
+                        required
+                        placeholder="Enter your registration code"
+                    />
+                    <p className="text-xs text-gray-500">
+                        Please get this code from an administrator to register.
+                    </p>
                   </div>
 
                   <div className="space-y-2">
