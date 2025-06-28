@@ -12,11 +12,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { useRouter } from "next/navigation"
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isAboutOpen, setIsAboutOpen] = useState(false)
-  const { user, userRole, signOut } = useAuth()
+  const { user, userProfile, userRole, signOut } = useAuth()
+  const router = useRouter()
 
   const aboutItems = [
     { name: "LEADERSHIP", href: "/leadership" },
@@ -27,6 +29,7 @@ export default function Header() {
 
   const handleSignOut = async () => {
     await signOut()
+    router.push('/') // Redirect to the main homepage after signing out
   }
 
   return (
@@ -86,10 +89,10 @@ export default function Header() {
               EVENTS
             </Link>
             <Link
-              href="/ministries"
+              href="/communityboard"
               className="text-white text-sm font-medium hover:text-blue-300 transition-colors tracking-wide"
             >
-              MINISTRIES
+              COMMUNITY BOARD
             </Link>
             <Link
               href="/join"
@@ -104,7 +107,7 @@ export default function Header() {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="text-white hover:bg-white/10">
                     <User className="h-4 w-4 mr-2" />
-                    {user.email}
+                    {userProfile?.nickname || user.email}
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
@@ -189,11 +192,11 @@ export default function Header() {
                 EVENTS
               </Link>
               <Link
-                href="/ministries"
+                href="/communityboard"
                 className="text-white text-sm font-medium py-2 hover:text-blue-300"
                 onClick={() => setIsMenuOpen(false)}
               >
-                MINISTRIES
+                COMMUNITY BOARD
               </Link>
               <Link
                 href="/join"
@@ -206,7 +209,7 @@ export default function Header() {
               {/* Mobile Auth Section */}
               {user ? (
                 <div className="border-t border-white/20 pt-3 mt-3">
-                  <div className="text-white/80 text-sm mb-2">{user.email}</div>
+                  <div className="text-white/80 text-sm mb-2">{userProfile?.nickname || user.email}</div>
                   <Link
                     href="/profile"
                     className="block text-white text-sm font-medium py-2 hover:text-blue-300"
@@ -224,10 +227,7 @@ export default function Header() {
                     </Link>
                   )}
                   <button
-                    onClick={() => {
-                      handleSignOut()
-                      setIsMenuOpen(false)
-                    }}
+                    onClick={handleSignOut}
                     className="block text-white text-sm font-medium py-2 hover:text-blue-300 w-full text-left"
                   >
                     Sign Out

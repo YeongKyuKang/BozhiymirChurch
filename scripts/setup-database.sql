@@ -23,6 +23,11 @@ DROP POLICY IF EXISTS "Anyone can view profile pictures" ON storage.objects;
 -- 기존 테이블 삭제 (CASCADE 옵션으로 의존 객체까지 삭제)
 DROP TABLE IF EXISTS public.content CASCADE;
 DROP TABLE IF EXISTS public.users CASCADE;
+DROP TABLE IF EXISTS public.posts CASCADE;
+DROP TABLE IF EXISTS public.comments CASCADE;
+DROP TABLE IF EXISTS public.likes CASCADE;
+DROP TABLE IF EXISTS public.comment_likes CASCADE;
+DROP TABLE IF EXISTS public.post_reactions CASCADE;
 
 -- 기존 스토리지 버킷과 객체 삭제
 DELETE FROM storage.objects WHERE bucket_id = 'profile-pictures';
@@ -54,9 +59,63 @@ CREATE TABLE public.content (
   UNIQUE(page, section, key)
 );
 
+-- posts 테이블 생성 (게시판 게시물)
+CREATE TABLE public.posts (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  title TEXT NOT NULL,
+  content TEXT NOT NULL,
+  media_url TEXT,
+  author_id UUID REFERENCES public.users(id) ON DELETE CASCADE NOT NULL,
+  view_count INT DEFAULT 0,
+  likes_count INT DEFAULT 0,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- comments 테이블 생성 (게시물 댓글)
+CREATE TABLE public.comments (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  post_id UUID REFERENCES public.posts(id) ON DELETE CASCADE NOT NULL,
+  author_id UUID REFERENCES public.users(id) ON DELETE CASCADE NOT NULL,
+  comment TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- likes 테이블 생성 (게시물 공감/좋아요)
+CREATE TABLE public.likes (
+  user_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
+  post_id UUID REFERENCES public.posts(id) ON DELETE CASCADE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  PRIMARY KEY (user_id, post_id) -- 복합 기본 키
+);
+
+-- comment_likes 테이블 생성 (댓글 좋아요)
+CREATE TABLE public.comment_likes (
+  user_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
+  comment_id UUID REFERENCES public.comments(id) ON DELETE CASCADE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  PRIMARY KEY (user_id, comment_id)
+);
+
+-- post_reactions 테이블 생성 (게시물 감정 표현)
+CREATE TABLE public.post_reactions (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
+  post_id UUID REFERENCES public.posts(id) ON DELETE CASCADE,
+  reaction_type TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE (user_id, post_id, reaction_type)
+);
+
+
 -- Row Level Security (RLS) 활성화
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.content ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.posts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.comments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.likes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.comment_likes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.post_reactions ENABLE ROW LEVEL SECURITY;
 
 -- updated_at 타임스탬프를 자동으로 업데이트하는 함수 생성
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -70,6 +129,11 @@ $$ LANGUAGE plpgsql;
 -- updated_at을 자동으로 업데이트하는 트리거 생성
 CREATE TRIGGER update_users_updated_at
     BEFORE UPDATE ON public.users
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_posts_updated_at
+    BEFORE UPDATE ON public.posts
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
@@ -112,6 +176,53 @@ CREATE POLICY "Only admins can modify content" ON public.content
       AND users.role = 'admin'
     )
   );
+  
+-- posts 테이블에 대한 정책 생성
+CREATE POLICY "Posts are public" ON public.posts
+  FOR SELECT USING (true);
+CREATE POLICY "Authenticated users can create posts" ON public.posts
+  FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
+CREATE POLICY "Post creators or admins can update" ON public.posts
+  FOR UPDATE USING (auth.uid() = author_id OR EXISTS(SELECT 1 FROM public.users WHERE users.id = auth.uid() AND users.role = 'admin'))
+  WITH CHECK (auth.uid() = author_id OR EXISTS(SELECT 1 FROM public.users WHERE users.id = auth.uid() AND users.role = 'admin'));
+CREATE POLICY "Post creators or admins can delete" ON public.posts
+  FOR DELETE USING (auth.uid() = author_id OR EXISTS(SELECT 1 FROM public.users WHERE users.id = auth.uid() AND users.role = 'admin'));
+
+-- comments 테이블에 대한 정책 생성
+CREATE POLICY "Comments are public" ON public.comments
+  FOR SELECT USING (true);
+CREATE POLICY "Authenticated users can create comments" ON public.comments
+  FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
+CREATE POLICY "Comment creators or admins can delete" ON public.comments
+  FOR DELETE USING (auth.uid() = author_id OR EXISTS(SELECT 1 FROM public.users WHERE users.id = auth.uid() AND users.role = 'admin'));
+CREATE POLICY "Comment creators or admins can update" ON public.comments
+  FOR UPDATE USING (auth.uid() = author_id OR EXISTS(SELECT 1 FROM public.users WHERE users.id = auth.uid() AND users.role = 'admin'))
+  WITH CHECK (auth.uid() = author_id OR EXISTS(SELECT 1 FROM public.users WHERE users.id = auth.uid() AND users.role = 'admin'));
+
+-- likes 테이블에 대한 정책 생성
+CREATE POLICY "Likes are public" ON public.likes
+  FOR SELECT USING (true);
+CREATE POLICY "Authenticated users can like posts" ON public.likes
+  FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
+CREATE POLICY "Users can remove their own likes" ON public.likes
+  FOR DELETE USING (auth.uid() = user_id);
+  
+-- comment_likes 테이블에 대한 정책 생성
+CREATE POLICY "Comment likes are public" ON public.comment_likes
+  FOR SELECT USING (true);
+CREATE POLICY "Authenticated users can like comments" ON public.comment_likes
+  FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
+CREATE POLICY "Users can remove their own comment likes" ON public.comment_likes
+  FOR DELETE USING (auth.uid() = user_id);
+
+-- post_reactions 테이블에 대한 정책 생성
+CREATE POLICY "Post reactions are public" ON public.post_reactions
+  FOR SELECT USING (true);
+CREATE POLICY "Authenticated users can add reactions" ON public.post_reactions
+  FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
+CREATE POLICY "Users can remove their own reactions" ON public.post_reactions
+  FOR DELETE USING (auth.uid() = user_id);
+  
 
 -- 'on_auth_user_created' 트리거 다시 생성
 CREATE TRIGGER on_auth_user_created
@@ -180,17 +291,13 @@ INSERT INTO public.content (page, section, key, value) VALUES
 ('ukrainian-ministry', 'mission', 'title', 'Our Mission'),
 ('ukrainian-ministry', 'mission', 'description', 'We are committed to providing support, love, and hope to Ukrainian children and families.'),
 
+-- Community Board page content
+('communityboard', 'main', 'title', 'Our Community Board'),
+('communityboard', 'main', 'description', 'Share and discuss ministry stories, events, and community activities.'),
+
 -- Events page content
 ('events', 'main', 'title', 'Upcoming Events'),
 ('events', 'main', 'description', 'Join us for these upcoming events and activities.'),
-
--- Ministries page content
-('ministries', 'main', 'title', 'Our Ministries'),
-('ministries', 'main', 'description', 'Discover the various ways you can get involved in our church community.'),
-('ministries', 'youth', 'title', 'Youth Ministry'),
-('ministries', 'youth', 'description', 'Engaging programs for teenagers and young adults.'),
-('ministries', 'children', 'title', 'Children''s Ministry'),
-('ministries', 'children', 'description', 'Fun and educational programs for children of all ages.'),
 
 -- Join page content
 ('join', 'main', 'title', 'Join Our Community'),

@@ -1,49 +1,50 @@
+"use client"
+
 import { Users, Baby, Globe, Music, Heart, BookOpen } from "lucide-react"
+import Link from "next/link"
+import { Button } from "@/components/ui/button" 
 
 export default function MinistriesShowcase() {
   const ministries = [
-    {
-      icon: Users,
-      title: "Adult Ministry",
-      description: "Bible studies, prayer groups, and fellowship",
-      color: "bg-blue-600",
-      image: "/placeholder.svg?height=200&width=300",
-    },
-    {
-      icon: Baby,
-      title: "Kids & Youth",
-      description: "Fun programs for children and teenagers",
-      color: "bg-green-600",
-      image: "/placeholder.svg?height=200&width=300",
-    },
     {
       icon: Globe,
       title: "Ukrainian Children",
       description: "Special ministry for Ukrainian orphan children 🇺🇦",
       color: "bg-gradient-to-r from-blue-500 to-yellow-400",
-      image: "/placeholder.svg?height=200&width=300",
+      link: "/ukrainian-ministry",
       special: true,
+    },
+    {
+      icon: Users,
+      title: "Community Board",
+      description: "Share your ministry stories on our community board.",
+      color: "bg-green-600",
+      link: "/communityboard",
+      special: false,
     },
     {
       icon: Music,
       title: "Worship & Arts",
       description: "Choir, worship team, and creative ministries",
       color: "bg-purple-600",
-      image: "/placeholder.svg?height=200&width=300",
+      link: "/communityboard",
+      special: false,
     },
     {
       icon: Heart,
       title: "Community Outreach",
       description: "Serving Portland with love and compassion",
       color: "bg-red-600",
-      image: "/placeholder.svg?height=200&width=300",
+      link: "/communityboard",
+      special: false,
     },
     {
       icon: BookOpen,
       title: "Small Groups",
       description: "Connect deeper through small group studies",
       color: "bg-indigo-600",
-      image: "/placeholder.svg?height=200&width=300",
+      link: "/communityboard",
+      special: false,
     },
   ]
 
@@ -51,9 +52,9 @@ export default function MinistriesShowcase() {
     <section className="py-16 bg-gray-50">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Our Ministries</h2>
+          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Community & Ministries</h2>
           <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-            At Boshmir Church, we believe everyone has a place to serve, grow, and make a difference. Discover where you
+            At Bozhiymir Church, we believe everyone has a place to serve, grow, and make a difference. Discover where you
             belong in our church family.
           </p>
         </div>
@@ -62,8 +63,9 @@ export default function MinistriesShowcase() {
           {ministries.map((ministry, index) => {
             const IconComponent = ministry.icon
             return (
-              <div
+              <Link
                 key={index}
+                href={ministry.link}
                 className={`relative overflow-hidden rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 group ${
                   ministry.special ? "ring-2 ring-yellow-400 ring-offset-2" : ""
                 }`}
@@ -81,14 +83,8 @@ export default function MinistriesShowcase() {
                 <div className="p-6 bg-white">
                   <h3 className="text-xl font-bold text-gray-900 mb-2">{ministry.title}</h3>
                   <p className="text-gray-600 text-sm leading-relaxed">{ministry.description}</p>
-
-                  <div className="mt-4">
-                    <button className="text-blue-600 font-medium text-sm hover:text-blue-800 transition-colors">
-                      Learn More →
-                    </button>
-                  </div>
                 </div>
-              </div>
+              </Link>
             )
           })}
         </div>
@@ -104,12 +100,16 @@ export default function MinistriesShowcase() {
               and opportunity.
             </p>
             <div className="mt-6 flex flex-col sm:flex-row gap-4 justify-center">
-              <button className="bg-blue-600 text-white px-6 py-3 rounded-full font-semibold hover:bg-blue-700 transition-colors">
-                Support This Ministry
-              </button>
-              <button className="border-2 border-blue-600 text-blue-600 px-6 py-3 rounded-full font-semibold hover:bg-blue-600 hover:text-white transition-colors">
-                Meet the Children
-              </button>
+              <Link href="/ukrainian-ministry" passHref>
+                <Button className="bg-blue-600 text-white px-6 py-3 rounded-full font-semibold hover:bg-blue-700 transition-colors">
+                  Support This Ministry
+                </Button>
+              </Link>
+              <Link href="/ukrainian-ministry" passHref>
+                <Button variant="outline" className="border-2 border-blue-600 text-blue-600 px-6 py-3 rounded-full font-semibold hover:bg-blue-600 hover:text-white transition-colors">
+                  Learn More
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
