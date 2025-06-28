@@ -79,25 +79,27 @@ export default function HeroSection() {
         </h1>
 
         <div className="mb-8">
-          <p className="text-lg md:text-xl font-medium mb-2">
+          {/* p 태그를 div 태그로 변경 */}
+          <div className="text-lg md:text-xl font-medium mb-2">
             <EditableText page="home" section="hero" contentKey="subtitle" tag="span" className="text-white" />
-          </p>
-          <p className="text-xl md:text-2xl font-bold tracking-wide">
+          </div>
+          <div className="text-xl md:text-2xl font-bold tracking-wide">
             <EditableText page="home" section="hero" contentKey="sunday_service_times" tag="span" className="text-white" />
-          </p>
-          <p className="text-sm md:text-base text-blue-200 mt-4 font-medium">
+          </div>
+          {/* p 태그를 div 태그로 변경 */}
+          <div className="text-sm md:text-base text-blue-200 mt-4 font-medium">
             <EditableText page="home" section="hero" contentKey="description" tag="span" className="text-blue-200" isTextArea={true} />
             <br />
             <span className="text-yellow-200">
               <EditableText page="home" section="hero" contentKey="ukrainian_translation" tag="span" className="text-yellow-200" />
             </span>
-          </p>
+          </div>
         </div>
 
         <div className="mt-8">
-          <p className="text-lg text-white/90 mb-4">
+          <div className="text-lg text-white/90 mb-4">
             <EditableText page="home" section="hero" contentKey="cta_text" tag="span" className="text-white/90" />
-          </p>
+          </div>
           <p className="text-sm text-blue-200">
             "He defends the cause of the fatherless and the widow, and loves the foreigner residing among you" -
             Deuteronomy 10:18

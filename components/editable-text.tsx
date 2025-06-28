@@ -32,17 +32,17 @@ const EditableText: React.FC<EditableTextProps> = ({
   const { content, loading: contentLoading, updateContent } = useContent(page, section);
   const [isEditing, setIsEditing] = useState(false);
   const [editedValue, setEditedValue] = useState("");
-
-  const isLoading = authLoading || contentLoading;
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    // Update editedValue when the fetched content changes
+    setIsMounted(true); // This runs only on the client after hydration
     if (!contentLoading && content[contentKey] !== undefined) {
       setEditedValue(content[contentKey]);
     }
   }, [content, contentKey, contentLoading]);
 
   const handleSave = async () => {
+    console.log(`[EditableText] Saving content for key: ${contentKey}, value: ${editedValue}`);
     await updateContent(contentKey, editedValue, section);
     setIsEditing(false);
   };
@@ -52,11 +52,16 @@ const EditableText: React.FC<EditableTextProps> = ({
     setIsEditing(false);
   };
   
-  if (isLoading) {
+  // Display value from DB or fallback
+  const displayValue = content[contentKey] ?? "콘텐츠를 찾을 수 없습니다.";
+
+  // Show skeleton while loading data or authenticating for the first time
+  if (!isMounted || authLoading || contentLoading) {
+    console.log(`[EditableText] Rendering Skeleton. isMounted: ${isMounted}, authLoading: ${authLoading}, contentLoading: ${contentLoading}`);
     return <Skeleton className={cn(className, "h-6 w-full max-w-lg")} />;
   }
 
-  // 관리자 모드 (편집 중)
+  // Admin editing mode
   if (isEditing && userRole === "admin") {
     const InputComponent = isTextArea ? Textarea : Input;
     return (
@@ -81,22 +86,22 @@ const EditableText: React.FC<EditableTextProps> = ({
     );
   }
 
-  // 일반 뷰 모드
-  const displayValue = content[contentKey] || "콘텐츠를 찾을 수 없습니다.";
-  
-  const handleDoubleClick = () => {
-    if (userRole === "admin") {
-      setIsEditing(true);
-    }
-  };
-  
-  // 관리자가 로그인되어 있을 때만 수정 버튼을 표시
-  if (userRole === "admin") {
-    return (
-      <div className="relative group/edit">
-        <Tag className={cn(className, "group-hover/edit:bg-yellow-100 transition-colors cursor-pointer p-1 rounded-md")} onDoubleClick={handleDoubleClick}>
-          {displayValue}
-        </Tag>
+  // View mode (consistent structure for server & client)
+  const isEditable = userRole === "admin";
+  return (
+    <div
+      className={cn(
+        "relative",
+        isEditable ? "group/edit" : ""
+      )}
+    >
+      <Tag
+        className={cn(className, isEditable ? "group-hover/edit:bg-yellow-100 transition-colors cursor-pointer p-1 rounded-md" : "")}
+        onDoubleClick={isEditable ? () => setIsEditing(true) : undefined}
+      >
+        {displayValue}
+      </Tag>
+      {isEditable && (
         <Button
           variant="ghost"
           size="icon"
@@ -105,12 +110,9 @@ const EditableText: React.FC<EditableTextProps> = ({
         >
           <Edit className="h-4 w-4" />
         </Button>
-      </div>
-    );
-  }
-
-  // 일반 사용자 뷰
-  return <Tag className={className}>{displayValue}</Tag>;
+      )}
+    </div>
+  );
 };
 
 export default EditableText;

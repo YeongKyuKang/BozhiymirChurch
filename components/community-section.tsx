@@ -60,14 +60,17 @@ export default function CommunitySection() {
                 className="text-xl text-gray-700 leading-relaxed"
                 isTextArea={true}
               />
-              <EditableText
-                page="home"
-                section="community_about"
-                contentKey="scripture_quote"
-                tag="p"
-                className="text-blue-700 font-bold italic border-l-4 border-blue-300 pl-4"
-                isTextArea={true}
-              />
+              {/* p 태그를 div 태그로 변경 */}
+              <div className="text-blue-700 font-bold italic border-l-4 border-blue-300 pl-4">
+                <EditableText
+                  page="home"
+                  section="community_about"
+                  contentKey="scripture_quote"
+                  tag="span"
+                  className="text-blue-700 font-bold italic"
+                  isTextArea={true}
+                />
+              </div>
             </div>
 
             <div className="bg-gradient-to-r from-blue-100 to-yellow-100 rounded-2xl p-8 border-2 border-blue-300 shadow-md">
