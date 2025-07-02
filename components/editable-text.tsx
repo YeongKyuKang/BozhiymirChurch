@@ -86,7 +86,7 @@ const EditableText: React.FC<EditableTextProps> = ({
         <InputComponent
           value={editedValue}
           onChange={(e) => setEditedValue(e.target.value)}
-          className={cn(className, "w-full", "text-gray-900")} // 여기를 수정했습니다: text-gray-900 추가
+          className={cn(className, "w-full", "text-gray-900")}
           rows={isTextArea ? 5 : undefined}
           placeholder={placeholder || "내용을 입력하세요..."}
         />

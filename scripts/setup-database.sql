@@ -476,6 +476,10 @@ INSERT INTO public.content (page, section, key, value) VALUES
 ('leadership', 'contact', 'title', 'Connect with Our Leaders'),
 ('leadership', 'contact', 'description', 'Our leadership team is here to serve you. Don''t hesitate to reach out with questions or prayer requests.'),
 
+-- Portland Community page content
+('portland-community', 'main', 'title', 'Portland Community'),
+('portland-community', 'main', 'description', 'Bozhiymir Church is a beacon of hope in the Portland community.'),
+
 -- Ukrainian Ministry page content
 ('ukrainian-ministry', 'main', 'title', 'Ukrainian Children Ministry'),
 ('ukrainian-ministry', 'main', 'description', 'In response to the Ukrainian crisis, Bozhiymir Church has opened our hearts and doors to provide love, care, and hope to Ukrainian orphan children in Portland.'),

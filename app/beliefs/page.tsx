@@ -7,7 +7,7 @@ import Link from "next/link"
 import Header from "@/components/header"
 import Footer from "@/components/footer"
 import EditableText from "@/components/editable-text"
-import { supabase } from "@/lib/supabase"
+import { supabase } from "@/lib/supabase" // 서버에서 데이터 패칭을 위해 supabase 클라이언트 import
 
 // 페이지 로드 시 서버에서 데이터를 비동기적으로 미리 가져오는 함수
 async function fetchBeliefsContent() {
@@ -25,7 +25,9 @@ async function fetchBeliefsContent() {
   // 가져온 데이터를 { section: { key: value } } 형태로 변환합니다.
   const contentMap: Record<string, any> = {};
   data.forEach(item => {
-    if (!contentMap[item.section] === undefined) {
+    // 수정된 부분: contentMap[item.section]이 undefined일 경우에만 초기화하도록 수정
+    // 이전: if (!contentMap[item.section] === undefined)
+    if (contentMap[item.section] === undefined) {
       contentMap[item.section] = {};
     }
     contentMap[item.section][item.key] = item.value;
