@@ -73,30 +73,30 @@ export default function HeroSection({ heroContent }: { heroContent: Record<strin
       </div>
       <div className="relative z-10 text-center text-white px-4 max-w-5xl mx-auto">
         <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
-          <EditableText page="home" section="hero" contentKey="title" initialValue={heroContent?.title} tag="span" className="text-white" />
+          <EditableText page="home" section="hero" contentKey="title" initialValue={heroContent?.title} tag="span" className="text-white" placeholder="환영 타이틀" />
           <br />
           <span className="text-blue-300">Bozhiymir Church</span>
         </h1>
 
         <div className="mb-8">
           <div className="text-lg md:text-xl font-medium mb-2">
-            <EditableText page="home" section="hero" contentKey="subtitle" initialValue={heroContent?.subtitle} tag="span" className="text-white" />
+            <EditableText page="home" section="hero" contentKey="subtitle" initialValue={heroContent?.subtitle} tag="span" className="text-white" placeholder="부제목" />
           </div>
           <div className="text-xl md:text-2xl font-bold tracking-wide">
-            <EditableText page="home" section="hero" contentKey="sunday_service_times" initialValue={heroContent?.sunday_service_times} tag="span" className="text-white" />
+            <EditableText page="home" section="hero" contentKey="sunday_service_times" initialValue={heroContent?.sunday_service_times} tag="span" className="text-white" placeholder="예배 시간" />
           </div>
           <div className="text-sm md:text-base text-blue-200 mt-4 font-medium">
-            <EditableText page="home" section="hero" contentKey="description" initialValue={heroContent?.description} tag="span" className="text-blue-200" isTextArea={true} />
+            <EditableText page="home" section="hero" contentKey="description" initialValue={heroContent?.description} tag="span" className="text-blue-200" isTextArea={true} placeholder="설명 문구" />
             <br />
             <span className="text-yellow-200">
-              <EditableText page="home" section="hero" contentKey="ukrainian_translation" initialValue={heroContent?.ukrainian_translation} tag="span" className="text-yellow-200" />
+              <EditableText page="home" section="hero" contentKey="ukrainian_translation" initialValue={heroContent?.ukrainian_translation} tag="span" className="text-yellow-200" placeholder="우크라이나어 번역" />
             </span>
           </div>
         </div>
 
         <div className="mt-8">
           <div className="text-lg text-white/90 mb-4">
-            <EditableText page="home" section="hero" contentKey="cta_text" initialValue={heroContent?.cta_text} tag="span" className="text-white/90" />
+            <EditableText page="home" section="hero" contentKey="cta_text" initialValue={heroContent?.cta_text} tag="span" className="text-white/90" placeholder="행동 유도 문구" />
           </div>
           <p className="text-sm text-blue-200">
             "He defends the cause of the fatherless and the widow, and loves the foreigner residing among you" -
