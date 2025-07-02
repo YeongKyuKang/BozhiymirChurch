@@ -163,6 +163,7 @@ export default function BeliefsPageClient({ initialContent }: BeliefsPageClientP
                   className="text-5xl font-bold text-gray-900"
               />
           </h1>
+          {/* <p> 태그를 <div>로 변경 */}
           <div className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
               <EditableText
                   page="beliefs"
@@ -199,6 +200,7 @@ export default function BeliefsPageClient({ initialContent }: BeliefsPageClientP
                       <EditableText page="beliefs" section="grid_items" contentKey={belief.titleKey} initialValue={initialContent?.grid_items?.[belief.titleKey]} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="ml-0" />
                     </h3>
                   </div>
+                  {/* <p> 태그를 <div>로 변경 */}
                   <div className="text-gray-600 leading-relaxed">
                       <EditableText page="beliefs" section="grid_items" contentKey={belief.descriptionKey} initialValue={initialContent?.grid_items?.[belief.descriptionKey]} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-gray-600 leading-relaxed" />
                   </div>
@@ -218,6 +220,7 @@ export default function BeliefsPageClient({ initialContent }: BeliefsPageClientP
           <blockquote className="text-2xl italic mb-6 max-w-4xl mx-auto">
               <EditableText page="beliefs" section="scripture" contentKey="scripture_quote" initialValue={initialContent?.scripture?.scripture_quote} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-2xl italic" isTextArea={true} />
           </blockquote>
+          {/* <p> 태그를 <div>로 변경 */}
           <div className="text-xl opacity-90">
               <EditableText page="beliefs" section="scripture" contentKey="scripture_reference" initialValue={initialContent?.scripture?.scripture_reference} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-xl opacity-90" />
           </div>
@@ -232,6 +235,7 @@ export default function BeliefsPageClient({ initialContent }: BeliefsPageClientP
               <h2 className="text-3xl font-bold mb-4">
                   <EditableText page="beliefs" section="ministry_connection" contentKey="ministry_title" initialValue={initialContent?.ministry_connection?.ministry_title} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-3xl font-bold" />
               </h2>
+              {/* <p> 태그를 <div>로 변경 */}
               <div className="text-xl mb-6 opacity-90">
                   <EditableText page="beliefs" section="ministry_connection" contentKey="ministry_description" initialValue={initialContent?.ministry_connection?.ministry_description} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-xl opacity-90" />
               </div>
@@ -251,6 +255,7 @@ export default function BeliefsPageClient({ initialContent }: BeliefsPageClientP
           <h2 className="text-3xl font-bold text-gray-900 mb-6">
               <EditableText page="beliefs" section="cta" contentKey="cta_title" initialValue={initialContent?.cta?.cta_title} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-3xl font-bold text-gray-900" />
           </h2>
+          {/* <p> 태그를 <div>로 변경 */}
           <div className="text-xl text-gray-600 mb-8">
               <EditableText page="beliefs" section="cta" contentKey="cta_description" initialValue={initialContent?.cta?.cta_description} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-xl text-gray-600" />
           </div>

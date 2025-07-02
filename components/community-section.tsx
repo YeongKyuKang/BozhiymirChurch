@@ -6,7 +6,14 @@ import { Users, Heart, Home, Globe } from "lucide-react"
 import EditableText from "@/components/editable-text"
 import Link from "next/link"
 
-export default function CommunitySection({ communityContent, communityHighlights }: { communityContent: Record<string, string>, communityHighlights: Record<string, string> }) {
+interface CommunitySectionProps {
+  communityContent: Record<string, string>;
+  communityHighlights: Record<string, string>;
+  isEditingPage: boolean;
+  onContentChange: (section: string, key: string, value: string) => void;
+}
+
+export default function CommunitySection({ communityContent, communityHighlights, isEditingPage, onContentChange }: CommunitySectionProps) {
   return (
     <section className="py-20 bg-gray-50">
       <div className="container mx-auto px-4">
@@ -35,6 +42,8 @@ export default function CommunitySection({ communityContent, communityHighlights
                 tag="h2"
                 className="text-5xl md:text-6xl font-extrabold text-gray-900 mb-6 leading-tight"
                 placeholder="커뮤니티 메인 타이틀"
+                isEditingPage={isEditingPage}
+                onContentChange={onContentChange}
               />
               <EditableText
                 page="home"
@@ -44,6 +53,8 @@ export default function CommunitySection({ communityContent, communityHighlights
                 tag="h3"
                 className="text-3xl font-bold text-blue-700 mb-8"
                 placeholder="커뮤니티 부제목"
+                isEditingPage={isEditingPage}
+                onContentChange={onContentChange}
               />
             </div>
 
@@ -57,6 +68,8 @@ export default function CommunitySection({ communityContent, communityHighlights
                 className="text-xl text-gray-700 leading-relaxed"
                 isTextArea={true}
                 placeholder="커뮤니티 설명 첫 번째 문단"
+                isEditingPage={isEditingPage}
+                onContentChange={onContentChange}
               />
               <EditableText
                 page="home"
@@ -67,6 +80,8 @@ export default function CommunitySection({ communityContent, communityHighlights
                 className="text-xl text-gray-700 leading-relaxed"
                 isTextArea={true}
                 placeholder="커뮤니티 설명 두 번째 문단"
+                isEditingPage={isEditingPage}
+                onContentChange={onContentChange}
               />
               <div className="text-blue-700 font-bold italic border-l-4 border-blue-300 pl-4">
                 <EditableText
@@ -78,6 +93,8 @@ export default function CommunitySection({ communityContent, communityHighlights
                   className="text-blue-700 font-bold italic"
                   isTextArea={true}
                   placeholder="성경 구절"
+                  isEditingPage={isEditingPage}
+                  onContentChange={onContentChange}
                 />
               </div>
             </div>
@@ -85,9 +102,9 @@ export default function CommunitySection({ communityContent, communityHighlights
             <div className="bg-gradient-to-r from-blue-100 to-yellow-100 rounded-2xl p-8 border-2 border-blue-300 shadow-md">
               <h4 className="text-2xl font-extrabold text-gray-900 mb-4 flex items-center">
                 <span className="mr-2 text-3xl">🇺🇦</span>
-                <EditableText page="home" section="community_about" contentKey="ministry_title" initialValue={communityContent?.ministry_title} tag="span" className="text-gray-900" placeholder="사역 타이틀" />
+                <EditableText page="home" section="community_about" contentKey="ministry_title" initialValue={communityContent?.ministry_title} tag="span" className="text-gray-900" placeholder="사역 타이틀" isEditingPage={isEditingPage} onContentChange={onContentChange} />
               </h4>
-              <EditableText page="home" section="community_about" contentKey="ministry_description" initialValue={communityContent?.ministry_description} tag="p" className="text-gray-800 text-base leading-relaxed" isTextArea={true} placeholder="사역 설명" />
+              <EditableText page="home" section="community_about" contentKey="ministry_description" initialValue={communityContent?.ministry_description} tag="p" className="text-gray-800 text-base leading-relaxed" isTextArea={true} placeholder="사역 설명" isEditingPage={isEditingPage} onContentChange={onContentChange} />
             </div>
 
             <div className="flex flex-col sm:flex-row gap-6 mt-8">
@@ -108,20 +125,20 @@ export default function CommunitySection({ communityContent, communityHighlights
         <div className="mt-20 grid md:grid-cols-3 gap-10">
           <div className="text-center p-8 bg-blue-50 rounded-2xl border-2 border-blue-100 shadow-lg transform hover:scale-105 transition-transform cursor-pointer">
             <div className="text-5xl mb-4">🤝</div>
-            <EditableText page="home" section="community_highlights" contentKey="highlight1_title" initialValue={communityHighlights?.highlight1_title} tag="h4" className="text-2xl font-bold text-gray-900 mb-3" placeholder="하이라이트 1 제목" />
-            <EditableText page="home" section="community_highlights" contentKey="highlight1_description" initialValue={communityHighlights?.highlight1_description} tag="p" className="text-gray-700 text-base" placeholder="하이라이트 1 설명" />
+            <EditableText page="home" section="community_highlights" contentKey="highlight1_title" initialValue={communityHighlights?.highlight1_title} tag="h4" className="text-2xl font-bold text-gray-900 mb-3" placeholder="하이라이트 1 제목" isEditingPage={isEditingPage} onContentChange={onContentChange} />
+            <EditableText page="home" section="community_highlights" contentKey="highlight1_description" initialValue={communityHighlights?.highlight1_description} tag="p" className="text-gray-700 text-base" placeholder="하이라이트 1 설명" isEditingPage={isEditingPage} onContentChange={onContentChange} />
           </div>
 
           <div className="text-center p-8 bg-yellow-50 rounded-2xl border-2 border-yellow-100 shadow-lg transform hover:scale-105 transition-transform cursor-pointer">
             <div className="text-5xl mb-4">🌍</div>
-            <EditableText page="home" section="community_highlights" contentKey="highlight2_title" initialValue={communityHighlights?.highlight2_title} tag="h4" className="text-2xl font-bold text-gray-900 mb-3" placeholder="하이라이트 2 제목" />
-            <EditableText page="home" section="community_highlights" contentKey="highlight2_description" initialValue={communityHighlights?.highlight2_description} tag="p" className="text-gray-700 text-base" placeholder="하이라이트 2 설명" />
+            <EditableText page="home" section="community_highlights" contentKey="highlight2_title" initialValue={communityHighlights?.highlight2_title} tag="h4" className="text-2xl font-bold text-gray-900 mb-3" placeholder="하이라이트 2 제목" isEditingPage={isEditingPage} onContentChange={onContentChange} />
+            <EditableText page="home" section="community_highlights" contentKey="highlight2_description" initialValue={communityHighlights?.highlight2_description} tag="p" className="text-gray-700 text-base" placeholder="하이라이트 2 설명" isEditingPage={isEditingPage} onContentChange={onContentChange} />
           </div>
 
           <div className="text-center p-8 bg-green-50 rounded-2xl border-2 border-green-100 shadow-lg transform hover:scale-105 transition-transform cursor-pointer">
             <div className="text-5xl mb-4">❤️‍🩹</div>
-            <EditableText page="home" section="community_highlights" contentKey="highlight3_title" initialValue={communityHighlights?.highlight3_title} tag="h4" className="text-2xl font-bold text-gray-900 mb-3" placeholder="하이라이트 3 제목" />
-            <EditableText page="home" section="community_highlights" contentKey="highlight3_description" initialValue={communityHighlights?.highlight3_description} tag="p" className="text-gray-700 text-base" placeholder="하이라이트 3 설명" />
+            <EditableText page="home" section="community_highlights" contentKey="highlight3_title" initialValue={communityHighlights?.highlight3_title} tag="h4" className="text-2xl font-bold text-gray-900 mb-3" placeholder="하이라이트 3 제목" isEditingPage={isEditingPage} onContentChange={onContentChange} />
+            <EditableText page="home" section="community_highlights" contentKey="highlight3_description" initialValue={communityHighlights?.highlight3_description} tag="p" className="text-gray-700 text-base" placeholder="하이라이트 3 설명" isEditingPage={isEditingPage} onContentChange={onContentChange} />
           </div>
         </div>
       </div>

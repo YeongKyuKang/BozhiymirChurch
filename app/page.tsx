@@ -1,47 +1,35 @@
 // app/page.tsx
 import Header from "@/components/header"
-import HeroSection from "@/components/hero-section"
-import CommunitySection from "@/components/community-section"
-import MinistriesShowcase from "@/components/ministries-showcase"
-import KidsMessageForm from "@/components/kids-message-form"
 import Footer from "@/components/footer"
 import { supabase } from "@/lib/supabase"
+import HomePageClient from "@/components/home-page-client" // 새로 생성할 클라이언트 컴포넌트 import
 
-// This is now a Server Component, so you can fetch data directly.
-// It will run on the server during the build process or on each request (if not cached).
-async function fetchPageContent() {
-  const { data, error } = await supabase.from("content").select("*");
+// 서버에서 홈페이지 콘텐츠를 미리 가져오는 함수
+async function fetchHomePageContent() {
+  const { data, error } = await supabase.from("content").select("*").eq('page', 'home');
   if (error) {
     console.error("Error fetching content on the server:", error);
-    return [];
+    return {};
   }
-  return data;
+  const contentMap: Record<string, any> = {};
+  data.forEach(item => {
+    if (!contentMap[item.section]) {
+      contentMap[item.section] = {};
+    }
+    contentMap[item.section][item.key] = item.value;
+  });
+  return contentMap;
 }
 
 export default async function Home() {
-  const contentData = await fetchPageContent();
-  const contentMap = contentData.reduce((acc, item) => {
-    if (!acc[item.page]) {
-      acc[item.page] = {};
-    }
-    if (!acc[item.page][item.section]) {
-      acc[item.page][item.section] = {};
-    }
-    acc[item.page][item.section][item.key] = item.value;
-    return acc;
-  }, {});
+  const initialContent = await fetchHomePageContent();
   
-  const homeContent = contentMap['home'] || {};
-
-  // Pass fetched content to client components as props
   return (
-    <div className="min-h-screen">
+    <>
       <Header />
-      <HeroSection heroContent={homeContent.hero || {}} />
-      <CommunitySection communityContent={homeContent.community_about || {}} communityHighlights={homeContent.community_highlights || {}} />
-      <MinistriesShowcase />
-      <KidsMessageForm />
+      {/* 모든 클라이언트 측 로직은 HomePageClient 컴포넌트 내부에서 처리됩니다. */}
+      <HomePageClient initialContent={initialContent} />
       <Footer />
-    </div>
+    </>
   )
 }

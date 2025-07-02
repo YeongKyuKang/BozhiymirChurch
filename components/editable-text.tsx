@@ -19,7 +19,7 @@ interface EditableTextProps {
   tag?: keyof JSX.IntrinsicElements;
   className?: string;
   isTextArea?: boolean;
-  placeholder?: string;
+  placeholder?: string; // Add placeholder prop
   // New props for global edit mode
   isEditingPage?: boolean; // Indicates if the parent page is in global edit mode
   onContentChange?: (section: string, key: string, value: string) => void; // Callback to report changes
@@ -67,13 +67,13 @@ const EditableText: React.FC<EditableTextProps> = ({
   const handleSave = async () => {
     setIsUpdating(true);
     await updateContent(contentKey, editedValue, section);
-    setIsEditing(false);
+    // setIsEditing(false); // 개별 저장 버튼 로직은 삭제되었으므로 이 부분은 필요 없습니다.
     setIsUpdating(false);
   };
 
   const handleCancel = () => {
     setEditedValue(initialValue || ""); // Revert to original initialValue
-    setIsEditing(false);
+    // setIsEditing(false); // 개별 취소 버튼 로직은 삭제되었으므로 이 부분은 필요 없습니다.
   };
   
   // Enter edit mode: ensure editedValue is the current display text
@@ -85,6 +85,16 @@ const EditableText: React.FC<EditableTextProps> = ({
     }
   };
 
+  // handleInputChange 정의: 입력 필드 값 변경을 처리하고 부모 컴포넌트로 전달합니다.
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const newValue = e.target.value;
+    setEditedValue(newValue);
+    if (onContentChange) {
+      onContentChange(section, contentKey, newValue);
+    }
+  };
+
+
   // Admin editing mode (input field appears)
   if (isEditingPage && userRole === "admin") {
     const InputComponent = isTextArea ? Textarea : Input;
@@ -92,7 +102,7 @@ const EditableText: React.FC<EditableTextProps> = ({
       <div className="relative flex flex-col gap-2 p-4 border-2 border-dashed border-blue-400 rounded-md bg-white/50">
         <InputComponent
           value={editedValue}
-          onChange={handleInputChange} // Use the new handler
+          onChange={handleInputChange} // 여기에서 handleInputChange를 사용합니다.
           className={cn(className, "w-full", "text-gray-900")}
           rows={isTextArea ? 5 : undefined}
           placeholder={placeholder || "내용을 입력하세요..."}
@@ -103,7 +113,6 @@ const EditableText: React.FC<EditableTextProps> = ({
   }
 
   // View mode (consistent structure for server & client)
-  // 개별 편집 표시 (노버 효과, 연필 아이콘)는 isEditingPage가 true일 때만 나타나도록 수정
   const showIndividualEditIndicator = userRole === "admin" && isEditingPage;
 
   return (
@@ -115,18 +124,16 @@ const EditableText: React.FC<EditableTextProps> = ({
     >
       <Tag
         className={cn(className, showIndividualEditIndicator ? "group-hover/edit:bg-yellow-100 transition-colors cursor-pointer p-1 rounded-md" : "")}
-        // 더블클릭은 isEditingPage가 true일 때만 변경 보고를 트리거합니다.
         onDoubleClick={showIndividualEditIndicator ? enterEditMode : undefined}
       >
         {displayValue}
       </Tag>
-      {/* 개별 편집 버튼은 showIndividualEditIndicator가 true일 때만 나타납니다. */}
       {showIndividualEditIndicator && (
         <Button
           variant="ghost"
           size="icon"
           className="absolute top-1 right-1 opacity-0 group-hover/edit:opacity-100 transition-opacity"
-          onClick={enterEditMode} // 클릭 시 변경 보고를 트리거합니다.
+          onClick={enterEditMode}
         >
           <Edit className="h-4 w-4" />
         </Button>
