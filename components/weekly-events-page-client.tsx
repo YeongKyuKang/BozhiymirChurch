@@ -1,3 +1,4 @@
+// yeongkyukang/bozhiymirchurch/BozhiymirChurch-3007c4235d54890bd3db6acc74558b701965297b/components/weekly-events-page-client.tsx
 "use client"; // 이 파일은 클라이언트 컴포넌트임을 명시합니다.
 
 import * as React from "react";
@@ -10,6 +11,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import Link from "next/link";
 import EditableText from "@/components/editable-text";
 import { Calendar, Clock, MapPin, Users, Heart, Star } from "lucide-react";
+import Image from "next/image"; // Image 컴포넌트 import
 
 interface Event {
   id: string
@@ -21,14 +23,15 @@ interface Event {
   category: string
   recurring: boolean
   icon: string
+  imageUrl?: string // 이미지 URL 필드 추가
 }
 
-interface EventsPageClientProps {
+interface WeeklyEventsPageClientProps { // 인터페이스 이름 변경
   initialEvents: Event[];
   initialContent: Record<string, any>;
 }
 
-export default function EventsPageClient({ initialEvents, initialContent }: EventsPageClientProps) {
+export default function WeeklyEventsPageClient({ initialEvents, initialContent }: WeeklyEventsPageClientProps) { // 컴포넌트 이름 변경
   const { userRole } = useAuth();
   const [isPageEditing, setIsPageEditing] = useState(false);
   const [changedContent, setChangedContent] = useState<Record<string, Record<string, string>>>({});
@@ -77,7 +80,7 @@ export default function EventsPageClient({ initialEvents, initialContent }: Even
       for (const key in changedContent[section]) {
         const value = changedContent[section][key];
         const { error } = await supabase.from('content').upsert({
-          page: 'events', // 'events' 페이지 지정
+          page: 'weekly', // 'events'에서 'weekly' 페이지로 변경
           section: section,
           key: key,
           value: value,
@@ -85,7 +88,7 @@ export default function EventsPageClient({ initialEvents, initialContent }: Even
         });
 
         if (error) {
-          console.error(`Error updating content for events.${section}.${key}:`, error);
+          console.error(`Error updating content for weekly.${section}.${key}:`, error);
         } else {
           updateCount++;
         }
@@ -94,13 +97,13 @@ export default function EventsPageClient({ initialEvents, initialContent }: Even
 
     if (updateCount > 0) {
       try {
-        const revalidateResponse = await fetch(`/api/revalidate?secret=${process.env.NEXT_PUBLIC_MY_SECRET_TOKEN}&path=/events`);
+        const revalidateResponse = await fetch(`/api/revalidate?secret=${process.env.NEXT_PUBLIC_MY_SECRET_TOKEN}&path=/weekly`); // 경로를 '/weekly'로 변경
         if (!revalidateResponse.ok) {
           const errorData = await revalidateResponse.json();
           console.error("Revalidation failed:", errorData.message);
         } else {
           revalidated = true;
-          console.log("Events page revalidated successfully!");
+          console.log("Weekly events page revalidated successfully!");
         }
       } catch (err) {
         console.error("Failed to call revalidate API:", err);
@@ -112,9 +115,9 @@ export default function EventsPageClient({ initialEvents, initialContent }: Even
     setChangedContent({});
 
     if (updateCount > 0 && revalidated) {
-      alert("모든 변경 사항이 저장되고 행사 페이지가 업데이트되었습니다. 새로고침하면 반영됩니다.");
+      alert("모든 변경 사항이 저장되고 상시 행사 페이지가 업데이트되었습니다. 새로고침하면 반영됩니다.");
     } else if (updateCount > 0 && !revalidated) {
-        alert("일부 변경 사항은 저장되었지만, 행사 페이지 재검증에 실패했습니다. 수동 새로고침이 필요할 수 있습니다.");
+        alert("일부 변경 사항은 저장되었지만, 상시 행사 페이지 재검증에 실패했습니다. 수동 새로고침이 필요할 수 있습니다.");
     } else {
         alert("변경된 내용이 없거나 저장에 실패했습니다.");
     }
@@ -155,7 +158,7 @@ export default function EventsPageClient({ initialEvents, initialContent }: Even
         <div className="container mx-auto text-center">
           <h1 className="text-5xl font-bold text-gray-900 mb-6">
             <EditableText
-                page="events"
+                page="weekly" // 페이지를 'weekly'로 변경
                 section="main"
                 contentKey="title"
                 initialValue={initialContent?.main?.title}
@@ -164,11 +167,11 @@ export default function EventsPageClient({ initialEvents, initialContent }: Even
                 tag="span"
                 className="text-5xl font-bold text-gray-900"
             />
-            <span className="text-blue-600">Events</span>
+            <span className="text-blue-600">Weekly Events</span> {/* 텍스트 변경 */}
           </h1>
           <div className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
             <EditableText
-                page="events"
+                page="weekly" // 페이지를 'weekly'로 변경
                 section="main"
                 contentKey="description"
                 initialValue={initialContent?.main?.description}
@@ -209,22 +212,50 @@ export default function EventsPageClient({ initialEvents, initialContent }: Even
             {initialEvents.map((event, index) => (
               <Card key={event.id} className="hover:shadow-lg transition-shadow duration-300 overflow-hidden">
                 <CardContent className="p-0">
-                  <div className="bg-gradient-to-br from-blue-500 to-blue-600 p-6 text-white">
-                    <div className="flex items-center justify-between mb-4">
-                      {getIconComponent(event.icon)}
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs font-medium ${getCategoryColor(event.category)}`}
-                      >
-                        {event.category}
-                      </span>
+                  {/* 이미지 및 오버레이 섹션 추가 */}
+                  {event.imageUrl ? (
+                    <div className="relative w-full h-48">
+                      <Image
+                        src={event.imageUrl}
+                        alt={event.title}
+                        layout="fill"
+                        objectFit="cover"
+                        className="w-full h-full"
+                      />
+                      <div className="absolute inset-0 bg-black bg-opacity-50 flex flex-col justify-end p-6 text-white"> {/* 알파 0.5인 검은색 오버레이 */}
+                        <div className="flex items-center justify-between mb-2">
+                          {getIconComponent(event.icon)}
+                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${getCategoryColor(event.category)}`}>
+                            {event.category}
+                          </span>
+                        </div>
+                        <h3 className="text-xl font-bold mb-1">{event.title}</h3>
+                        {event.recurring && (
+                          <span className="inline-block bg-yellow-400 text-blue-900 px-2 py-1 rounded text-xs font-medium">
+                            Recurring
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <h3 className="text-xl font-bold mb-2">{event.title}</h3>
-                    {event.recurring && (
-                      <span className="inline-block bg-yellow-400 text-blue-900 px-2 py-1 rounded text-xs font-medium">
-                        Recurring
-                      </span>
-                    )}
-                  </div>
+                  ) : (
+                    // imageUrl이 없을 경우 기존 그라데이션 배경 사용
+                    <div className="bg-gradient-to-br from-blue-500 to-blue-600 p-6 text-white">
+                      <div className="flex items-center justify-between mb-4">
+                        {getIconComponent(event.icon)}
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-medium ${getCategoryColor(event.category)}`}
+                        >
+                          {event.category}
+                        </span>
+                      </div>
+                      <h3 className="text-xl font-bold mb-2">{event.title}</h3>
+                      {event.recurring && (
+                        <span className="inline-block bg-yellow-400 text-blue-900 px-2 py-1 rounded text-xs font-medium">
+                          Recurring
+                        </span>
+                      )}
+                    </div>
+                  )}
 
                   <div className="p-6">
                     <div className="space-y-3 mb-4">
@@ -258,7 +289,7 @@ export default function EventsPageClient({ initialEvents, initialContent }: Even
         <div className="container mx-auto text-center">
           <h2 className="text-3xl font-bold mb-8">
             <EditableText
-                page="events"
+                page="weekly" // 페이지를 'weekly'로 변경
                 section="special_ministry"
                 contentKey="title"
                 initialValue={initialContent?.special_ministry?.title}
@@ -274,7 +305,7 @@ export default function EventsPageClient({ initialEvents, initialContent }: Even
                 <div className="text-4xl mb-4">🇺🇦</div>
                 <h3 className="text-xl font-bold mb-2">
                     <EditableText
-                        page="events"
+                        page="weekly" // 페이지를 'weekly'로 변경
                         section="special_ministry"
                         contentKey="card1_title"
                         initialValue={initialContent?.special_ministry?.card1_title}
@@ -286,7 +317,7 @@ export default function EventsPageClient({ initialEvents, initialContent }: Even
                 </h3>
                 <div className="opacity-90 mb-4">
                     <EditableText
-                        page="events"
+                        page="weekly" // 페이지를 'weekly'로 변경
                         section="special_ministry"
                         contentKey="card1_description"
                         initialValue={initialContent?.special_ministry?.card1_description}
@@ -306,7 +337,7 @@ export default function EventsPageClient({ initialEvents, initialContent }: Even
                 <div className="text-4xl mb-4">👨‍👩‍👧‍👦</div>
                 <h3 className="text-xl font-bold mb-2">
                     <EditableText
-                        page="events"
+                        page="weekly" // 페이지를 'weekly'로 변경
                         section="special_ministry"
                         contentKey="card2_title"
                         initialValue={initialContent?.special_ministry?.card2_title}
@@ -318,7 +349,7 @@ export default function EventsPageClient({ initialEvents, initialContent }: Even
                 </h3>
                 <div className="opacity-90 mb-4">
                     <EditableText
-                        page="events"
+                        page="weekly" // 페이지를 'weekly'로 변경
                         section="special_ministry"
                         contentKey="card2_description"
                         initialValue={initialContent?.special_ministry?.card2_description}
@@ -342,7 +373,7 @@ export default function EventsPageClient({ initialEvents, initialContent }: Even
         <div className="container mx-auto">
           <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
             <EditableText
-              page="events"
+              page="weekly" // 페이지를 'weekly'로 변경
               section="guidelines"
               contentKey="title"
               initialValue={initialContent?.guidelines?.title}
@@ -357,10 +388,10 @@ export default function EventsPageClient({ initialEvents, initialContent }: Even
               <CardContent className="p-6">
                 <Users className="h-12 w-12 text-blue-600 mx-auto mb-4" />
                 <h3 className="text-xl font-bold text-gray-900 mb-2">
-                  <EditableText page="events" section="guidelines" contentKey="card1_title" initialValue={initialContent?.guidelines?.card1_title} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-xl font-bold text-gray-900 mb-2" />
+                  <EditableText page="weekly" section="guidelines" contentKey="card1_title" initialValue={initialContent?.guidelines?.card1_title} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-xl font-bold text-gray-900 mb-2" /> {/* 페이지를 'weekly'로 변경 */}
                 </h3>
                 <div className="text-gray-600">
-                  <EditableText page="events" section="guidelines" contentKey="card1_description" initialValue={initialContent?.guidelines?.card1_description} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-gray-600" />
+                  <EditableText page="weekly" section="guidelines" contentKey="card1_description" initialValue={initialContent?.guidelines?.card1_description} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-gray-600" /> {/* 페이지를 'weekly'로 변경 */}
                 </div>
               </CardContent>
             </Card>
@@ -368,10 +399,10 @@ export default function EventsPageClient({ initialEvents, initialContent }: Even
               <CardContent className="p-6">
                 <Heart className="h-12 w-12 text-red-600 mx-auto mb-4" />
                 <h3 className="text-xl font-bold text-gray-900 mb-2">
-                  <EditableText page="events" section="guidelines" contentKey="card2_title" initialValue={initialContent?.guidelines?.card2_title} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-xl font-bold text-gray-900 mb-2" />
+                  <EditableText page="weekly" section="guidelines" contentKey="card2_title" initialValue={initialContent?.guidelines?.card2_title} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-xl font-bold text-gray-900 mb-2" /> {/* 페이지를 'weekly'로 변경 */}
                 </h3>
                 <div className="text-gray-600">
-                  <EditableText page="events" section="guidelines" contentKey="card2_description" initialValue={initialContent?.guidelines?.card2_description} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-gray-600" />
+                  <EditableText page="weekly" section="guidelines" contentKey="card2_description" initialValue={initialContent?.guidelines?.card2_description} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-gray-600" /> {/* 페이지를 'weekly'로 변경 */}
                 </div>
               </CardContent>
             </Card>
@@ -379,10 +410,10 @@ export default function EventsPageClient({ initialEvents, initialContent }: Even
               <CardContent className="p-6">
                 <MapPin className="h-12 w-12 text-green-600 mx-auto mb-4" />
                 <h3 className="text-xl font-bold text-gray-900 mb-2">
-                  <EditableText page="events" section="guidelines" contentKey="card3_title" initialValue={initialContent?.guidelines?.card3_title} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-xl font-bold text-gray-900 mb-2" />
+                  <EditableText page="weekly" section="guidelines" contentKey="card3_title" initialValue={initialContent?.guidelines?.card3_title} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-xl font-bold text-gray-900 mb-2" /> {/* 페이지를 'weekly'로 변경 */}
                 </h3>
                 <div className="text-gray-600">
-                  <EditableText page="events" section="guidelines" contentKey="card3_description" initialValue={initialContent?.guidelines?.card3_description} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-gray-600" />
+                  <EditableText page="weekly" section="guidelines" contentKey="card3_description" initialValue={initialContent?.guidelines?.card3_description} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-gray-600" /> {/* 페이지를 'weekly'로 변경 */}
                 </div>
               </CardContent>
             </Card>
@@ -394,10 +425,10 @@ export default function EventsPageClient({ initialEvents, initialContent }: Even
       <section className="py-16 px-4 text-center bg-gray-50">
         <div className="container mx-auto">
           <h2 className="text-3xl font-bold text-gray-900 mb-6">
-            <EditableText page="events" section="cta" contentKey="title" initialValue={initialContent?.cta?.title} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-3xl font-bold text-gray-900 mb-6" />
+            <EditableText page="weekly" section="cta" contentKey="title" initialValue={initialContent?.cta?.title} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-3xl font-bold text-gray-900 mb-6" /> {/* 페이지를 'weekly'로 변경 */}
           </h2>
           <div className="text-xl text-gray-600 mb-8">
-            <EditableText page="events" section="cta" contentKey="description" initialValue={initialContent?.cta?.description} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-xl text-gray-600 mb-8" />
+            <EditableText page="weekly" section="cta" contentKey="description" initialValue={initialContent?.cta?.description} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-xl text-gray-600 mb-8" /> {/* 페이지를 'weekly'로 변경 */}
           </div>
           <div className="space-x-4">
             <Button asChild size="lg" className="bg-blue-600 hover:bg-blue-700">

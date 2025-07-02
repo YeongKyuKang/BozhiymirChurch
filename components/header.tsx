@@ -1,3 +1,4 @@
+// yeongkyukang/bozhiymirchurch/BozhiymirChurch-3007c4235d54890bd3db6acc74558b701965297b/components/header.tsx
 "use client"
 
 import { useState } from "react"
@@ -17,6 +18,8 @@ import { useRouter } from "next/navigation"
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isAboutOpen, setIsAboutOpen] = useState(false)
+  const [isEventsOpen, setIsEventsOpen] = useState(false)
+  const [isFaithOpen, setIsFaithOpen] = useState(false) // FAITH 드롭다운 상태 다시 추가
   const { user, userProfile, userRole, signOut } = useAuth()
   const router = useRouter()
 
@@ -25,6 +28,18 @@ export default function Header() {
     { name: "BELIEFS", href: "/beliefs" },
     { name: "OUR STORY", href: "/story" },
     { name: "UKRAINIAN MINISTRY", href: "/ukrainian-ministry" },
+    { name: "JESUS", href: "/jesus" }, // JESUS 페이지 링크 경로 유지
+  ]
+
+  const eventItems = [
+    { name: "WEEKLY", href: "/weekly" },
+    { name: "SPECIFIC EVENTS", href: "/events" },
+  ]
+
+  const faithItems = [ // FAITH 하위 메뉴 다시 구성
+    { name: "THANKS", href: "/thanks" },
+    { name: "WORD", href: "/word" },
+    { name: "PRAYER", href: "/prayer" },
   ]
 
   const handleSignOut = async () => {
@@ -74,6 +89,7 @@ export default function Header() {
                       key={item.name}
                       href={item.href}
                       className="block px-4 py-3 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                      onClick={() => setIsAboutOpen(false)}
                     >
                       {item.name}
                     </Link>
@@ -82,12 +98,65 @@ export default function Header() {
               </div>
             </div>
 
-            <Link
-              href="/events"
-              className="text-white text-sm font-medium hover:text-blue-300 transition-colors tracking-wide"
+            {/* Events Dropdown */}
+            <div
+              className="relative group"
+              onMouseEnter={() => setIsEventsOpen(true)}
+              onMouseLeave={() => setIsEventsOpen(false)}
             >
-              EVENTS
-            </Link>
+              <button className="flex items-center text-white text-sm font-medium hover:text-blue-300 transition-colors tracking-wide">
+                EVENTS
+                <ChevronDown className="ml-1 h-4 w-4" />
+              </button>
+
+              <div
+                className={`absolute top-full left-0 mt-2 transition-all duration-200 ${isEventsOpen ? "opacity-100 visible" : "opacity-0 invisible"}`}
+              >
+                <div className="w-64 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50">
+                  {eventItems.map((item) => (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      className="block px-4 py-3 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                      onClick={() => setIsEventsOpen(false)}
+                    >
+                      {item.name}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Faith Dropdown */}
+            <div
+              className="relative group"
+              onMouseEnter={() => setIsFaithOpen(true)}
+              onMouseLeave={() => setIsFaithOpen(false)}
+            >
+              <button className="flex items-center text-white text-sm font-medium hover:text-blue-300 transition-colors tracking-wide">
+                FAITH
+                <ChevronDown className="ml-1 h-4 w-4" />
+              </button>
+
+              <div
+                className={`absolute top-full left-0 mt-2 transition-all duration-200 ${isFaithOpen ? "opacity-100 visible" : "opacity-0 invisible"}`}
+              >
+                <div className="w-64 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50">
+                  {faithItems.map((item) => (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      className="block px-4 py-3 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                      onClick={() => setIsFaithOpen(false)}
+                    >
+                      {item.name}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+
             <Link
               href="/communityboard"
               className="text-white text-sm font-medium hover:text-blue-300 transition-colors tracking-wide"
@@ -114,6 +183,7 @@ export default function Header() {
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
+                  {/* Removed span wrapper, rely on Button to handle multiple children */}
                   <Button variant="ghost" size="sm" className="text-white hover:bg-white/10">
                     <User className="h-4 w-4 mr-2" />
                     {userProfile?.nickname || user.email}
@@ -130,6 +200,7 @@ export default function Header() {
                   )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleSignOut}>
+                    {/* Removed span wrapper, rely on DropdownMenuItem to handle multiple children */}
                     <LogOut className="h-4 w-4 mr-2" />
                     Sign Out
                   </DropdownMenuItem>
@@ -184,7 +255,7 @@ export default function Header() {
                         key={item.name}
                         href={item.href}
                         className="block text-white/80 text-sm py-1 hover:text-blue-300"
-                        onClick={() => setIsMenuOpen(false)}
+                        onClick={() => { setIsMenuOpen(false); setIsAboutOpen(false); }}
                       >
                         {item.name}
                       </Link>
@@ -193,13 +264,57 @@ export default function Header() {
                 )}
               </div>
 
-              <Link
-                href="/events"
-                className="text-white text-sm font-medium py-2 hover:text-blue-300"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                EVENTS
-              </Link>
+              {/* Mobile Events Section */}
+              <div>
+                <button
+                  onClick={() => setIsEventsOpen(!isEventsOpen)}
+                  className="flex items-center justify-between w-full text-white text-sm font-medium py-2"
+                >
+                  EVENTS
+                  <ChevronDown className={`h-4 w-4 transition-transform ${isEventsOpen ? "rotate-180" : ""}`} />
+                </button>
+                {isEventsOpen && (
+                  <div className="ml-4 mt-2 space-y-2">
+                    {eventItems.map((item) => (
+                      <Link
+                        key={item.name}
+                        href={item.href}
+                        className="block text-white/80 text-sm py-1 hover:text-blue-300"
+                        onClick={() => { setIsMenuOpen(false); setIsEventsOpen(false); }}
+                      >
+                        {item.name}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Mobile Faith Section */}
+              <div>
+                <button
+                  onClick={() => setIsFaithOpen(!isFaithOpen)}
+                  className="flex items-center justify-between w-full text-white text-sm font-medium py-2"
+                >
+                  FAITH
+                  <ChevronDown className={`h-4 w-4 transition-transform ${isFaithOpen ? "rotate-180" : ""}`} />
+                </button>
+                {isFaithOpen && (
+                  <div className="ml-4 mt-2 space-y-2">
+                    {faithItems.map((item) => (
+                      <Link
+                        key={item.name}
+                        href={item.href}
+                        className="block text-white/80 text-sm py-1 hover:text-blue-300"
+                        onClick={() => { setIsMenuOpen(false); setIsFaithOpen(false); }}
+                      >
+                        {item.name}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+
               <Link
                 href="/communityboard"
                 className="text-white text-sm font-medium py-2 hover:text-blue-300"
@@ -239,6 +354,8 @@ export default function Header() {
                     onClick={handleSignOut}
                     className="block text-white text-sm font-medium py-2 hover:text-blue-300 w-full text-left"
                   >
+                    {/* Removed span wrapper */}
+                    <LogOut className="h-4 w-4 mr-2" />
                     Sign Out
                   </button>
                 </div>
