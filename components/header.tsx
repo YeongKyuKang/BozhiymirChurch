@@ -19,7 +19,7 @@ export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isAboutOpen, setIsAboutOpen] = useState(false)
   const [isEventsOpen, setIsEventsOpen] = useState(false)
-  const [isFaithOpen, setIsFaithOpen] = useState(false) // FAITH 드롭다운 상태 다시 추가
+  const [isFaithOpen, setIsFaithOpen] = useState(false)
   const { user, userProfile, userRole, signOut } = useAuth()
   const router = useRouter()
 
@@ -28,7 +28,7 @@ export default function Header() {
     { name: "BELIEFS", href: "/beliefs" },
     { name: "OUR STORY", href: "/story" },
     { name: "UKRAINIAN MINISTRY", href: "/ukrainian-ministry" },
-    { name: "JESUS", href: "/jesus" }, // JESUS 페이지 링크 경로 유지
+    { name: "JESUS", href: "/jesus" },
   ]
 
   const eventItems = [
@@ -36,7 +36,7 @@ export default function Header() {
     { name: "SPECIFIC EVENTS", href: "/events" },
   ]
 
-  const faithItems = [ // FAITH 하위 메뉴 다시 구성
+  const faithItems = [
     { name: "THANKS", href: "/thanks" },
     { name: "WORD", href: "/word" },
     { name: "PRAYER", href: "/prayer" },
@@ -44,7 +44,7 @@ export default function Header() {
 
   const handleSignOut = async () => {
     await signOut()
-    router.push('/') // Redirect to the main homepage after signing out
+    router.push('/')
   }
 
   return (
@@ -156,13 +156,13 @@ export default function Header() {
               </div>
             </div>
 
-
-            <Link
+            {/* COMMUNITY BOARD 링크 제거 */}
+            {/* <Link
               href="/communityboard"
               className="text-white text-sm font-medium hover:text-blue-300 transition-colors tracking-wide"
             >
               COMMUNITY BOARD
-            </Link>
+            </Link> */}
             <Link
               href="/join"
               className="text-white text-sm font-medium hover:text-blue-300 transition-colors tracking-wide"
@@ -183,10 +183,12 @@ export default function Header() {
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  {/* Removed span wrapper, rely on Button to handle multiple children */}
+                  {/* Wrap icon and text in a span */}
                   <Button variant="ghost" size="sm" className="text-white hover:bg-white/10">
-                    <User className="h-4 w-4 mr-2" />
-                    {userProfile?.nickname || user.email}
+                    <span className="flex items-center">
+                      <User className="h-4 w-4 mr-2" />
+                      {userProfile?.nickname || user.email}
+                    </span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
@@ -200,9 +202,11 @@ export default function Header() {
                   )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleSignOut}>
-                    {/* Removed span wrapper, rely on DropdownMenuItem to handle multiple children */}
-                    <LogOut className="h-4 w-4 mr-2" />
-                    Sign Out
+                    {/* Wrap icon and text in a span */}
+                    <span className="flex items-center">
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Sign Out
+                    </span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -314,14 +318,14 @@ export default function Header() {
                 )}
               </div>
 
-
-              <Link
+              {/* COMMUNITY BOARD 링크 제거 */}
+              {/* <Link
                 href="/communityboard"
                 className="text-white text-sm font-medium py-2 hover:text-blue-300"
                 onClick={() => setIsMenuOpen(false)}
               >
                 COMMUNITY BOARD
-              </Link>
+              </Link> */}
               <Link
                 href="/join"
                 className="text-white text-sm font-medium py-2 hover:text-blue-300"
@@ -354,9 +358,11 @@ export default function Header() {
                     onClick={handleSignOut}
                     className="block text-white text-sm font-medium py-2 hover:text-blue-300 w-full text-left"
                   >
-                    {/* Removed span wrapper */}
-                    <LogOut className="h-4 w-4 mr-2" />
-                    Sign Out
+                    {/* Wrap icon and text in a span */}
+                    <span className="flex items-center">
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Sign Out
+                    </span>
                   </button>
                 </div>
               ) : (
