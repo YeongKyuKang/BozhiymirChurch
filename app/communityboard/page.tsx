@@ -9,7 +9,7 @@ import { Plus, Eye, Heart, MessageCircle } from "lucide-react"
 import Header from "@/components/header"
 import Footer from "@/components/footer"
 import EditableText from "@/components/editable-text"
-import CommunityBoardPageClient from "@/components/communityboard-page-client" // 새로 생성할 클라이언트 컴포넌트 import
+import CommunityBoardPageClient from "@/components/community-board-client" // 새로 생성할 클라이언트 컴포넌트 import
 
 // 이 함수는 서버에서만 실행되어 페이지에 필요한 모든 데이터를 미리 가져옵니다.
 async function fetchCommunityData() {
