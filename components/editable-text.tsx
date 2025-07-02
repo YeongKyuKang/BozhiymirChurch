@@ -1,4 +1,4 @@
-"use client";
+"use client"; // 이 파일은 클라이언트 컴포넌트임을 명시합니다.
 
 import * as React from "react";
 import { useState, useEffect } from "react";
@@ -19,7 +19,10 @@ interface EditableTextProps {
   tag?: keyof JSX.IntrinsicElements;
   className?: string;
   isTextArea?: boolean;
-  placeholder?: string; // Add placeholder prop
+  placeholder?: string;
+  // New props for global edit mode
+  isEditingPage?: boolean; // Indicates if the parent page is in global edit mode
+  onContentChange?: (section: string, key: string, value: string) => void; // Callback to report changes
 }
 
 const EditableText: React.FC<EditableTextProps> = ({
@@ -30,13 +33,14 @@ const EditableText: React.FC<EditableTextProps> = ({
   tag: Tag = "span",
   className,
   isTextArea = false,
-  placeholder, // Destructure new prop
+  placeholder,
+  isEditingPage = false, // Default to false if not provided
+  onContentChange, // Destructure the callback
 }) => {
   const { userRole, loading: authLoading } = useAuth();
-  // Fetch content on the client side only for updates, not initial load
+  // `useContent`는 이제 초기 패칭이 아닌, 업데이트 로직에만 사용됩니다.
   const { content, updateContent } = useContent(page, section);
   
-  const [isEditing, setIsEditing] = useState(false);
   const [editedValue, setEditedValue] = useState(initialValue || ""); // Initialize with initialValue
   const [isUpdating, setIsUpdating] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
@@ -75,54 +79,54 @@ const EditableText: React.FC<EditableTextProps> = ({
   // Enter edit mode: ensure editedValue is the current display text
   const enterEditMode = () => {
     setEditedValue(editedValue); // Use the current state value
-    setIsEditing(true);
+    // Since this is called when isEditingPage is true, it simply reports the change
+    if (onContentChange) {
+      onContentChange(section, contentKey, editedValue);
+    }
   };
 
-  // Admin editing mode
-  if (isEditing && userRole === "admin") {
+  // Admin editing mode (input field appears)
+  if (isEditingPage && userRole === "admin") {
     const InputComponent = isTextArea ? Textarea : Input;
     return (
       <div className="relative flex flex-col gap-2 p-4 border-2 border-dashed border-blue-400 rounded-md bg-white/50">
         <InputComponent
           value={editedValue}
-          onChange={(e) => setEditedValue(e.target.value)}
+          onChange={handleInputChange} // Use the new handler
           className={cn(className, "w-full", "text-gray-900")}
           rows={isTextArea ? 5 : undefined}
           placeholder={placeholder || "내용을 입력하세요..."}
         />
-        <div className="flex gap-2 justify-end">
-          <Button size="sm" onClick={handleSave} disabled={isUpdating} className="bg-green-600 hover:bg-green-700">
-            {isUpdating ? '저장 중...' : '저장'}
-          </Button>
-          <Button size="sm" variant="outline" onClick={handleCancel} disabled={isUpdating}>
-            취소
-          </Button>
-        </div>
+        {/* Individual Save/Cancel buttons removed here as per batch save design */}
       </div>
     );
   }
 
   // View mode (consistent structure for server & client)
-  const isEditable = userRole === "admin";
+  // 개별 편집 표시 (노버 효과, 연필 아이콘)는 isEditingPage가 true일 때만 나타나도록 수정
+  const showIndividualEditIndicator = userRole === "admin" && isEditingPage;
+
   return (
     <div
       className={cn(
         "relative",
-        isEditable ? "group/edit" : ""
+        showIndividualEditIndicator ? "group/edit" : ""
       )}
     >
       <Tag
-        className={cn(className, isEditable ? "group-hover/edit:bg-yellow-100 transition-colors cursor-pointer p-1 rounded-md" : "")}
-        onDoubleClick={isEditable ? enterEditMode : undefined}
+        className={cn(className, showIndividualEditIndicator ? "group-hover/edit:bg-yellow-100 transition-colors cursor-pointer p-1 rounded-md" : "")}
+        // 더블클릭은 isEditingPage가 true일 때만 변경 보고를 트리거합니다.
+        onDoubleClick={showIndividualEditIndicator ? enterEditMode : undefined}
       >
         {displayValue}
       </Tag>
-      {isEditable && (
+      {/* 개별 편집 버튼은 showIndividualEditIndicator가 true일 때만 나타납니다. */}
+      {showIndividualEditIndicator && (
         <Button
           variant="ghost"
           size="icon"
           className="absolute top-1 right-1 opacity-0 group-hover/edit:opacity-100 transition-opacity"
-          onClick={enterEditMode}
+          onClick={enterEditMode} // 클릭 시 변경 보고를 트리거합니다.
         >
           <Edit className="h-4 w-4" />
         </Button>
