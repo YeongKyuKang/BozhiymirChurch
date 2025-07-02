@@ -9,6 +9,7 @@ import { Plus, Eye, Heart, MessageCircle } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 import Header from "@/components/header"
 import Footer from "@/components/footer"
+import EditableText from "@/components/editable-text"
 
 interface Post {
   id: string
@@ -31,15 +32,37 @@ export default function CommunityBoardPage() {
   const [posts, setPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  
+  // TypeScript 오류 해결: useState에 명시적인 타입을 지정합니다.
+  const [initialContent, setInitialContent] = useState<Record<string, Record<string, string>>>({});
 
   useEffect(() => {
-    fetchPosts()
-  }, [])
+    // Client-side fetch for posts list
+    fetchPosts();
+    // Client-side fetch for content, needed by EditableText component
+    fetchCommunityContentClient();
+  }, []);
+
+  const fetchCommunityContentClient = async () => {
+      const { data, error } = await supabase
+        .from('content')
+        .select('*')
+        .eq('page', 'communityboard');
+      if (error) {
+          console.error("Error fetching client content:", error);
+      } else {
+          const contentMap: Record<string, any> = {};
+          data.forEach(item => {
+              if (!contentMap[item.section]) contentMap[item.section] = {};
+              contentMap[item.section][item.key] = item.value;
+          });
+          setInitialContent(contentMap);
+      }
+  };
+
 
   const fetchPosts = async () => {
     setLoading(true)
-    // Specify the relationship to use by aliasing the users table and providing the foreign key name.
-    // This resolves the ambiguity caused by multiple relationships to the users table.
     const { data, error } = await supabase
       .from("posts")
       .select(`
@@ -63,7 +86,6 @@ export default function CommunityBoardPage() {
       setError("Failed to load posts: " + error.message)
       console.error(error)
     } else {
-      // Map the data to include the comment count and ensure 'users' is a single object.
       const postsWithMappedData = data.map((rawPost: any) => {
         const userProfile = rawPost.users && rawPost.users.length > 0 ? rawPost.users[0] : { nickname: null, profile_picture_url: null };
         
@@ -120,10 +142,10 @@ export default function CommunityBoardPage() {
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h1 className="text-5xl font-bold text-gray-900 mb-6">
-              Our <span className="text-blue-600">Community Board</span>
+              <EditableText page="communityboard" section="main" contentKey="title" initialValue={initialContent?.main?.title} tag="span" className="text-5xl font-bold text-gray-900 mb-6" />
             </h1>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
-              Share and discuss ministry stories, events, and community activities. Your thoughts and stories help our church family grow.
+              <EditableText page="communityboard" section="main" contentKey="description" initialValue={initialContent?.main?.description} tag="span" className="text-xl text-gray-600 max-w-3xl mx-auto mb-8" />
             </p>
           </div>
 

@@ -15,6 +15,7 @@ interface EditableTextProps {
   page: string;
   section: string;
   contentKey: string;
+  initialValue?: string; // New prop for the initial server-rendered value
   tag?: keyof JSX.IntrinsicElements;
   className?: string;
   isTextArea?: boolean;
@@ -24,42 +25,48 @@ const EditableText: React.FC<EditableTextProps> = ({
   page,
   section,
   contentKey,
+  initialValue,
   tag: Tag = "span",
   className,
   isTextArea = false,
 }) => {
   const { userRole, loading: authLoading } = useAuth();
-  const { content, loading: contentLoading, updateContent } = useContent(page, section);
+  // Fetch content on the client side only for updates, not initial load
+  // `useContent`는 관리자 편집 후 DB 업데이트를 위해 유지합니다.
+  const { content, updateContent } = useContent(page, section);
+  
   const [isEditing, setIsEditing] = useState(false);
-  const [editedValue, setEditedValue] = useState("");
+  const [editedValue, setEditedValue] = useState(initialValue || "");
+  const [isUpdating, setIsUpdating] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    setIsMounted(true); // This runs only on the client after hydration
-    if (!contentLoading && content[contentKey] !== undefined) {
+    setIsMounted(true);
+    // 이펙트를 통해 editedValue를 업데이트된 content로 동기화합니다 (저장 후 UI 갱신).
+    if (content[contentKey] !== undefined && content[contentKey] !== editedValue) {
       setEditedValue(content[contentKey]);
     }
-  }, [content, contentKey, contentLoading]);
+  }, [content, contentKey]);
+  
+  // Use the initialValue from the prop for the first render
+  const displayValue = editedValue ?? initialValue ?? "콘텐츠를 찾을 수 없습니다.";
+
+  // 로딩 상태 처리: initialValue가 아직 서버에서 전달되지 않았을 때만 스켈레톤을 보여줍니다.
+  if (!isMounted && initialValue === undefined) {
+    return <Skeleton className={cn(className, "h-6 w-full max-w-lg")} />;
+  }
 
   const handleSave = async () => {
-    console.log(`[EditableText] Saving content for key: ${contentKey}, value: ${editedValue}`);
+    setIsUpdating(true);
     await updateContent(contentKey, editedValue, section);
     setIsEditing(false);
+    setIsUpdating(false);
   };
 
   const handleCancel = () => {
-    setEditedValue(content[contentKey]);
+    setEditedValue(initialValue || "");
     setIsEditing(false);
   };
-  
-  // Display value from DB or fallback
-  const displayValue = content[contentKey] ?? "콘텐츠를 찾을 수 없습니다.";
-
-  // Show skeleton while loading data or authenticating for the first time
-  if (!isMounted || authLoading || contentLoading) {
-    console.log(`[EditableText] Rendering Skeleton. isMounted: ${isMounted}, authLoading: ${authLoading}, contentLoading: ${contentLoading}`);
-    return <Skeleton className={cn(className, "h-6 w-full max-w-lg")} />;
-  }
 
   // Admin editing mode
   if (isEditing && userRole === "admin") {
@@ -73,12 +80,10 @@ const EditableText: React.FC<EditableTextProps> = ({
           rows={isTextArea ? 5 : undefined}
         />
         <div className="flex gap-2 justify-end">
-          <Button size="sm" onClick={handleSave} className="bg-green-600 hover:bg-green-700">
-            <Save className="h-4 w-4 mr-1" />
-            저장
+          <Button size="sm" onClick={handleSave} disabled={isUpdating} className="bg-green-600 hover:bg-green-700">
+            {isUpdating ? '저장 중...' : '저장'}
           </Button>
-          <Button size="sm" variant="outline" onClick={handleCancel}>
-            <X className="h-4 w-4 mr-1" />
+          <Button size="sm" variant="outline" onClick={handleCancel} disabled={isUpdating}>
             취소
           </Button>
         </div>

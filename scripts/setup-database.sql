@@ -423,6 +423,42 @@ INSERT INTO public.content (page, section, key, value) VALUES
 ('beliefs', 'cta', 'cta_title', 'Want to Learn More?'),
 ('beliefs', 'cta', 'cta_description', 'Join us for worship and discover how these beliefs come alive in our church community.'),
 
+-- Story page content (***수정되어 추가된 부분***)
+('story', 'main', 'title', 'Our Story'),
+('story', 'main', 'description', 'From humble beginnings to a thriving community church, discover how God has been faithful in building Bozhiymir Church into a beacon of hope in Portland.'),
+('story', 'mission', 'mission_title', 'Our Mission'),
+('story', 'mission', 'mission_quote', '"To be a loving church family that welcomes all people, shares the Gospel of Jesus Christ, and serves our community with special care for the vulnerable, including Ukrainian orphan children."'),
+('story', 'timeline', 'timeline_title', 'Our Journey'),
+('story', 'timeline', 'timeline_2010_title', 'Church Founded'),
+('story', 'timeline', 'timeline_2010_description', 'Bozhiymir Church was established in Portland with a vision to serve the diverse community.'),
+('story', 'timeline', 'timeline_2015_title', 'Community Growth'),
+('story', 'timeline', 'timeline_2015_description', 'Our congregation grew to over 100 members, representing 12 different countries.'),
+('story', 'timeline', 'timeline_2018_title', 'Youth Ministry Launch'),
+('story', 'timeline', 'timeline_2018_description', 'Started dedicated programs for children and teenagers in our community.'),
+('story', 'timeline', 'timeline_2022_title', 'Ukrainian Ministry Begins'),
+('story', 'timeline', 'timeline_2022_description', 'In response to the Ukrainian crisis, we began our ministry to support Ukrainian orphan children.'),
+('story', 'timeline', 'timeline_2024_title', 'Expanding Impact'),
+('story', 'timeline', 'timeline_2024_description', 'Now supporting 47 Ukrainian children and 25 host families in the Portland area.'),
+('story', 'values', 'values_title', 'Our Core Values'),
+('story', 'values', 'value1_title', 'Love'),
+('story', 'values', 'value1_description', 'Showing Christ''s love to all people, especially the vulnerable.'),
+('story', 'values', 'value2_title', 'Community'),
+('story', 'values', 'value2_description', 'Building authentic relationships and welcoming all backgrounds.'),
+('story', 'values', 'value3_title', 'Service'),
+('story', 'values', 'value3_description', 'Serving locally and globally with hands-on compassion.'),
+('story', 'values', 'value4_title', 'Hope'),
+('story', 'values', 'value4_description', 'Bringing hope through the Gospel and practical care.'),
+('story', 'ministry_highlight', 'highlight_title', 'A Special Calling'),
+('story', 'ministry_highlight', 'highlight_description', 'When the Ukrainian crisis began, God placed a special burden on our hearts for Ukrainian orphan children. Today, this ministry is central to who we are as Bozhiymir Church.'),
+('story', 'ministry_highlight', 'stat1_number', '47'),
+('story', 'ministry_highlight', 'stat1_label', 'Children Supported'),
+('story', 'ministry_highlight', 'stat2_number', '25'),
+('story', 'ministry_highlight', 'stat2_label', 'Host Families'),
+('story', 'ministry_highlight', 'highlight_quote', '"Religion that God our Father accepts as pure and faultless is this: to look after orphans and widows in their distress." - James 1:27'),
+('story', 'cta', 'cta_title', 'Be Part of Our Story'),
+('story', 'cta', 'cta_description', 'God is still writing the story of Bozhiymir Church. We''d love for you to be part of the next chapter.'),
+
+
 -- Leadership page content
 ('leadership', 'main', 'title', 'Our Leadership'),
 ('leadership', 'main', 'description', 'Meet the dedicated leaders who guide Bozhiymir Church with wisdom, compassion, and a heart for serving our community and Ukrainian children.'),
@@ -439,10 +475,6 @@ INSERT INTO public.content (page, section, key, value) VALUES
 ('leadership', 'values', 'value3_description', 'Serving locally while thinking globally, especially for Ukrainian children.'),
 ('leadership', 'contact', 'title', 'Connect with Our Leaders'),
 ('leadership', 'contact', 'description', 'Our leadership team is here to serve you. Don''t hesitate to reach out with questions or prayer requests.'),
-
--- Portland Community page content
-('portland-community', 'main', 'title', 'Portland Community'),
-('portland-community', 'main', 'description', 'Bozhiymir Church is a beacon of hope in the Portland community.'),
 
 -- Ukrainian Ministry page content
 ('ukrainian-ministry', 'main', 'title', 'Ukrainian Children Ministry'),

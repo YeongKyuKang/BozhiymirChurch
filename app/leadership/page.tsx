@@ -1,5 +1,5 @@
-"use client";
-
+// app/leadership/page.tsx
+// "use client" 지시문 제거
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Mail, Phone, Heart, Globe, BookOpen } from "lucide-react"
@@ -8,8 +8,33 @@ import Image from "next/image"
 import Header from "@/components/header"
 import Footer from "@/components/footer"
 import EditableText from "@/components/editable-text";
+import { supabase } from "@/lib/supabase" // 서버 컴포넌트에서 DB 패칭을 위해 추가
 
-export default function LeadershipPage() {
+async function fetchLeadershipContent() {
+  const { data, error } = await supabase
+    .from('content')
+    .select('page, section, key, value')
+    .eq('page', 'leadership');
+    
+  if (error) {
+    console.error('Failed to fetch leadership content on the server:', error);
+    return {};
+  }
+  
+  const contentMap: Record<string, any> = {};
+  data.forEach(item => {
+    if (!contentMap[item.section]) {
+      contentMap[item.section] = {};
+    }
+    contentMap[item.section][item.key] = item.value;
+  });
+  
+  return contentMap;
+}
+
+export default async function LeadershipPage() {
+  const content = await fetchLeadershipContent();
+
   const leaders = [
     {
       name: "Pastor Michael Johnson",
@@ -59,20 +84,26 @@ export default function LeadershipPage() {
         {/* Hero Section */}
         <section className="py-16 px-4 pt-32">
           <div className="container mx-auto text-center">
-            <EditableText
-              page="leadership"
-              section="main"
-              contentKey="title"
-              tag="h1"
-              className="text-5xl font-bold text-gray-900 mb-6"
-            />
-            <EditableText
-              page="leadership"
-              section="main"
-              contentKey="description"
-              tag="p"
-              className="text-xl text-gray-600 max-w-3xl mx-auto mb-8"
-            />
+            <h1 className="text-5xl font-bold text-gray-900 mb-6">
+              <EditableText
+                  page="leadership"
+                  section="main"
+                  contentKey="title"
+                  initialValue={content?.main?.title}
+                  tag="span"
+                  className="text-5xl font-bold text-gray-900"
+              />
+            </h1>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
+              <EditableText
+                  page="leadership"
+                  section="main"
+                  contentKey="description"
+                  initialValue={content?.main?.description}
+                  tag="span"
+                  className="text-xl text-gray-600 max-w-3xl mx-auto mb-8"
+              />
+            </p>
             <div className="flex items-center justify-center space-x-2 text-blue-600">
               <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
               <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
@@ -97,15 +128,17 @@ export default function LeadershipPage() {
                     </div>
 
                     <div className="p-6">
-                      <EditableText
-                        page="leadership"
-                        section="bios"
-                        contentKey={leader.bio_key}
-                        tag="p"
-                        className="text-gray-600 mb-4 leading-relaxed"
-                        isTextArea={true}
-                      />
-
+                      <p className="text-gray-600 mb-4 leading-relaxed">
+                        <EditableText
+                          page="leadership"
+                          section="bios"
+                          contentKey={leader.bio_key}
+                          initialValue={content?.bios?.[leader.bio_key]}
+                          tag="span"
+                          className="text-gray-600 mb-4 leading-relaxed"
+                          isTextArea={true}
+                        />
+                      </p>
                       <div className="mb-4">
                         <h4 className="font-semibold text-gray-900 mb-2">Specialties:</h4>
                         <div className="flex flex-wrap gap-2">
@@ -144,34 +177,41 @@ export default function LeadershipPage() {
           <div className="container mx-auto">
             <h2 className="text-3xl font-bold text-center mb-12">
               <EditableText
-                page="leadership"
-                section="values"
-                contentKey="title"
-                tag="span"
-                className="text-white"
+                  page="leadership"
+                  section="values"
+                  contentKey="title"
+                  initialValue={content?.values?.title}
+                  tag="span"
+                  className="text-white"
               />
             </h2>
             <div className="grid md:grid-cols-3 gap-8">
               <div className="text-center">
                 <Heart className="h-12 w-12 mx-auto mb-4 text-yellow-400" />
                 <h3 className="text-xl font-bold mb-2">
-                  <EditableText page="leadership" section="values" contentKey="value1_title" tag="span" className="text-white" />
+                  <EditableText page="leadership" section="values" contentKey="value1_title" initialValue={content?.values?.value1_title} tag="span" className="text-white" />
                 </h3>
-                <EditableText page="leadership" section="values" contentKey="value1_description" tag="p" className="opacity-90" />
+                <p className="opacity-90">
+                  <EditableText page="leadership" section="values" contentKey="value1_description" initialValue={content?.values?.value1_description} tag="span" className="opacity-90" />
+                </p>
               </div>
               <div className="text-center">
                 <BookOpen className="h-12 w-12 mx-auto mb-4 text-yellow-400" />
                 <h3 className="text-xl font-bold mb-2">
-                  <EditableText page="leadership" section="values" contentKey="value2_title" tag="span" className="text-white" />
+                  <EditableText page="leadership" section="values" contentKey="value2_title" initialValue={content?.values?.value2_title} tag="span" className="text-white" />
                 </h3>
-                <EditableText page="leadership" section="values" contentKey="value2_description" tag="p" className="opacity-90" />
+                <p className="opacity-90">
+                  <EditableText page="leadership" section="values" contentKey="value2_description" initialValue={content?.values?.value2_description} tag="span" className="opacity-90" />
+                </p>
               </div>
               <div className="text-center">
                 <Globe className="h-12 w-12 mx-auto mb-4 text-yellow-400" />
                 <h3 className="text-xl font-bold mb-2">
-                  <EditableText page="leadership" section="values" contentKey="value3_title" tag="span" className="text-white" />
+                  <EditableText page="leadership" section="values" contentKey="value3_title" initialValue={content?.values?.value3_title} tag="span" className="text-white" />
                 </h3>
-                <EditableText page="leadership" section="values" contentKey="value3_description" tag="p" className="opacity-90" />
+                <p className="opacity-90">
+                  <EditableText page="leadership" section="values" contentKey="value3_description" initialValue={content?.values?.value3_description} tag="span" className="opacity-90" />
+                </p>
               </div>
             </div>
           </div>
@@ -181,10 +221,10 @@ export default function LeadershipPage() {
         <section className="py-16 px-4 text-center">
           <div className="container mx-auto">
             <h2 className="text-3xl font-bold text-gray-900 mb-6">
-              <EditableText page="leadership" section="contact" contentKey="title" tag="span" className="text-gray-900" />
+              <EditableText page="leadership" section="contact" contentKey="title" initialValue={content?.contact?.title} tag="span" className="text-gray-900" />
             </h2>
             <p className="text-xl text-gray-600 mb-8">
-              <EditableText page="leadership" section="contact" contentKey="description" tag="span" className="text-gray-600" />
+              <EditableText page="leadership" section="contact" contentKey="description" initialValue={content?.contact?.description} tag="span" className="text-gray-600" />
             </p>
             <div className="space-x-4">
               <Button asChild size="lg" className="bg-blue-600 hover:bg-blue-700">
