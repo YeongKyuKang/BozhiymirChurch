@@ -9,9 +9,9 @@ import ThanksPageClient from "@/components/thanks-page-client";
 export const revalidate = 60; 
 
 // Next.js PageProps 타입을 정의하여 searchParams의 타입을 명확히 합니다.
-// Next.js 13의 App Router에서 searchParams는 이미 해결된 객체로 전달됩니다.
+// 서버 컴포넌트의 searchParams는 이미 해결된 객체로 전달되므로 Promise 타입은 필요 없습니다.
 interface PageProps {
-  searchParams?: { [key: string]: string | string[] | undefined }; // Promise<any> 제거
+  searchParams?: { [key: string]: string | string[] | undefined };
 }
 
 async function fetchThanksContentAndPosts(searchParams: { [key: string]: string | string[] | undefined }) {
@@ -51,7 +51,7 @@ async function fetchThanksContentAndPosts(searchParams: { [key: string]: string 
   }
 
   // searchParams는 이미 해결된 객체로 전달되므로 Promise.resolve()가 필요 없습니다.
-  const { time, role, date, sort, timezoneOffset } = searchParams; // Promise.resolve 제거
+  const { time, role, date, sort, timezoneOffset } = searchParams;
 
   const timeFilter = time as string || 'latest';
   const roleFilter = role as string || 'all';
@@ -144,6 +144,7 @@ export default async function ThanksPage({ searchParams }: PageProps) {
     redirect('/login');
   }
 
+  // searchParams가 undefined일 경우 빈 객체를 전달합니다.
   const { content, thanksPosts } = await fetchThanksContentAndPosts(searchParams || {});
 
   return (
