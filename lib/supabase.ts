@@ -1,9 +1,13 @@
 import { createClient } from "@supabase/supabase-js"
+import { createBrowserClient } from "@supabase/ssr" // 수정: createBrowserClient를 @supabase/ssr에서 임포트
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+export const supabase = createBrowserClient( // 수정: createBrowserClient 사용
+  supabaseUrl,
+  supabaseAnonKey
+)
 
 export type Database = {
   public: {

@@ -1,14 +1,50 @@
 // yeongkyukang/bozhiymirchurch/BozhiymirChurch-3007c4235d54890bd3db6acc74558b701965297b/app/prayer/page.tsx
 import Header from "@/components/header";
 import Footer from "@/components/footer";
-import { supabase } from "@/lib/supabase";
-import PrayerPageClient from "@/components/prayer-page-client"; // 클라이언트 컴포넌트 이름 변경 및 import 경로 업데이트
+import { createServerClient, type CookieOptions } from "@supabase/ssr"; 
+import { cookies } from "next/headers";
+import PrayerPageClient from "@/components/prayer-page-client";
 
-async function fetchPrayerContent() {
+// 페이지 전체의 재검증 주기 설정 (예: 60초마다 자동으로 재검증)
+export const revalidate = 60; 
+
+interface PrayerRequest {
+  id: string;
+  category: "ukraine" | "bozhiymirchurch" | "members" | "children";
+  title: string;
+  content: string;
+  author_id: string;
+  author_nickname: string;
+  created_at: string;
+  answer_content?: string | null;
+  answer_author_id?: string | null;
+  answer_author_nickname?: string | null;
+  answered_at?: string | null;
+}
+
+async function fetchPrayerContentAndRequests() {
+  const cookieStore = await cookies();
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get: (name: string) => cookieStore.get(name)?.value,
+        set: (name: string, value: string, options: CookieOptions) => {
+          cookieStore.set({ name, value, ...options });
+        },
+        remove: (name: string, options: CookieOptions) => {
+          cookieStore.set({ name, value: '', ...options });
+        },
+      },
+    }
+  );
+
   const { data: contentData, error: contentError } = await supabase
     .from("content")
     .select("*")
-    .eq("page", "prayer"); // 'faith-prayer'에서 'prayer'로 페이지 이름 변경
+    .eq("page", "prayer");
 
   const contentMap: Record<string, any> = {};
   contentData?.forEach((item) => {
@@ -22,21 +58,28 @@ async function fetchPrayerContent() {
     console.error("Error fetching Prayer page content:", contentError);
   }
 
-  // TODO: 기도 제목 데이터를 가져오는 로직 추가 (향후 'prayer_requests' 테이블 등)
+  const { data: prayerRequestsData, error: prayerRequestsError } = await supabase
+    .from("prayer_requests")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (prayerRequestsError) {
+    console.error("Error fetching Prayer Requests:", prayerRequestsError);
+  }
 
   return {
     content: contentMap,
+    prayerRequests: prayerRequestsData || [],
   };
 }
 
-export default async function PrayerPage() { // 컴포넌트 이름 변경
-  const { content } = await fetchPrayerContent();
+export default async function PrayerPage() {
+  const { content, prayerRequests } = await fetchPrayerContentAndRequests();
 
   return (
     <>
       <Header />
-      {/* 초기에는 빈 데이터나 예시 데이터를 전달 */}
-      <PrayerPageClient initialContent={content} initialPrayerRequests={[]} /> 
+      <PrayerPageClient initialContent={content} initialPrayerRequests={prayerRequests} /> 
       <Footer />
     </>
   );

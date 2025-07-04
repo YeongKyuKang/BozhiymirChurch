@@ -1,51 +1,40 @@
-// components/prayer-request-form.tsx
+// yeongkyukang/bozhiymirchurch/BozhiymirChurch-3007c4235d54890bd3db6acc74558b701965297b/components/prayer-request-form.tsx
 "use client";
 
+import * as React from "react";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase"; // make sure this is the browser client
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Card, CardContent } from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useRouter } from "next/navigation"; // useRouter import
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Terminal } from "lucide-react";
 
 export default function PrayerRequestForm() {
-  const router = useRouter();
   const { user, userProfile } = useAuth();
-  const [category, setCategory] = useState("");
+  const router = useRouter();
+
+  const [category, setCategory] = useState<"ukraine" | "bozhiymirchurch" | "members" | "children">("ukraine");
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const prayerCategories = [
-    { value: "ukraine", label: "우크라이나" },
-    { value: "bozhiymirchurch", label: "보지미르 교회" },
-    { value: "members", label: "교회 지체들" },
-    { value: "children", label: "자녀들" },
-  ];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
     if (!user || !userProfile?.id || !userProfile?.nickname) {
-      setError("로그인해야 기도 요청을 제출할 수 있습니다.");
+      setError("기도 요청을 제출하려면 로그인해야 합니다.");
       return;
     }
 
-    if (!category || !title || !content) {
-      setError("모든 필드를 채워주세요.");
+    if (!title.trim() || !content.trim()) {
+      setError("제목과 내용을 모두 입력해주세요.");
       return;
     }
 
@@ -64,82 +53,74 @@ export default function PrayerRequestForm() {
       setError(`기도 요청 제출 중 오류 발생: ${insertError.message}`);
     } else {
       alert("기도 요청이 성공적으로 제출되었습니다!");
-      // 기도 페이지 재검증
-      try {
-        const revalidateResponse = await fetch(`/api/revalidate?secret=${process.env.NEXT_PUBLIC_MY_SECRET_TOKEN}&path=/prayer`);
-        if (!revalidateResponse.ok) {
-          const errorData = await revalidateResponse.json();
-          console.error("Revalidation failed:", errorData.message);
-          alert("기도 요청은 제출되었으나, 페이지 업데이트에 실패했습니다. 수동 새로고침이 필요할 수 있습니다.");
-        } else {
-          console.log("Prayer page revalidated successfully!");
-        }
-      } catch (err) {
-        console.error("Failed to call revalidate API:", err);
-        alert("기도 요청은 제출되었으나, 페이지 업데이트에 실패했습니다. 수동 새로고침이 필요할 수 있습니다.");
-      }
-      router.push("/prayer"); // 기도 페이지로 리다이렉트
+      // 수정: 페이지 재검증 API 호출 제거
+      // 재검증은 app/prayer/page.tsx의 export const revalidate 설정을 따릅니다.
+      // router.push()는 서버 컴포넌트를 다시 렌더링하도록 트리거합니다.
+      router.push("/prayer"); 
     }
-
     setIsLoading(false);
   };
 
+  const prayerCategories = [
+    { value: "ukraine", label: "우크라이나" },
+    { value: "bozhiymirchurch", label: "보쥐미르교회" },
+    { value: "members", label: "성도님들" },
+    { value: "children", label: "아이들" },
+  ];
+
   return (
-    <Card className="p-6 shadow-lg">
-      <CardContent className="p-0">
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <Label htmlFor="category">카테고리</Label>
-            <Select onValueChange={setCategory} value={category}>
-              <SelectTrigger id="category" className="w-full">
-                <SelectValue placeholder="카테고리를 선택하세요" />
-              </SelectTrigger>
-              <SelectContent>
-                {prayerCategories.map((cat) => (
-                  <SelectItem key={cat.value} value={cat.value}>
-                    {cat.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+    <form onSubmit={handleSubmit} className="space-y-6 p-8 bg-white rounded-lg shadow-md">
+      {error && (
+        <Alert variant="destructive">
+          <Terminal className="h-4 w-4" />
+          <AlertTitle>오류!</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
 
-          <div>
-            <Label htmlFor="title">기도 제목</Label>
-            <Input
-              id="title"
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="기도 제목을 입력하세요 (예: 우크라이나의 평화)"
-            />
-          </div>
+      <div>
+        <Label htmlFor="category" className="mb-2 block">카테고리</Label>
+        <Select value={category} onValueChange={(value: "ukraine" | "bozhiymirchurch" | "members" | "children") => setCategory(value)}>
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="카테고리 선택" />
+          </SelectTrigger>
+          <SelectContent>
+            {prayerCategories.map((cat) => (
+              <SelectItem key={cat.value} value={cat.value}>
+                {cat.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
-          <div>
-            <Label htmlFor="content">기도 내용</Label>
-            <Textarea
-              id="content"
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="기도 내용을 3~6줄로 자세히 작성해주세요."
-              rows={6}
-            />
-          </div>
+      <div>
+        <Label htmlFor="title" className="mb-2 block">기도 제목</Label>
+        <Input
+          id="title"
+          type="text"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="간단한 기도 제목을 입력하세요 (예: 전쟁 종식)"
+          required
+        />
+      </div>
 
-          {error && <p className="text-red-500 text-sm">{error}</p>}
+      <div>
+        <Label htmlFor="content" className="mb-2 block">기도 내용</Label>
+        <Textarea
+          id="content"
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          placeholder="구체적인 기도 내용을 3-6줄 정도로 작성해 주세요."
+          rows={5}
+          required
+        />
+      </div>
 
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                제출 중...
-              </>
-            ) : (
-              "기도 요청 제출"
-            )}
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
+      <Button type="submit" className="w-full" disabled={isLoading}>
+        {isLoading ? "제출 중..." : "기도 요청 제출"}
+      </Button>
+    </form>
   );
 }
