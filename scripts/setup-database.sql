@@ -4,6 +4,9 @@ DROP TRIGGER IF EXISTS update_users_updated_at ON public.users;
 DROP TRIGGER IF EXISTS update_posts_updated_at ON public.posts;
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 DROP TRIGGER IF EXISTS update_events_updated_at ON public.events;
+-- 신규 추가될 테이블의 트리거도 삭제
+DROP TRIGGER IF EXISTS update_thanks_posts_updated_at ON public.thanks_posts;
+DROP TRIGGER IF EXISTS update_word_posts_updated_at ON public.word_posts;
 
 -- 기존 함수 삭제 (CASCADE 옵션으로 의존 객체까지 삭제)
 DROP FUNCTION IF EXISTS update_updated_at_column() CASCADE;
@@ -44,6 +47,34 @@ DROP POLICY IF EXISTS "Admin can view admin settings" ON public.admin_settings;
 DROP POLICY IF EXISTS "Admin can update admin settings" ON public.admin_settings;
 DROP POLICY IF EXISTS "Events are public" ON public.events;
 DROP POLICY IF EXISTS "Only admins can modify events" ON public.events;
+DROP POLICY IF EXISTS "Prayer requests are public" ON public.prayer_requests;
+DROP POLICY IF EXISTS "Authenticated users can create prayer requests" ON public.prayer_requests;
+DROP POLICY IF EXISTS "Admins or request authors can update prayer request answers" ON public.prayer_requests;
+DROP POLICY IF EXISTS "Request authors or admins can delete prayer requests" ON public.prayer_requests;
+-- 신규 추가될 테이블의 정책도 삭제
+DROP POLICY IF EXISTS "Thanks posts are public" ON public.thanks_posts;
+DROP POLICY IF EXISTS "Authenticated users can create thanks posts" ON public.thanks_posts;
+DROP POLICY IF EXISTS "Thanks post creators or admins can update" ON public.thanks_posts;
+DROP POLICY IF EXISTS "Thanks post creators or admins can delete" ON public.thanks_posts;
+DROP POLICY IF EXISTS "Thanks comments are public" ON public.thanks_comments;
+DROP POLICY IF EXISTS "Authenticated users with comment permission can create thanks comments" ON public.thanks_comments;
+DROP POLICY IF EXISTS "Thanks comment creators or admins can delete" ON public.thanks_comments;
+DROP POLICY IF EXISTS "Thanks comment creators or admins can update" ON public.thanks_comments;
+DROP POLICY IF EXISTS "Thanks reactions are public" ON public.thanks_reactions;
+DROP POLICY IF EXISTS "Authenticated users can add thanks reactions" ON public.thanks_reactions;
+DROP POLICY IF EXISTS "Users can remove their own thanks reactions" ON public.thanks_reactions;
+DROP POLICY IF EXISTS "Word posts are public" ON public.word_posts;
+DROP POLICY IF EXISTS "Admins can create word posts" ON public.word_posts;
+DROP POLICY IF EXISTS "Admins can update word posts" ON public.word_posts;
+DROP POLICY IF EXISTS "Admins can delete word posts" ON public.word_posts;
+DROP POLICY IF EXISTS "Word comments are public" ON public.word_comments;
+DROP POLICY IF EXISTS "Authenticated users with comment permission can create word comments" ON public.word_comments;
+DROP POLICY IF EXISTS "Word comment creators or admins can delete" ON public.word_comments;
+DROP POLICY IF EXISTS "Word comment creators or admins can update" ON public.word_comments;
+DROP POLICY IF EXISTS "Word reactions are public" ON public.word_reactions;
+DROP POLICY IF EXISTS "Authenticated users can add word reactions" ON public.word_reactions;
+DROP POLICY IF EXISTS "Users can remove their own word reactions" ON public.word_reactions;
+
 
 -- 기존 테이블 삭제 (CASCADE 옵션으로 의존 객체까지 삭제)
 DROP TABLE IF EXISTS public.content CASCADE;
@@ -56,6 +87,14 @@ DROP TABLE IF EXISTS public.post_reactions CASCADE;
 DROP TABLE IF EXISTS public.registration_codes CASCADE;
 DROP TABLE IF EXISTS public.admin_settings CASCADE;
 DROP TABLE IF EXISTS public.events CASCADE;
+DROP TABLE IF EXISTS public.prayer_requests CASCADE;
+-- 신규 추가될 테이블도 삭제
+DROP TABLE IF EXISTS public.thanks_posts CASCADE;
+DROP TABLE IF EXISTS public.thanks_comments CASCADE;
+DROP TABLE IF EXISTS public.thanks_reactions CASCADE;
+DROP TABLE IF EXISTS public.word_posts CASCADE;
+DROP TABLE IF EXISTS public.word_comments CASCADE;
+DROP TABLE IF EXISTS public.word_reactions CASCADE;
 
 
 -- ########## 2단계: 최신 스키마로 다시 생성 ##########
@@ -164,6 +203,82 @@ CREATE TABLE public.events (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- prayer_requests 테이블 생성 (이전 대화에서 추가)
+CREATE TABLE public.prayer_requests (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  category TEXT NOT NULL, -- 'ukraine' | 'bozhiymirchurch' | 'members' | 'children'
+  title TEXT NOT NULL,
+  content TEXT NOT NULL,
+  author_id UUID REFERENCES public.users(id) ON DELETE CASCADE NOT NULL,
+  author_nickname TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  answer_content TEXT,
+  answer_author_id UUID REFERENCES public.users(id) ON DELETE SET NULL,
+  answer_author_nickname TEXT,
+  answered_at TIMESTAMP WITH TIME ZONE
+);
+
+-- thanks_posts 테이블 생성 (새로 추가: 감사 제목 게시판)
+CREATE TABLE public.thanks_posts (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  title TEXT NOT NULL,
+  content TEXT NOT NULL,
+  author_id UUID REFERENCES public.users(id) ON DELETE CASCADE NOT NULL,
+  author_nickname TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- thanks_comments 테이블 생성 (새로 추가: 감사 제목 댓글)
+CREATE TABLE public.thanks_comments (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  post_id UUID REFERENCES public.thanks_posts(id) ON DELETE CASCADE NOT NULL,
+  author_id UUID REFERENCES public.users(id) ON DELETE CASCADE NOT NULL,
+  comment TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- thanks_reactions 테이블 생성 (새로 추가: 감사 제목 공감/반응)
+CREATE TABLE public.thanks_reactions (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
+  post_id UUID REFERENCES public.thanks_posts(id) ON DELETE CASCADE,
+  reaction_type TEXT NOT NULL, -- 'like', 'heart', 'pray' 등 다양한 이모티콘
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE (user_id, post_id, reaction_type)
+);
+
+-- word_posts 테이블 생성 (새로 추가: 매일 말씀 게시판)
+CREATE TABLE public.word_posts (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  title TEXT NOT NULL, -- 예: "요한복음 3:16"
+  content TEXT NOT NULL, -- 예: "하나님이 세상을 이처럼 사랑하사..."
+  word_date DATE UNIQUE NOT NULL, -- 매일 말씀을 위한 고유 날짜 (달력 UI용)
+  author_id UUID REFERENCES public.users(id) ON DELETE CASCADE NOT NULL, -- 주로 관리자가 작성
+  author_nickname TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- word_comments 테이블 생성 (새로 추가: 매일 말씀 댓글)
+CREATE TABLE public.word_comments (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  post_id UUID REFERENCES public.word_posts(id) ON DELETE CASCADE NOT NULL,
+  author_id UUID REFERENCES public.users(id) ON DELETE CASCADE NOT NULL,
+  comment TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- word_reactions 테이블 생성 (새로 추가: 매일 말씀 공감/반응)
+CREATE TABLE public.word_reactions (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
+  post_id UUID REFERENCES public.word_posts(id) ON DELETE CASCADE,
+  reaction_type TEXT NOT NULL, -- 'like', 'heart', 'pray' 등 다양한 이모티콘
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE (user_id, post_id, reaction_type)
+);
+
 
 -- Row Level Security (RLS) 활성화
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
@@ -176,6 +291,15 @@ ALTER TABLE public.post_reactions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.registration_codes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.admin_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.prayer_requests ENABLE ROW LEVEL SECURITY;
+-- 신규 추가된 테이블 RLS 활성화
+ALTER TABLE public.thanks_posts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.thanks_comments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.thanks_reactions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.word_posts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.word_comments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.word_reactions ENABLE ROW LEVEL SECURITY;
+
 
 -- updated_at 타임스탬프를 자동으로 업데이트하는 함수 생성
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -201,6 +325,18 @@ CREATE TRIGGER update_events_updated_at
     BEFORE UPDATE ON public.events
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
+
+-- 신규 추가된 테이블의 updated_at 트리거
+CREATE TRIGGER update_thanks_posts_updated_at
+    BEFORE UPDATE ON public.thanks_posts
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_word_posts_updated_at
+    BEFORE UPDATE ON public.word_posts
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
 
 -- handle_new_user 함수를 새로운 필드를 포함하도록 생성
 CREATE OR REPLACE FUNCTION handle_new_user()
@@ -318,6 +454,97 @@ CREATE POLICY "Only admins can modify events" ON public.events
       AND users.role = 'admin'
     )
   );
+
+-- prayer_requests 테이블에 대한 정책 생성
+CREATE POLICY "Prayer requests are public" ON public.prayer_requests
+  FOR SELECT USING (true);
+CREATE POLICY "Authenticated users can create prayer requests" ON public.prayer_requests
+  FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
+-- 관리자 또는 요청 작성자가 응답 필드를 업데이트할 수 있도록 허용
+CREATE POLICY "Admins or request authors can update prayer request answers" ON public.prayer_requests
+  FOR UPDATE USING (
+    auth.uid() = author_id 
+    OR EXISTS (SELECT 1 FROM public.users WHERE users.id = auth.uid() AND users.role = 'admin')
+  )
+  WITH CHECK (
+    auth.uid() = author_id 
+    OR EXISTS (SELECT 1 FROM public.users WHERE users.id = auth.uid() AND users.role = 'admin')
+  );
+CREATE POLICY "Request authors or admins can delete prayer requests" ON public.prayer_requests
+  FOR DELETE USING (auth.uid() = author_id OR EXISTS(SELECT 1 FROM public.users WHERE users.id = auth.uid() AND users.role = 'admin'));
+
+-- thanks_posts 테이블에 대한 정책 생성 (새로 추가)
+CREATE POLICY "Thanks posts are public" ON public.thanks_posts
+  FOR SELECT USING (true);
+CREATE POLICY "Authenticated users can create thanks posts" ON public.thanks_posts
+  FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
+CREATE POLICY "Thanks post creators or admins can update" ON public.thanks_posts
+  FOR UPDATE USING (auth.uid() = author_id OR EXISTS(SELECT 1 FROM public.users WHERE users.id = auth.uid() AND users.role = 'admin'))
+  WITH CHECK (auth.uid() = author_id OR EXISTS(SELECT 1 FROM public.users WHERE users.id = auth.uid() AND users.role = 'admin'));
+CREATE POLICY "Thanks post creators or admins can delete" ON public.thanks_posts
+  FOR DELETE USING (auth.uid() = author_id OR EXISTS(SELECT 1 FROM public.users WHERE users.id = auth.uid() AND users.role = 'admin'));
+
+-- thanks_comments 테이블에 대한 정책 생성 (새로 추가)
+CREATE POLICY "Thanks comments are public" ON public.thanks_comments
+  FOR SELECT USING (true);
+CREATE POLICY "Authenticated users with comment permission can create thanks comments" ON public.thanks_comments
+  FOR INSERT WITH CHECK (
+    auth.uid() IS NOT NULL 
+    AND EXISTS (
+      SELECT 1 FROM public.users
+      WHERE users.id = auth.uid() AND users.can_comment = TRUE
+    )
+  );
+CREATE POLICY "Thanks comment creators or admins can delete" ON public.thanks_comments
+  FOR DELETE USING (auth.uid() = author_id OR EXISTS(SELECT 1 FROM public.users WHERE users.id = auth.uid() AND users.role = 'admin'));
+CREATE POLICY "Thanks comment creators or admins can update" ON public.thanks_comments
+  FOR UPDATE USING (auth.uid() = author_id OR EXISTS(SELECT 1 FROM public.users WHERE users.id = auth.uid() AND users.role = 'admin'))
+  WITH CHECK (auth.uid() = author_id OR EXISTS(SELECT 1 FROM public.users WHERE users.id = auth.uid() AND users.role = 'admin'));
+
+-- thanks_reactions 테이블에 대한 정책 생성 (새로 추가)
+CREATE POLICY "Thanks reactions are public" ON public.thanks_reactions
+  FOR SELECT USING (true);
+CREATE POLICY "Authenticated users can add thanks reactions" ON public.thanks_reactions
+  FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
+CREATE POLICY "Users can remove their own thanks reactions" ON public.thanks_reactions
+  FOR DELETE USING (auth.uid() = user_id);
+
+-- word_posts 테이블에 대한 정책 생성 (새로 추가)
+CREATE POLICY "Word posts are public" ON public.word_posts
+  FOR SELECT USING (true);
+-- 매일 말씀은 관리자만 작성 가능하도록 설정
+CREATE POLICY "Admins can create word posts" ON public.word_posts
+  FOR INSERT WITH CHECK (EXISTS(SELECT 1 FROM public.users WHERE users.id = auth.uid() AND users.role = 'admin'));
+CREATE POLICY "Admins can update word posts" ON public.word_posts
+  FOR UPDATE USING (EXISTS(SELECT 1 FROM public.users WHERE users.id = auth.uid() AND users.role = 'admin'))
+  WITH CHECK (EXISTS(SELECT 1 FROM public.users WHERE users.id = auth.uid() AND users.role = 'admin'));
+CREATE POLICY "Admins can delete word posts" ON public.word_posts
+  FOR DELETE USING (EXISTS(SELECT 1 FROM public.users WHERE users.id = auth.uid() AND users.role = 'admin'));
+
+-- word_comments 테이블에 대한 정책 생성 (새로 추가)
+CREATE POLICY "Word comments are public" ON public.word_comments
+  FOR SELECT USING (true);
+CREATE POLICY "Authenticated users with comment permission can create word comments" ON public.word_comments
+  FOR INSERT WITH CHECK (
+    auth.uid() IS NOT NULL 
+    AND EXISTS (
+      SELECT 1 FROM public.users
+      WHERE users.id = auth.uid() AND users.can_comment = TRUE
+    )
+  );
+CREATE POLICY "Word comment creators or admins can delete" ON public.word_comments
+  FOR DELETE USING (auth.uid() = author_id OR EXISTS(SELECT 1 FROM public.users WHERE users.id = auth.uid() AND users.role = 'admin'));
+CREATE POLICY "Word comment creators or admins can update" ON public.word_comments
+  FOR UPDATE USING (auth.uid() = author_id OR EXISTS(SELECT 1 FROM public.users WHERE users.id = auth.uid() AND users.role = 'admin'))
+  WITH CHECK (auth.uid() = author_id OR EXISTS(SELECT 1 FROM public.users WHERE users.id = auth.uid() AND users.role = 'admin'));
+
+-- word_reactions 테이블에 대한 정책 생성 (새로 추가)
+CREATE POLICY "Word reactions are public" ON public.word_reactions
+  FOR SELECT USING (true);
+CREATE POLICY "Authenticated users can add word reactions" ON public.word_reactions
+  FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
+CREATE POLICY "Users can remove their own word reactions" ON public.word_reactions
+  FOR DELETE USING (auth.uid() = user_id);
 
 
 -- 'on_auth_user_created' 트리거 다시 생성
@@ -460,25 +687,55 @@ INSERT INTO public.content (page, section, key, value) VALUES
 
 
 -- Leadership page content
-('leadership', 'main', 'title', 'Our Leadership'),
-('leadership', 'main', 'description', 'Meet the dedicated leaders who guide Bozhiymir Church with wisdom, compassion, and a heart for serving our community and Ukrainian children.'),
-('leadership', 'bios', 'michael_bio', 'Pastor Michael has been leading Bozhiymir Church for over 10 years. He has a heart for community outreach and has been instrumental in establishing our Ukrainian children ministry.'),
-('leadership', 'bios', 'sarah_bio', 'Pastor Sarah oversees our children''s programs and has a special calling to work with Ukrainian refugee children. She speaks fluent Ukrainian and Russian.'),
-('leadership', 'bios', 'james_bio', 'James leads our church board and coordinates our community outreach programs. He has been with Bozhiymir Church since its founding.'),
-('leadership', 'bios', 'maria_bio', 'Maria is originally from Ukraine and coordinates our Ukrainian children''s program. She helps with translation and cultural bridge-building.'),
-('leadership', 'values', 'title', 'Our Leadership Values'),
-('leadership', 'values', 'value1_title', 'Compassionate Service'),
-('leadership', 'values', 'value1_description', 'Leading with love and putting others first, especially the vulnerable.'),
-('leadership', 'values', 'value2_title', 'Biblical Foundation'),
-('leadership', 'values', 'value2_description', 'Grounding all decisions and teachings in God''s Word.'),
-('leadership', 'values', 'value3_title', 'Global Vision'),
-('leadership', 'values', 'value3_description', 'Serving locally while thinking globally, especially for Ukrainian children.'),
-('leadership', 'contact', 'title', 'Connect with Our Leaders'),
-('leadership', 'contact', 'description', 'Our leadership team is here to serve you. Don''t hesitate to reach out with questions or prayer requests.'),
+-- 기존 leaders 배열의 내용을 content 테이블에 삽입
+('leadership', 'hero', 'title_part1', 'Our'),
+('leadership', 'hero', 'title_part2', 'Leadership'),
+('leadership', 'hero', 'description', 'Meet the dedicated leaders who guide Bozhiymir Church with wisdom, compassion, and a heart for serving our community and Ukrainian children.'),
 
--- Portland Community page content
-('portland-community', 'main', 'title', 'Portland Community'),
-('portland-community', 'main', 'description', 'Bozhiymir Church is a beacon of hope in the Portland community.'),
+('leadership', 'leader_michael', 'name', 'Pastor Michael Johnson'),
+('leadership', 'leader_michael', 'role', 'Senior Pastor'),
+('leadership', 'leader_michael', 'image', '/placeholder.svg?height=300&width=300'),
+('leadership', 'leader_michael', 'bio', 'Pastor Michael has been leading Bozhiymir Church for over 10 years. He has a heart for community outreach and has been instrumental in establishing our Ukrainian children ministry.'),
+('leadership', 'leader_michael', 'specialties', 'Biblical Teaching, Community Outreach, Ukrainian Ministry'),
+('leadership', 'leader_michael', 'email', 'pastor.michael@bozhiymirchurch.com'),
+('leadership', 'leader_michael', 'phone', '(503) 555-0123'),
+
+('leadership', 'leader_sarah', 'name', 'Pastor Sarah Williams'),
+('leadership', 'leader_sarah', 'role', 'Associate Pastor & Children''s Ministry'),
+('leadership', 'leader_sarah', 'image', '/placeholder.svg?height=300&width=300'),
+('leadership', 'leader_sarah', 'bio', 'Pastor Sarah oversees our children''s programs and has a special calling to work with Ukrainian refugee children. She speaks fluent Ukrainian and Russian.'),
+('leadership', 'leader_sarah', 'specialties', 'Children''s Ministry, Ukrainian Language, Family Counseling'),
+('leadership', 'leader_sarah', 'email', 'pastor.sarah@bozhiymirchurch.com'),
+('leadership', 'leader_sarah', 'phone', '(503) 555-0124'),
+
+('leadership', 'leader_james', 'name', 'Deacon James Thompson'),
+('leadership', 'leader_james', 'role', 'Board Chairman'),
+('leadership', 'leader_james', 'image', '/placeholder.svg?height=300&width=300'),
+('leadership', 'leader_james', 'bio', 'James leads our church board and coordinates our community outreach programs. He has been with Bozhiymir Church since its founding.'),
+('leadership', 'leader_james', 'specialties', 'Church Administration, Community Relations, Volunteer Coordination'),
+('leadership', 'leader_james', 'email', 'james.thompson@bozhiymirchurch.com'),
+('leadership', 'leader_james', 'phone', '(503) 555-0125'),
+
+('leadership', 'leader_maria', 'name', 'Maria Kovalenko'),
+('leadership', 'leader_maria', 'role', 'Ukrainian Ministry Coordinator'),
+('leadership', 'leader_maria', 'image', '/placeholder.svg?height=300&width=300'),
+('leadership', 'leader_maria', 'bio', 'Maria is originally from Ukraine and coordinates our Ukrainian children''s program. She helps with translation and cultural bridge-building.'),
+('leadership', 'leader_maria', 'specialties', 'Ukrainian Culture, Translation Services, Child Care'),
+('leadership', 'leader_maria', 'email', 'maria.kovalenko@bozhiymirchurch.com'),
+('leadership', 'leader_maria', 'phone', '(503) 555-0126'),
+
+('leadership', 'leadership_values', 'title', 'Our Leadership Values'),
+('leadership', 'leadership_values', 'value1_title', 'Compassionate Service'),
+('leadership', 'leadership_values', 'value1_description', 'Leading with love and putting others first, especially the vulnerable.'),
+('leadership', 'leadership_values', 'value2_title', 'Biblical Foundation'),
+('leadership', 'leadership_values', 'value2_description', 'Grounding all decisions and teachings in God''s Word.'),
+('leadership', 'leadership_values', 'value3_title', 'Global Vision'),
+('leadership', 'leadership_values', 'value3_description', 'Serving locally while thinking globally, especially for Ukrainian children.'),
+
+('leadership', 'contact_leadership', 'title', 'Connect with Our Leaders'),
+('leadership', 'contact_leadership', 'description', 'Our leadership team is here to serve you. Don''t hesitate to reach out with questions or prayer requests.'),
+('leadership', 'contact_leadership', 'button1_text', 'Visit Our Church'),
+('leadership', 'contact_leadership', 'button2_text', 'Back to Home'),
 
 -- Ukrainian Ministry page content
 ('ukrainian-ministry', 'main', 'title', 'Ukrainian Children Ministry'),
