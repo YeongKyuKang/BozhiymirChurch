@@ -1,38 +1,14 @@
-// app/word/page.tsx
+// yeongkyukang/bozhiymirchurch/BozhiymirChurch-3007c4235d54890bd3db6acc74558b701965297b/app/word/page.tsx
 import Header from "@/components/header";
 import Footer from "@/components/footer";
-import { createServerClient, type CookieOptions } from "@supabase/ssr";
-import { cookies } from "next/headers";
-import WordPageClient from "@/components/word-page-client"; // WordPageClient 임포트
+import { supabase } from "@/lib/supabase";
+import WordPageClient from "@/components/word-page-client"; // 클라이언트 컴포넌트 이름 변경 및 import 경로 업데이트
 
-// 페이지 전체의 재검증 주기 설정 (예: 60초마다 자동으로 재검증)
-export const revalidate = 60;
-
-// 말씀 게시물 및 관련 데이터를 가져오는 함수
-async function fetchWordContentAndPosts() {
-  const cookieStore = await cookies();
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get: (name: string) => cookieStore.get(name)?.value,
-        set: (name: string, value: string, options: CookieOptions) => {
-          cookieStore.set({ name, value, ...options });
-        },
-        remove: (name: string, options: CookieOptions) => {
-          cookieStore.set({ name, value: '', ...options });
-        },
-      },
-    }
-  );
-
-  // 'word' 페이지의 content 데이터 가져오기
+async function fetchWordContent() {
   const { data: contentData, error: contentError } = await supabase
     .from("content")
     .select("*")
-    .eq("page", "word"); // 페이지 이름을 'word'로 지정
+    .eq("page", "word"); // 'faith-word'에서 'word'로 페이지 이름 변경
 
   const contentMap: Record<string, any> = {};
   contentData?.forEach((item) => {
@@ -46,31 +22,21 @@ async function fetchWordContentAndPosts() {
     console.error("Error fetching Word page content:", contentError);
   }
 
-  // word_posts, word_reactions, word_comments 데이터를 함께 가져오기
-  const { data: wordPostsData, error: wordPostsError } = await supabase
-    .from("word_posts")
-    .select('*, word_reactions(*), word_comments(*)') // word_reactions과 word_comments를 조인하여 가져옴
-    .order("word_date", { ascending: false }); // 최신 말씀이 먼저 오도록 날짜 기준으로 정렬
-
-  if (wordPostsError) {
-    console.error("Error fetching Word posts:", wordPostsError);
-  }
-
   return {
     content: contentMap,
-    wordPosts: wordPostsData || [], // 가져온 데이터를 반환
   };
 }
 
-// Word 페이지 컴포넌트
-export default async function WordPage() {
-  const { content, wordPosts } = await fetchWordContentAndPosts(); // 데이터 가져오는 함수 호출
+export default async function WordPage() { // 컴포넌트 이름 변경
+  const { content } = await fetchWordContent();
+
+  // TODO: 말씀 게시물 데이터를 가져오는 로직 추가 (향후 'word_posts' 테이블 등)
 
   return (
     <>
       <Header />
-      {/* 가져온 데이터를 initialContent와 initialWordPosts prop으로 WordPageClient에 전달 */}
-      <WordPageClient initialContent={content} initialWordPosts={wordPosts} />
+      {/* 초기에는 빈 데이터나 예시 데이터를 전달 */}
+      <WordPageClient initialContent={content} initialWordPosts={[]} /> 
       <Footer />
     </>
   );

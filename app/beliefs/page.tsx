@@ -1,34 +1,12 @@
 // app/beliefs/page.tsx
 // "use client" 지시문을 제거하여 Server Component로 만듭니다.
-import Header from "@/components/header";
-import Footer from "@/components/footer";
-// 빌드 시점 데이터 패칭을 위해 createServerClient와 cookies를 임포트합니다.
-import { createServerClient, type CookieOptions } from "@supabase/ssr";
-import { cookies } from "next/headers";
+import Header from "@/components/header"
+import Footer from "@/components/footer"
+import { supabase } from "@/lib/supabase" // 서버에서 데이터 패칭을 위해 supabase 클라이언트 import
+import BeliefsPageClient from "@/components/beliefs-page-client" // 새로 생성할 클라이언트 컴포넌트 import
 
-import BeliefsPageClient from "@/components/beliefs-page-client"; // 클라이언트 컴포넌트 import
-
-// 이 페이지는 정적으로 생성되므로, revalidate 설정을 명시적으로 하지 않거나 0으로 설정합니다.
-// revalidate를 설정하지 않으면 기본적으로 SSG로 동작합니다.
-// export const revalidate = 0; // 필요시 명시적으로 설정
-
-// 페이지 로드 시 서버에서 데이터를 비동기적으로 미리 가져오는 함수 (빌드 시점에 실행)
+// 페이지 로드 시 서버에서 데이터를 비동기적으로 미리 가져오는 함수
 async function fetchBeliefsContent() {
-  const cookieStore = await cookies(); // 수정: cookies() 호출 앞에 await 추가
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll: () => cookieStore.getAll(),
-        setAll: (cookiesToSet) => {
-          cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options));
-        },
-      },
-    }
-  );
-
   const { data, error } = await supabase
     .from('content')
     .select('page, section, key, value')
@@ -36,11 +14,13 @@ async function fetchBeliefsContent() {
 
   if (error) {
     console.error('Failed to fetch beliefs content from DB on the server:', error);
+    // 에러 발생 시 빈 객체를 반환하여 앱이 중단되지 않도록 합니다.
     return {};
   }
 
   const contentMap: Record<string, any> = {};
   data.forEach(item => {
+    // 수정된 부분: contentMap[item.section]이 undefined일 경우에만 초기화하도록 수정
     if (contentMap[item.section] === undefined) {
       contentMap[item.section] = {};
     }
@@ -51,11 +31,13 @@ async function fetchBeliefsContent() {
 }
 
 export default async function BeliefsPageWrapper() {
+  // 서버에서 초기 콘텐츠를 가져와서 클라이언트 컴포넌트에 prop으로 전달합니다.
   const initialContent = await fetchBeliefsContent(); 
 
   return (
     <>
       <Header />
+      {/* 모든 클라이언트 측 로직은 BeliefsPageClient 컴포넌트 내부에서 처리됩니다. */}
       <BeliefsPageClient initialContent={initialContent} />
       <Footer />
     </>

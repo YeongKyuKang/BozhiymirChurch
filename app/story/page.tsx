@@ -7,29 +7,12 @@ import Link from "next/link"
 import Header from "@/components/header"
 import Footer from "@/components/footer"
 import EditableText from "@/components/editable-text";
-// 수정: createServerClient 대신 기본 createClient를 사용하고 cookies import 제거
-import { createClient } from "@supabase/supabase-js"; 
-// import { createServerClient, type CookieOptions } from "@supabase/ssr"; // 제거
-// import { cookies } from "next/headers"; // 제거
-
-// StoryPageClient import 및 사용 제거 (이 페이지는 자체적으로 렌더링)
-// import StoryPageClient from "@/components/story-page-client"; // 제거됨
-
-// 이 페이지는 정적으로 생성되므로, revalidate 설정을 명시적으로 하지 않거나 0으로 설정합니다.
-// revalidate를 설정하지 않으면 기본적으로 SSG로 동작합니다.
-// export const revalidate = 0; // 필요시 명시적으로 설정
+import { supabase } from "@/lib/supabase" // 서버 컴포넌트에서 DB 패칭을 위해 추가
 
 async function fetchStoryContent() {
-  // 수정: createClient로 supabase 인스턴스 생성 (cookies 관련 로직 제거)
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
-
   const { data, error } = await supabase
-    // 수정: select() 메서드의 인수를 단일 문자열로 결합
     .from('content')
-    .select('page, section, key, value') 
+    .select('page, section, key, value')
     .eq('page', 'story');
     
   if (error) {
@@ -101,8 +84,7 @@ export default async function StoryPage() {
                   className="text-5xl font-bold text-gray-900"
               />
             </h1>
-            {/* 수정: <p> 태그를 <div> 태그로 변경하여 중첩 오류 해결 */}
-            <div className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
               <EditableText
                   page="story"
                   section="main"
@@ -111,7 +93,7 @@ export default async function StoryPage() {
                   tag="span"
                   className="text-xl text-gray-600 max-w-3xl mx-auto mb-8"
               />
-            </div>
+            </p>
             <div className="flex items-center justify-center space-x-2 text-blue-600">
               <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
               <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
@@ -180,10 +162,9 @@ export default async function StoryPage() {
                         <EditableText page="story" section="timeline" contentKey={event.titleKey} initialValue={content?.timeline?.[event.titleKey]} tag="span" className="text-xl font-bold text-gray-900" />
                       </h3>
                     </div>
-                    {/* 수정: <p> 태그를 <div> 태그로 변경 */}
-                    <div className="text-gray-600 leading-relaxed">
+                    <p className="text-gray-600 leading-relaxed">
                       <EditableText page="story" section="timeline" contentKey={event.descriptionKey} initialValue={content?.timeline?.[event.descriptionKey]} tag="span" className="text-gray-600 leading-relaxed" isTextArea={true} />
-                    </div>
+                    </p>
                   </div>
                 </div>
               ))}
@@ -204,10 +185,9 @@ export default async function StoryPage() {
                   <h3 className="text-xl font-bold text-gray-900 mb-2">
                     <EditableText page="story" section="values" contentKey="value1_title" initialValue={content?.values?.value1_title} tag="span" className="text-xl font-bold text-gray-900 mb-2" />
                   </h3>
-                  {/* 수정: <p> 태그를 <div> 태그로 변경 */}
-                  <div className="text-gray-600">
+                  <p className="text-gray-600">
                     <EditableText page="story" section="values" contentKey="value1_description" initialValue={content?.values?.value1_description} tag="span" className="text-gray-600" />
-                  </div>
+                  </p>
                 </CardContent>
               </Card>
               <Card className="text-center hover:shadow-lg transition-shadow">
@@ -216,10 +196,9 @@ export default async function StoryPage() {
                   <h3 className="text-xl font-bold text-gray-900 mb-2">
                     <EditableText page="story" section="values" contentKey="value2_title" initialValue={content?.values?.value2_title} tag="span" className="text-xl font-bold text-gray-900 mb-2" />
                   </h3>
-                  {/* 수정: <p> 태그를 <div> 태그로 변경 */}
-                  <div className="text-gray-600">
+                  <p className="text-gray-600">
                     <EditableText page="story" section="values" contentKey="value2_description" initialValue={content?.values?.value2_description} tag="span" className="text-gray-600" />
-                  </div>
+                  </p>
                 </CardContent>
               </Card>
               <Card className="text-center hover:shadow-lg transition-shadow">
@@ -228,10 +207,9 @@ export default async function StoryPage() {
                   <h3 className="text-xl font-bold text-gray-900 mb-2">
                     <EditableText page="story" section="values" contentKey="value3_title" initialValue={content?.values?.value3_title} tag="span" className="text-xl font-bold text-gray-900 mb-2" />
                   </h3>
-                  {/* 수정: <p> 태그를 <div> 태그로 변경 */}
-                  <div className="text-gray-600">
+                  <p className="text-gray-600">
                     <EditableText page="story" section="values" contentKey="value3_description" initialValue={content?.values?.value3_description} tag="span" className="text-gray-600" />
-                  </div>
+                  </p>
                 </CardContent>
               </Card>
               <Card className="text-center hover:shadow-lg transition-shadow">
@@ -240,10 +218,9 @@ export default async function StoryPage() {
                   <h3 className="text-xl font-bold text-gray-900 mb-2">
                     <EditableText page="story" section="values" contentKey="value4_title" initialValue={content?.values?.value4_title} tag="span" className="text-xl font-bold text-gray-900 mb-2" />
                   </h3>
-                  {/* 수정: <p> 태그를 <div> 태그로 변경 */}
-                  <div className="text-gray-600">
+                  <p className="text-gray-600">
                     <EditableText page="story" section="values" contentKey="value4_description" initialValue={content?.values?.value4_description} tag="span" className="text-gray-600" />
-                  </div>
+                  </p>
                 </CardContent>
               </Card>
             </div>
@@ -260,10 +237,9 @@ export default async function StoryPage() {
                     <h2 className="text-3xl font-bold mb-4">
                       <EditableText page="story" section="ministry_highlight" contentKey="highlight_title" initialValue={content?.ministry_highlight?.highlight_title} tag="span" className="text-3xl font-bold mb-4" />
                     </h2>
-                    {/* 수정: <p> 태그를 <div> 태그로 변경 */}
-                    <div className="text-xl mb-6 opacity-90">
+                    <p className="text-xl mb-6 opacity-90">
                       <EditableText page="story" section="ministry_highlight" contentKey="highlight_description" initialValue={content?.ministry_highlight?.highlight_description} tag="span" className="text-xl mb-6 opacity-90" />
-                    </div>
+                    </p>
                     <div className="grid grid-cols-2 gap-4 text-center">
                       <div>
                         <div className="text-3xl font-bold">
@@ -285,10 +261,9 @@ export default async function StoryPage() {
                   </div>
                   <div className="text-center">
                     <div className="text-8xl mb-4">🇺🇦</div>
-                    {/* 수정: <p> 태그를 <div> 태그로 변경 */}
-                    <div className="text-lg opacity-90">
+                    <p className="text-lg opacity-90">
                       <EditableText page="story" section="ministry_highlight" contentKey="highlight_quote" initialValue={content?.ministry_highlight?.highlight_quote} tag="span" className="text-lg opacity-90" isTextArea={true} />
-                    </div>
+                    </p>
                   </div>
                 </div>
               </CardContent>
@@ -302,10 +277,9 @@ export default async function StoryPage() {
             <h2 className="text-3xl font-bold text-gray-900 mb-6">
               <EditableText page="story" section="cta" contentKey="cta_title" initialValue={content?.cta?.cta_title} tag="span" className="text-3xl font-bold text-gray-900" />
             </h2>
-            {/* 수정: <p> 태그를 <div> 태그로 변경 */}
-            <div className="text-xl text-gray-600 mb-8">
+            <p className="text-xl text-gray-600 mb-8">
               <EditableText page="story" section="cta" contentKey="cta_description" initialValue={content?.cta?.cta_description} tag="span" className="text-xl text-gray-600" />
-            </div>
+            </p>
             <div className="space-x-4">
               <Button asChild size="lg" className="bg-blue-600 hover:bg-blue-700">
                 <Link href="/join">Join Our Family</Link>
