@@ -1,4 +1,4 @@
-// yeongkyukang/bozhiymirchurch/BozhiymirChurch-3007c4235d54890bd3db6acc74558b701965297b/components/thanks-page-client.tsx
+// yeongkyukang/bozhiymirchurch/BozhiymirChurch-4d2cde288530ef711b8ef2d2cc649e1ca337c00c/components/thanks-page-client.tsx
 "use client";
 
 import * as React from "react";
@@ -255,7 +255,7 @@ export default function ThanksPageClient({ initialContent, initialThanksPosts }:
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-yellow-50 to-white">
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
       {/* 전역 편집 모드 버튼 */}
       {userRole === 'admin' && (
         <div className="fixed top-24 right-8 z-50 flex flex-col space-y-2">
@@ -314,7 +314,7 @@ export default function ThanksPageClient({ initialContent, initialThanksPosts }:
               {showNewPostForm ? "감사 제목 작성 취소" : <><PlusCircle className="mr-2 h-5 w-5" /> 감사 제목 작성</>}
             </Button>
             {showNewPostForm && (
-              <Card className="p-6">
+              <Card className="shadow-sm rounded-lg border bg-card text-card-foreground p-6 hover:shadow-lg transition-shadow duration-300">
                 <h2 className="text-2xl font-bold mb-4">새 감사 제목 작성</h2>
                 <form onSubmit={handleAddPost} className="space-y-4">
                   <div>
@@ -356,7 +356,7 @@ export default function ThanksPageClient({ initialContent, initialThanksPosts }:
             <p className="text-center text-gray-600">아직 작성된 감사 제목이 없습니다. 첫 감사 제목을 작성해보세요!</p>
           ) : (
             thanksPosts.map(post => (
-              <Card key={post.id} className="relative">
+              <Card key={post.id} className="shadow-sm rounded-lg border bg-card text-card-foreground relative hover:shadow-lg transition-shadow duration-300">
                 <CardHeader>
                   <div className="flex items-center space-x-3 mb-2">
                     <Avatar>

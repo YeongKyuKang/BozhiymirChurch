@@ -1,4 +1,4 @@
-// yeongkyukang/bozhiymirchurch/BozhiymirChurch-3007c4235d54890bd3db6acc74558b701965297b/components/word-page-client.tsx
+// yeongkyukang/bozhiymirchurch/BozhiymirChurch-4d2cde288530ef711b8ef2d2cc649e1ca337c00c/components/word-page-client.tsx
 "use client";
 
 import * as React from "react";
@@ -162,7 +162,7 @@ export default function WordPageClient({ initialContent, initialWordPosts }: Wor
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-green-50 to-white">
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
       {/* 전역 편집 모드 버튼 */}
       {userRole === 'admin' && (
         <div className="fixed top-24 right-8 z-50 flex flex-col space-y-2">
@@ -217,7 +217,7 @@ export default function WordPageClient({ initialContent, initialWordPosts }: Wor
       <section className="py-8 px-4">
         <div className="container mx-auto max-w-4xl space-y-8">
           {/* TODO: 달력 UI 배치 (후순위 개발) */}
-          <div className="border p-6 rounded-lg bg-white shadow-sm flex items-center justify-center h-48 text-gray-400">
+          <div className="shadow-sm rounded-lg border bg-card text-card-foreground p-6 flex items-center justify-center h-48 text-gray-400 hover:shadow-lg transition-shadow duration-300">
             <Calendar className="h-12 w-12 mr-4" />
             <span className="text-xl">달력 UI (이후 추가 예정)</span>
           </div>
@@ -226,7 +226,7 @@ export default function WordPageClient({ initialContent, initialWordPosts }: Wor
             <p className="text-center text-gray-600">아직 작성된 말씀 게시물이 없습니다.</p>
           ) : (
             wordPosts.map(post => (
-              <Card key={post.id}>
+              <Card key={post.id} className="shadow-sm rounded-lg border bg-card text-card-foreground hover:shadow-lg transition-shadow duration-300">
                 <CardHeader>
                   <div className="flex items-center space-x-3 mb-2">
                     <Avatar>

@@ -1,4 +1,4 @@
-// yeongkyukang/bozhiymirchurch/BozhiymirChurch-3007c4235d54890bd3db6acc74558b701965297b/components/prayer-page-client.tsx
+// yeongkyukang/bozhiymirchurch/BozhiymirChurch-4d2cde288530ef711b8ef2d2cc649e1ca337c00c/components/prayer-page-client.tsx
 "use client";
 
 import * as React from "react";
@@ -170,7 +170,7 @@ export default function PrayerPageClient({ initialContent, initialPrayerRequests
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-purple-50 to-white">
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
       {userRole === 'admin' && (
         <div className="fixed top-24 right-8 z-50 flex flex-col space-y-2">
           {!isPageEditing ? (
@@ -222,7 +222,7 @@ export default function PrayerPageClient({ initialContent, initialPrayerRequests
       <section className="py-8 px-4">
         <div className="container mx-auto grid md:grid-cols-2 lg:grid-cols-4 gap-6">
           {prayerCategories.map(category => (
-            <Card key={category.key} className="bg-white shadow-md rounded-lg p-6 text-center">
+            <Card key={category.key} className="shadow-sm rounded-lg border bg-card text-card-foreground p-6 text-center hover:shadow-lg transition-shadow duration-300 border-l-4 border-l-blue-600">
               <div className="text-5xl mb-4">{category.icon}</div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">
                 <EditableText
@@ -268,7 +268,7 @@ export default function PrayerPageClient({ initialContent, initialPrayerRequests
                     <p className="text-center text-gray-600 col-span-full">아직 이 카테고리에 대한 기도 제목이 없습니다.</p>
                 ) : (
                     prayerRequests.filter(req => req.category === category.key).map(req => (
-                        <Card key={req.id} className="p-6 relative">
+                        <Card key={req.id} className="shadow-sm rounded-lg border bg-card text-card-foreground p-6 relative hover:shadow-lg transition-shadow duration-300">
                             <CardTitle className="text-lg font-semibold mb-2">{req.title}</CardTitle>
                             <CardContent className="p-0 text-gray-700 leading-relaxed whitespace-pre-wrap mb-4">
                                 {req.content}
@@ -359,10 +359,10 @@ export default function PrayerPageClient({ initialContent, initialPrayerRequests
               isEditingPage={isPageEditing}
               onContentChange={handleContentChange}
               tag="span"
-              className="text-xl text-gray-600 mb-8"
+              className="text-xl text-gray-600"
             />
           </div>
-          <Button asChild size="lg" className="bg-purple-600 hover:bg-purple-700">
+          <Button asChild size="lg" className="bg-blue-600 hover:bg-blue-700">
             <Link href="/prayer/new"><span>기도 요청 추가</span></Link>
           </Button>
         </div>
