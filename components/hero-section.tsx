@@ -1,3 +1,4 @@
+// components/hero-section.tsx
 "use client"
 
 import { useState, useEffect } from "react"
@@ -50,6 +51,8 @@ export default function HeroSection({ heroContent, isEditingPage, onContentChang
               height={1080}
               className="max-w-full max-h-full object-contain"
               priority={index === 0}
+              unoptimized={true}
+              style={{ width: 'auto' }} // 수정: width: 'auto' 스타일 추가
             />
           </div>
         ))}
