@@ -5,9 +5,6 @@ import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import WordPageClient from "@/components/word-page-client"; // WordPageClient 임포트
 
-// 페이지 전체의 재검증 주기 설정 (예: 60초마다 자동으로 재검증)
-export const revalidate = 60;
-
 // 말씀 게시물 및 관련 데이터를 가져오는 함수
 async function fetchWordContentAndPosts() {
   const cookieStore = await cookies();

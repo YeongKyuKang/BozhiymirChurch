@@ -8,9 +8,6 @@ import { cookies } from "next/headers";
 
 import JoinPageClient from "@/components/join-page-client"; // 클라이언트 컴포넌트 import
 
-// 이 페이지는 정적으로 생성되므로, revalidate 설정을 명시적으로 하지 않거나 0으로 설정합니다.
-// revalidate를 설정하지 않으면 기본적으로 SSG로 동작합니다.
-// export const revalidate = 0; // 필요시 명시적으로 설정
 
 async function fetchJoinContent() {
   const cookieStore = await cookies(); // cookies() 호출 앞에 await 추가

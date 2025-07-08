@@ -10,10 +10,6 @@ import EditableText from "@/components/editable-text";
 // 수정: createClient로 변경하고, createServerClient 및 cookies 관련 import 제거
 import { createClient } from "@supabase/supabase-js";
 
-// 이 페이지는 정적으로 생성되므로, revalidate 설정을 명시적으로 하지 않거나 0으로 설정합니다.
-// revalidate를 설정하지 않으면 기본적으로 SSG로 동작합니다.
-// export const revalidate = 0; // 필요시 명시적으로 설정
-
 async function fetchLeadershipContent() {
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

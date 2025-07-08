@@ -5,9 +5,6 @@ import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import PrayerPageClient from "@/components/prayer-page-client";
 
-// 페이지 전체의 재검증 주기 설정 (예: 60초마다 자동으로 재검증)
-export const revalidate = 60; 
-
 interface PrayerRequest {
   id: string;
   category: "ukraine" | "bozhiymirchurch" | "members" | "children";
