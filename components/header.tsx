@@ -25,24 +25,20 @@ import {
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAboutOpen, setIsAboutOpen] = useState(false);
-  const [isEventsOpen, setIsEventsOpen] = useState(false);
+  // const [isEventsOpen, setIsEventsOpen] = useState(false); // EVENTS 드롭다운 제거로 상태 제거
   const [isFaithOpen, setIsFaithOpen] = useState(false);
   const { user, userProfile, userRole, signOut } = useAuth(); // user, userProfile, userRole 가져오기
   const router = useRouter();
 
   const aboutItems = [
-    { name: "LEADERSHIP", href: "/leadership" },
-    { name: "BELIEFS", href: "/beliefs" },
     { name: "OUR STORY", href: "/story" },
-    { name: "UKRAINIAN MINISTRY", href: "/ukrainian-ministry" },
     { name: "JESUS", href: "/jesus" },
+    { name: "BELIEFS", href: "/beliefs" },
+    { name: "LEADERSHIP", href: "/leadership" },
+    { name: "UKRAINIAN MINISTRY", href: "/ukrainian-ministry" },
+    
   ];
-
-  const eventItems = [
-    { name: "WEEKLY", href: "/weekly" },
-    { name: "SPECIFIC EVENTS", href: "/events" },
-  ];
-
+  
   const faithItems = [
     { name: "THANKS", href: "/thanks" },
     { name: "WORD", href: "/word" },
@@ -105,33 +101,13 @@ export default function Header() {
                 </div>
               </div>
 
-              {/* Events Dropdown */}
-              <div
-                className="relative group"
-                onMouseEnter={() => setIsEventsOpen(true)}
-                onMouseLeave={() => setIsEventsOpen(false)}
+              {/* Events Link (드롭다운에서 일반 링크로 변경) */}
+              <Link
+                href="/events" // 직접 /events로 연결
+                className="text-white text-sm font-medium hover:text-blue-300 transition-colors tracking-wide"
               >
-                <button className="flex items-center text-white text-sm font-medium hover:text-blue-300 transition-colors tracking-wide">
-                  EVENTS
-                  <ChevronDown className="ml-1 h-4 w-4" />
-                </button>
-                <div
-                  className={`absolute top-full left-0 mt-2 transition-all duration-200 ${isEventsOpen ? "opacity-100 visible" : "opacity-0 invisible"}`}
-                >
-                  <div className="w-64 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50">
-                    {eventItems.map((item) => (
-                      <Link
-                        key={item.name}
-                        href={item.href}
-                        className="block px-4 py-3 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
-                        onClick={() => setIsEventsOpen(false)}
-                      >
-                        {item.name}
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              </div>
+                EVENTS
+              </Link>
 
               {/* Faith Dropdown (로그인 상태에 따라 활성화/비활성화 및 툴팁) */}
               <div
@@ -286,30 +262,14 @@ export default function Header() {
                   )}
                 </div>
 
-                {/* Mobile Events Section */}
-                <div>
-                  <button
-                    onClick={() => setIsEventsOpen(!isEventsOpen)}
-                    className="flex items-center justify-between w-full text-white text-sm font-medium py-2"
-                  >
-                    EVENTS
-                    <ChevronDown className={`h-4 w-4 transition-transform ${isEventsOpen ? "rotate-180" : ""}`} />
-                  </button>
-                  {isEventsOpen && (
-                    <div className="ml-4 mt-2 space-y-2">
-                      {eventItems.map((item) => (
-                        <Link
-                          key={item.name}
-                          href={item.href}
-                          className="block text-white/80 text-sm py-1 hover:text-blue-300"
-                          onClick={() => { setIsMenuOpen(false); setIsEventsOpen(false); }}
-                        >
-                          {item.name}
-                        </Link>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                {/* Mobile Events Link (드롭다운에서 일반 링크로 변경) */}
+                <Link
+                  href="/events" // 직접 /events로 연결
+                  className="block text-white text-sm font-medium py-2 hover:text-blue-300"
+                  onClick={() => setIsMenuOpen(false)} // 메뉴 닫기
+                >
+                  EVENTS
+                </Link>
 
                 {/* Mobile Faith Section (로그인 상태에 따라 활성화/비활성화 및 툴팁) */}
                 <div>

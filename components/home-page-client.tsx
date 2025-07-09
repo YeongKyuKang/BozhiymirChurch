@@ -1,4 +1,4 @@
-"use client"; // 이 파일은 클라이언트 컴포넌트임을 명시합니다.
+"use client";
 
 import * as React from "react";
 import { useState } from "react";
@@ -10,6 +10,8 @@ import HeroSection from "@/components/hero-section"; // 기존 HeroSection 컴�
 import CommunitySection from "@/components/community-section"; // 기존 CommunitySection 컴포넌트 import
 import MinistriesShowcase from "@/components/ministries-showcase";
 import KidsMessageForm from "@/components/kids-message-form";
+import { useRouter } from "next/navigation"; // useRouter import for router.refresh()
+import { Database } from "@/lib/supabase"; // Database 타입 임포트
 
 interface HomePageClientProps {
   initialContent: Record<string, any>;
@@ -17,6 +19,8 @@ interface HomePageClientProps {
 
 export default function HomePageClient({ initialContent }: HomePageClientProps) {
   const { userRole } = useAuth();
+  const router = useRouter();
+
   const [isPageEditing, setIsPageEditing] = useState(false);
   const [changedContent, setChangedContent] = useState<Record<string, Record<string, string>>>({});
   const [isSavingAll, setIsSavingAll] = useState(false);
@@ -70,9 +74,9 @@ export default function HomePageClient({ initialContent }: HomePageClientProps) 
       }
     }
 
-    setIsSavingAll(false);
-    setIsPageEditing(false);
     setChangedContent({});
+    setIsPageEditing(false);
+    setIsSavingAll(false);
 
     if (updateCount > 0 && revalidated) {
       alert("홈페이지의 모든 변경 사항이 저장되고 업데이트되었습니다. 새로고침하면 반영됩니다.");
@@ -118,12 +122,15 @@ export default function HomePageClient({ initialContent }: HomePageClientProps) 
         onContentChange={handleContentChange} 
       />
       <CommunitySection 
-        communityContent={initialContent.community_about || {}} 
-        communityHighlights={initialContent.community_highlights || {}} 
+        initialContent={initialContent} // CommunitySection은 initialContent를 직접 받음
         isEditingPage={isPageEditing} 
         onContentChange={handleContentChange} 
       />
-      <MinistriesShowcase />
+      <MinistriesShowcase 
+        initialContent={initialContent} // MinistriesShowcase에 initialContent 전달
+        isEditingPage={isPageEditing} 
+        onContentChange={handleContentChange} 
+      />
       <KidsMessageForm />
     </div>
   );

@@ -10,44 +10,18 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { supabase } from "@/lib/supabase"
+import { supabase } from "@/lib/supabase" // 클라이언트용 supabase 임포트 (Database 타입이 적용된)
 import Header from "@/components/header"
 import Footer from "@/components/footer"
 import { Switch } from "@/components/ui/switch"
 import { Trash2 } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Database } from "@/lib/supabase"; // Database 타입 임포트
 
-interface ContentItem {
-  id: string
-  page: string
-  section: string
-  key: string
-  value: string
-}
-
-interface UserProfile {
-  id: string
-  email: string
-  role: "admin" | "user" | "child"
-  nickname: string | null
-  gender: "male" | "female"| null
-  profile_picture_url: string | null
-  created_at: string
-  updated_at: string
-  can_comment: boolean
-}
-
-interface Event {
-  id: string
-  title: string
-  date: string
-  time: string
-  location: string
-  description: string
-  category: string
-  recurring: boolean
-  icon: string
-}
+// Database 타입에서 인터페이스 파생
+type ContentItem = Database['public']['Tables']['content']['Row'];
+type UserProfile = Database['public']['Tables']['users']['Row'];
+type Event = Database['public']['Tables']['events']['Row']; // events 테이블 스키마에 맞춰 수정
 
 export default function AdminPage() {
   const { user, userRole, loading } = useAuth()
@@ -62,7 +36,7 @@ export default function AdminPage() {
     key: "",
     value: "",
   })
-  const [newEvent, setNewEvent] = useState({ // 새 이벤트 상태 추가
+  const [newEvent, setNewEvent] = useState<Omit<Event, 'id' | 'created_at' | 'updated_at'>>({ // 새 이벤트 상태 (id, created_at, updated_at 제외)
     title: "",
     date: "",
     time: "",
@@ -99,7 +73,8 @@ export default function AdminPage() {
   }
 
   const fetchEvents = async () => {
-    const { data, error } = await supabase.from("events").select("*").order("created_at", { ascending: false })
+    // events 테이블의 모든 필드를 select하도록 수정
+    const { data, error } = await supabase.from("events").select("id, title, date, time, location, description, category, recurring, icon, created_at, updated_at").order("created_at", { ascending: false })
 
     if (error) {
       console.error("Error fetching events:", error)
@@ -109,7 +84,8 @@ export default function AdminPage() {
   }
 
   const fetchUsers = async () => {
-    const { data, error } = await supabase.from("users").select("*").order("created_at", { ascending: false })
+    // users 테이블의 모든 필드를 select하도록 수정
+    const { data, error } = await supabase.from("users").select("id, email, role, nickname, gender, profile_picture_url, created_at, updated_at, can_comment").order("created_at", { ascending: false })
 
     if (error) {
       console.error("Error fetching users:", error)
@@ -169,7 +145,14 @@ export default function AdminPage() {
         return;
     }
 
-    const { error } = await supabase.from("events").insert([newEvent]);
+    // newEvent 객체에 created_at과 updated_at을 추가하여 삽입
+    const eventToInsert = {
+        ...newEvent,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+    };
+
+    const { error } = await supabase.from("events").insert([eventToInsert]);
 
     if (error) {
         setMessage("Error adding event: " + error.message);
@@ -296,7 +279,7 @@ export default function AdminPage() {
               <TabsList>
                 <TabsTrigger value="content">Content Management</TabsTrigger>
                 <TabsTrigger value="add">Add New Content</TabsTrigger>
-                <TabsTrigger value="events">Event Management</TabsTrigger> {/* 이벤트 탭 추가 */}
+                <TabsTrigger value="events">Event Management</TabsTrigger>
                 <TabsTrigger value="users">User Management</TabsTrigger>
               </TabsList>
 

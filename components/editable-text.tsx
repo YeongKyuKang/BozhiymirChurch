@@ -30,7 +30,7 @@ const EditableText: React.FC<EditableTextProps> = ({
   section,
   contentKey,
   initialValue,
-  tag: Tag = "span",
+  tag: Tag = "span", // 기본값은 span
   className,
   isTextArea = false,
   placeholder,
@@ -67,13 +67,11 @@ const EditableText: React.FC<EditableTextProps> = ({
   const handleSave = async () => {
     setIsUpdating(true);
     await updateContent(contentKey, editedValue, section);
-    // setIsEditing(false); // 개별 저장 버튼 로직은 삭제되었으므로 이 부분은 필요 없습니다.
     setIsUpdating(false);
   };
 
   const handleCancel = () => {
     setEditedValue(initialValue || ""); // Revert to original initialValue
-    // setIsEditing(false); // 개별 취소 버튼 로직은 삭제되었으므로 이 부분은 필요 없습니다.
   };
   
   // Enter edit mode: ensure editedValue is the current display text
@@ -94,40 +92,45 @@ const EditableText: React.FC<EditableTextProps> = ({
     }
   };
 
-
-  // Admin editing mode (input field appears)
-  if (isEditingPage && userRole === "admin") {
-    const InputComponent = isTextArea ? Textarea : Input;
-    return (
-      <div className="relative flex flex-col gap-2 p-4 border-2 border-dashed border-blue-400 rounded-md bg-white/50">
-        <InputComponent
-          value={editedValue}
-          onChange={handleInputChange} // 여기에서 handleInputChange를 사용합니다.
-          className={cn(className, "w-full", "text-gray-900")}
-          rows={isTextArea ? 5 : undefined}
-          placeholder={placeholder || "내용을 입력하세요..."}
-        />
-        {/* Individual Save/Cancel buttons removed here as per batch save design */}
-      </div>
-    );
-  }
-
-  // View mode (consistent structure for server & client)
+  // 항상 동일한 최상위 div를 렌더링하고 그 안에서 조건부 렌더링
   const showIndividualEditIndicator = userRole === "admin" && isEditingPage;
 
   return (
     <div
       className={cn(
         "relative",
-        showIndividualEditIndicator ? "group/edit" : ""
+        className, // EditableText에 전달된 className을 최상위 div에 적용
+        // 편집 모드일 때의 스타일을 최상위 div에 직접 적용
+        isEditingPage && userRole === "admin" ? "p-2 border-2 border-dashed border-blue-400 rounded-md bg-white/50" : ""
       )}
     >
-      <Tag
-        className={cn(className, showIndividualEditIndicator ? "group-hover/edit:bg-yellow-100 transition-colors cursor-pointer p-1 rounded-md" : "")}
-        onDoubleClick={showIndividualEditIndicator ? enterEditMode : undefined}
-      >
-        {displayValue}
-      </Tag>
+      {isEditingPage && userRole === "admin" ? (
+        // 편집 모드: Input 또는 Textarea를 직접 렌더링
+        isTextArea ? (
+          <Textarea
+            value={editedValue}
+            onChange={handleInputChange}
+            className={cn("w-full", "text-gray-900")}
+            rows={5}
+            placeholder={placeholder || "내용을 입력하세요..."}
+          />
+        ) : (
+          <Input
+            value={editedValue}
+            onChange={handleInputChange}
+            className={cn("w-full", "text-gray-900")}
+            placeholder={placeholder || "내용을 입력하세요..."}
+          />
+        )
+      ) : (
+        // 뷰 모드: Tag prop으로 지정된 요소를 렌더링
+        <Tag
+          className={cn(showIndividualEditIndicator ? "group-hover/edit:bg-yellow-100 transition-colors cursor-pointer p-1 rounded-md" : "")}
+          onDoubleClick={showIndividualEditIndicator ? enterEditMode : undefined}
+        >
+          {displayValue}
+        </Tag>
+      )}
       {showIndividualEditIndicator && (
         <Button
           variant="ghost"

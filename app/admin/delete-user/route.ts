@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
+import { Database } from '@/lib/supabase'; // Database 타입 임포트
 
 // Ensure your Supabase service role key is stored securely in environment variables
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -12,7 +13,8 @@ if (!supabaseUrl || !supabaseServiceRoleKey || !adminDeletePassword) {
     // In a real app, you might want to return an error here if these are missing.
 }
 
-const supabaseAdmin = createClient(supabaseUrl!, supabaseServiceRoleKey!, {
+// createClient에 Database 타입을 적용합니다.
+const supabaseAdmin = createClient<Database>(supabaseUrl!, supabaseServiceRoleKey!, {
   auth: {
     autoRefreshToken: false,
     persistSession: false,

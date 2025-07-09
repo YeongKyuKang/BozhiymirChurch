@@ -45,32 +45,35 @@ export type Database = {
         Row: {
           id: string
           email: string
-          role: "admin" | "user"
+          role: "admin" | "user" | "child" // 'child' 역할 추가
           nickname: string | null
           gender: "male" | "female"| null
           profile_picture_url: string | null
           created_at: string
           updated_at: string
+          can_comment: boolean // can_comment 필드 추가
         }
         Insert: {
           id: string
           email: string
-          role?: "admin" | "user"
+          role?: "admin" | "user" | "child" // 'child' 역할 추가
           nickname?: string | null
           gender?: "male" | "female"| null
           profile_picture_url?: string | null
           created_at?: string
           updated_at?: string
+          can_comment?: boolean // can_comment 필드 추가
         }
         Update: {
           id?: string
           email?: string
-          role?: "admin" | "user"
+          role?: "admin" | "user" | "child" // 'child' 역할 추가
           nickname?: string | null
           gender?: "male" | "female" | null
           profile_picture_url?: string | null
           created_at?: string
           updated_at?: string
+          can_comment?: boolean // can_comment 필드 추가
         }
       }
       events: {
