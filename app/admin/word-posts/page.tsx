@@ -1,9 +1,8 @@
 // app/admin/word-posts/page.tsx
-"use client";
+"use client"; // ✅ 수정: 이 줄을 파일 맨 위에 추가하여 클라이언트 컴포넌트로 지정
 
 import * as React from "react";
-// ✅ 수정: useCallback을 React에서 직접 임포트합니다.
-import { useState, useEffect, useRef, useCallback } from "react"; 
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
 import { supabase } from "@/lib/supabase";
@@ -14,13 +13,13 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { format, startOfDay, isBefore, isAfter, isFuture, isPast } from "date-fns"; 
-import { 
-  Settings, Save, X, MessageCircle, Heart, Download, BookOpen, 
-  Calendar as CalendarIcon, Frown, ImageIcon, Upload, Loader2, 
-  CheckCircle, XCircle 
-} from "lucide-react"; 
-import imageCompression from "browser-image-compression"; 
+import { format, startOfDay, subDays, isFuture, isPast } from "date-fns"; // isBefore 제거
+import {
+  Settings, Save, X, MessageCircle, Heart, Download, BookOpen,
+  Calendar as CalendarIcon, Frown, ImageIcon, Upload, Loader2,
+  CheckCircle, XCircle
+} from "lucide-react";
+import imageCompression from "browser-image-compression"; // 이미지 압축 라이브러리
 
 // Supabase word_posts 테이블의 행 타입 정의 (image_url 포함)
 interface WordPost {
@@ -211,8 +210,8 @@ export default function AdminWordPostsPage() {
     router.push('/word');
   };
 
-  // 달력에서 선택 불가능한 날짜를 설정하는 함수
-  const getDisabledDays = useCallback(() => { // useCallback 직접 사용
+  // 달력에서 선택 불가능한 날짜를 설정하는 함수 (미래 날짜 및 5일 이전 과거 날짜)
+  const getDisabledDays = useCallback(() => { 
     const today = new Date(); 
     const startOfToday = startOfDay(today);
 
@@ -220,12 +219,8 @@ export default function AdminWordPostsPage() {
     fiveDaysAgo.setDate(today.getDate() - 5); 
     const startOfFiveDaysAgo = startOfDay(fiveDaysAgo);
 
-    const tomorrow = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
-    const futureDates = { from: tomorrow, to: new Date(2100, 0, 1) }; 
-
-    const sixDaysAgo = new Date();
-    sixDaysAgo.setDate(today.getDate() - 6); 
-    const pastBeyondFiveDays = { from: new Date(1900, 0, 1), to: startOfDay(sixDaysAgo) }; 
+    const futureDates = { from: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1), to: new Date(2100, 0, 1) }; 
+    const pastBeyondFiveDays = { from: new Date(1900, 0, 1), to: startOfDay(new Date(fiveDaysAgo.getFullYear(), fiveDaysAgo.getMonth(), fiveDaysAgo.getDate() - 1)) }; 
     
     return [
       futureDates,
