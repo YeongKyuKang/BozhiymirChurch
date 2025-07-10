@@ -1,10 +1,11 @@
+// lib/supabase.ts
 import { createClient } from "@supabase/supabase-js"
-import { createBrowserClient } from "@supabase/ssr" // 수정: createBrowserClient를 @supabase/ssr에서 임포트
+import { createBrowserClient } from "@supabase/ssr"
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
-export const supabase = createBrowserClient( // 수정: createBrowserClient 사용
+export const supabase = createBrowserClient(
   supabaseUrl,
   supabaseAnonKey
 )
@@ -45,78 +46,135 @@ export type Database = {
         Row: {
           id: string
           email: string
-          role: "admin" | "user" | "child" // 'child' 역할 추가
+          role: "admin" | "user" | "child"
           nickname: string | null
           gender: "male" | "female"| null
           profile_picture_url: string | null
           created_at: string
           updated_at: string
-          can_comment: boolean // can_comment 필드 추가
+          can_comment: boolean
         }
         Insert: {
           id: string
           email: string
-          role?: "admin" | "user" | "child" // 'child' 역할 추가
+          role?: "admin" | "user" | "child"
           nickname?: string | null
           gender?: "male" | "female"| null
           profile_picture_url?: string | null
           created_at?: string
           updated_at?: string
-          can_comment?: boolean // can_comment 필드 추가
         }
         Update: {
           id?: string
           email?: string
-          role?: "admin" | "user" | "child" // 'child' 역할 추가
+          role?: "admin" | "user" | "child"
           nickname?: string | null
           gender?: "male" | "female" | null
           profile_picture_url?: string | null
           created_at?: string
           updated_at?: string
-          can_comment?: boolean // can_comment 필드 추가
         }
       }
       events: {
         Row: {
           id: string
           title: string
-          date: string
-          time: string
-          location: string
-          description: string
-          category: string
-          recurring: boolean
-          icon: string
+          slug: string | null
+          description: string | null
+          event_date: string
+          start_time: string | null
+          end_time: string | null
+          location: string | null
+          category: string | null
+          image_url: string | null
           created_at: string
           updated_at: string
         }
         Insert: {
           id?: string
           title: string
-          date: string
-          time: string
-          location: string
-          description: string
-          category: string
-          recurring?: boolean
-          icon?: string
+          slug?: string | null
+          description?: string | null
+          event_date: string
+          start_time?: string | null
+          end_time?: string | null
+          location?: string | null
+          category?: string | null
+          image_url?: string | null
           created_at?: string
           updated_at?: string
         }
         Update: {
           id?: string
           title?: string
-          date?: string
-          time?: string
-          location?: string
-          description?: string
-          category?: string
-          recurring?: boolean
-          icon?: string
+          slug?: string | null
+          description?: string | null
+          event_date?: string
+          start_time?: string | null
+          end_time?: string | null
+          location?: string | null
+          category?: string | null
+          image_url?: string | null
           created_at?: string
           updated_at?: string
         }
       }
+      contact_forms: { // contact_forms 테이블 정의
+        Row: {
+          id: string
+          first_name: string
+          last_name: string
+          email: string
+          phone: string | null
+          interests: string[] | Record<string, boolean> | null // Json -> string[] | Record<string, boolean>로 변경
+          message: string | null
+          is_read: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          first_name: string
+          last_name: string
+          email: string
+          phone?: string | null
+          interests?: string[] | Record<string, boolean> | null // Json -> string[] | Record<string, boolean>로 변경
+          message?: string | null
+          is_read?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          first_name?: string
+          last_name?: string
+          email?: string
+          phone?: string | null
+          interests?: string[] | Record<string, boolean> | null // Json -> string[] | Record<string, boolean>로 변경
+          message?: string | null
+          is_read?: boolean
+          created_at?: string
+        }
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      [_ in never]: never
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
     }
   }
 }
+
+// Json 타입은 더 이상 interests에 직접 사용되지 않지만, 다른 곳에서 사용될 수 있으므로 유지합니다.
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]

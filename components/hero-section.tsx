@@ -17,9 +17,9 @@
    const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
    const backgroundImages = [
+    "/images/bozhiymir.png",
      "/images/bozhiymir2.jpg",
-     "/images/녕.png",
-     "/images/하.png",
+     "/images/bozhiymir3.jpg",
      "/images/세.png",
      "/images/요.png",
      "/images/!!.png",

@@ -7,10 +7,16 @@ DROP TRIGGER IF EXISTS update_events_updated_at ON public.events;
 -- 신규 추가될 테이블의 트리거도 삭제
 DROP TRIGGER IF EXISTS update_thanks_posts_updated_at ON public.thanks_posts;
 DROP TRIGGER IF EXISTS update_word_posts_updated_at ON public.word_posts;
+-- 슬러그 생성 트리거도 삭제
+DROP TRIGGER IF EXISTS set_event_slug ON public.events;
+
 
 -- 기존 함수 삭제 (CASCADE 옵션으로 의존 객체까지 삭제)
 DROP FUNCTION IF EXISTS update_updated_at_column() CASCADE;
 DROP FUNCTION IF EXISTS handle_new_user() CASCADE;
+-- 슬러그 생성 함수도 삭제
+DROP FUNCTION IF EXISTS generate_event_slug() CASCADE;
+
 
 -- 기존 정책 삭제
 DROP POLICY IF EXISTS "Users can view their own profile" ON public.users;
@@ -78,7 +84,7 @@ DROP POLICY IF EXISTS "Users can remove their own word reactions" ON public.word
 
 -- 기존 테이블 삭제 (CASCADE 옵션으로 의존 객체까지 삭제)
 DROP TABLE IF EXISTS public.content CASCADE;
-DROP TABLE IF EXISTS public.users CASCADE;
+-- DROP TABLE IF EXISTS public.users CASCADE; -- users 테이블 삭제 부분 제거
 DROP TABLE IF EXISTS public.posts CASCADE;
 DROP TABLE IF EXISTS public.comments CASCADE;
 DROP TABLE IF EXISTS public.likes CASCADE;
@@ -88,6 +94,8 @@ DROP TABLE IF EXISTS public.registration_codes CASCADE;
 DROP TABLE IF EXISTS public.admin_settings CASCADE;
 DROP TABLE IF EXISTS public.events CASCADE;
 DROP TABLE IF EXISTS public.prayer_requests CASCADE;
+-- contact_forms 테이블 삭제 추가
+DROP TABLE IF EXISTS public.contact_forms CASCADE;
 -- 신규 추가될 테이블도 삭제
 DROP TABLE IF EXISTS public.thanks_posts CASCADE;
 DROP TABLE IF EXISTS public.thanks_comments CASCADE;
@@ -98,18 +106,18 @@ DROP TABLE IF EXISTS public.word_reactions CASCADE;
 
 
 -- ########## 2단계: 최신 스키마로 다시 생성 ##########
--- users 테이블 생성 (새로운 컬럼들을 처음부터 포함)
-CREATE TABLE public.users (
-  id UUID REFERENCES auth.users(id) PRIMARY KEY,
-  email TEXT NOT NULL,
-  role TEXT DEFAULT 'user' CHECK (role IN ('admin', 'user', 'child')), -- 'child' 역할 추가
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  nickname TEXT,
-  gender TEXT CHECK (gender IN ('male', 'female')),
-  profile_picture_url TEXT,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  can_comment BOOLEAN DEFAULT FALSE -- 댓글 허용 여부 컬럼 추가
-);
+-- users 테이블 생성 (새로운 컬럼들을 처음부터 포함) - 이 부분도 제거합니다.
+-- CREATE TABLE public.users (
+--   id UUID REFERENCES auth.users(id) PRIMARY KEY,
+--   email TEXT NOT NULL,
+--   role TEXT DEFAULT 'user' CHECK (role IN ('admin', 'user', 'child')), -- 'child' 역할 추가
+--   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+--   nickname TEXT,
+--   gender TEXT CHECK (gender IN ('male', 'female')),
+--   profile_picture_url TEXT,
+--   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+--   can_comment BOOLEAN DEFAULT FALSE -- 댓글 허용 여부 컬럼 추가
+-- );
 
 -- content 테이블 생성
 CREATE TABLE public.content (
@@ -138,7 +146,7 @@ CREATE TABLE public.posts (
 
 -- comments 테이블 생성 (게시물 댓글)
 CREATE TABLE public.comments (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY, -- 오류 수정: 'IS NULL' 제거
   post_id UUID REFERENCES public.posts(id) ON DELETE CASCADE NOT NULL,
   author_id UUID REFERENCES public.users(id) ON DELETE CASCADE NOT NULL,
   comment TEXT NOT NULL,
@@ -188,17 +196,18 @@ CREATE TABLE public.admin_settings (
   password_history_hashes JSONB DEFAULT '[]'::jsonb
 );
 
--- events 테이블 생성
+-- events 테이블 생성 (스키마 수정: slug 컬럼 추가)
 CREATE TABLE public.events (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   title TEXT NOT NULL,
-  date TEXT NOT NULL,
-  time TEXT NOT NULL,
-  location TEXT NOT NULL,
-  description TEXT NOT NULL,
-  category TEXT NOT NULL,
-  recurring BOOLEAN DEFAULT FALSE,
-  icon TEXT,
+  slug TEXT UNIQUE, -- 슬러그 컬럼 추가 및 UNIQUE 제약 조건
+  description TEXT, -- Nullable
+  event_date TEXT NOT NULL, --YYYY-MM-DD
+  start_time TEXT, -- HH:MM, Nullable
+  end_time TEXT, -- HH:MM, Nullable
+  location TEXT, -- Nullable
+  category TEXT, -- Nullable
+  image_url TEXT, -- Nullable
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -279,6 +288,18 @@ CREATE TABLE public.word_reactions (
   UNIQUE (user_id, post_id, reaction_type)
 );
 
+CREATE TABLE public.contact_forms (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  first_name TEXT NOT NULL,
+  last_name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  phone TEXT,
+  interests JSONB,
+  message TEXT,
+  is_read BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 
 -- Row Level Security (RLS) 활성화
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
@@ -337,14 +358,64 @@ CREATE TRIGGER update_word_posts_updated_at
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
+-- 슬러그를 자동으로 생성하는 함수
+CREATE OR REPLACE FUNCTION generate_event_slug()
+RETURNS TRIGGER AS $$
+DECLARE
+    base_slug TEXT;
+    new_slug TEXT;
+    counter INT := 0;
+BEGIN
+    -- 특수 문자 제거 및 공백을 하이픈으로 대체, 소문자로 변환
+    base_slug := LOWER(REGEXP_REPLACE(NEW.title, '[^a-zA-Z0-9가-힣]+', '-', 'g'));
+    -- 선행/후행 하이픈 제거 및 여러 하이픈을 하나로
+    base_slug := TRIM(BOTH '-' FROM REGEXP_REPLACE(base_slug, '-+', '-', 'g'));
+
+    -- 제목이 너무 짧거나 특수 문자로만 이루어져 슬러그가 비어있는 경우 기본값 설정
+    IF base_slug = '' THEN
+        base_slug := 'event';
+    END IF;
+
+    new_slug := base_slug;
+
+    -- 슬러그의 고유성 확인 및 필요한 경우 카운터 추가
+    LOOP
+        -- 카운터가 0보다 크면 슬러그에 카운터 추가
+        IF counter > 0 THEN
+            new_slug := base_slug || '-' || counter;
+        END IF;
+
+        -- 이미 존재하는 슬러그인지 확인
+        PERFORM 1 FROM public.events WHERE slug = new_slug;
+        -- 슬러그가 존재하지 않거나, 업데이트 중이고 기존 슬러그와 동일한 경우 루프 종료
+        IF NOT FOUND OR (TG_OP = 'UPDATE' AND OLD.slug = new_slug) THEN
+            NEW.slug := new_slug;
+            EXIT;
+        END IF;
+
+        counter := counter + 1;
+    END LOOP;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- 슬러그를 자동으로 설정하는 트리거
+CREATE TRIGGER set_event_slug
+BEFORE INSERT OR UPDATE ON public.events
+FOR EACH ROW
+EXECUTE FUNCTION generate_event_slug();
+
 
 -- handle_new_user 함수를 새로운 필드를 포함하도록 생성
+-- 이 함수는 auth.users 테이블에 새 사용자가 추가될 때 public.users 테이블에 자동으로 레코드를 삽입합니다.
+-- public.users 테이블이 삭제되지 않으므로, 이 함수는 기존 로직과 함께 잘 작동합니다.
 CREATE OR REPLACE FUNCTION handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
   INSERT INTO public.users (id, email, role, nickname, gender, profile_picture_url, can_comment)
   VALUES (NEW.id, NEW.email, 'user', NULL, NULL, NULL, FALSE) -- 기본값으로 role='user', can_comment=FALSE 설정
-  ON CONFLICT (id) DO NOTHING;
+  ON CONFLICT (id) DO NOTHING; -- 이미 존재하는 ID에 대한 충돌 방지
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -682,8 +753,8 @@ INSERT INTO public.content (page, section, key, value) VALUES
 ('story', 'ministry_highlight', 'stat2_number', '25'),
 ('story', 'ministry_highlight', 'stat2_label', 'Host Families'),
 ('story', 'ministry_highlight', 'highlight_quote', '"Religion that God our Father accepts as pure and faultless is this: to look after orphans and widows in their distress." - James 1:27'),
-('story', 'cta', 'cta_title', 'Be Part of Our Story'),
-('story', 'cta', 'cta_description', 'God is still writing the story of Bozhiymir Church. We''d love for you to be part of the next chapter.'),
+('story', 'cta', 'cta_title', 'Want to Learn More?'),
+('story', 'cta', 'cta_description', 'Join us for worship and discover how these beliefs come alive in our church community.'),
 
 
 -- Leadership page content
@@ -808,42 +879,17 @@ INSERT INTO public.content (page, section, key, value) VALUES
 ('events', 'guidelines', 'card3_title', 'Easy to Find'),
 ('events', 'guidelines', 'card3_description', 'All events are held at our church campus with clear directions and parking available.'),
 ('events', 'cta', 'title', 'Don''t Miss Out!'),
-('events', 'cta', 'description', 'Stay connected with all our events and activities. Join our church family today!'),
-
--- Join page content
-('join', 'main', 'title', 'Join Our Family'),
-('join', 'main', 'description', 'We''d love to welcome you to Bozhiymir Church! Whether you''re visiting for the first time or looking to become part of our church family, there''s a place for you here.'),
-('join', 'services', 'services_title', 'Sunday Services'),
-('join', 'services', 'service_style_1', 'Traditional Service'),
-('join', 'services', 'service_description_1', 'Classic hymns, choir, and traditional worship format'),
-('join', 'services', 'service_style_2', 'Contemporary Service'),
-('join', 'services', 'service_description_2', 'Modern worship music and casual atmosphere'),
-('join', 'services', 'service_style_3', 'Family Service'),
-('join', 'services', 'service_description_3', 'Family-friendly with children''s activities'),
-('join', 'services', 'services_footer_text', 'All services held every Sunday'),
-('join', 'expect', 'expect_title', 'What to Expect'),
-('join', 'expect', 'expect_title_1', 'Warm Welcome'),
-('join', 'expect', 'expect_description_1', 'Our greeters will welcome you and help you find your way around.'),
-('join', 'expect', 'expect_title_2', 'Inspiring Worship'),
-('join', 'expect', 'expect_description_2', 'Experience meaningful worship through music and biblical teaching.'),
-('join', 'expect', 'expect_title_3', 'Friendly Community'),
-('join', 'expect', 'expect_description_3', 'Meet our diverse church family from many different backgrounds.'),
-('join', 'expect', 'expect_title_4', 'Kids Programs'),
-('join', 'expect', 'expect_description_4', 'Safe, fun programs for children during the service.'),
-('join', 'contact', 'visit_title', 'Visit Us'),
-('join', 'contact', 'address', '1234 Portland Avenue\nPortland, OR 97201'),
-('join', 'contact', 'service_times', 'Sunday: 9:00 AM, 10:30 AM, 12:00 PM\nWednesday Bible Study: 7:00 PM'),
-('join', 'contact', 'phone', '(503) 555-0123'),
-('join', 'contact', 'email', 'info@bozhiymirchurch.com'),
-('join', 'ministry_highlight', 'highlight_title', 'Special Ministry Opportunity'),
-('join', 'ministry_highlight', 'highlight_subtitle', 'Ukrainian Children Ministry'),
-('join', 'ministry_highlight', 'highlight_description', 'Join us in caring for Ukrainian orphan children in Portland. Whether through hosting, volunteering, or supporting, there are many ways to make a difference.'),
-('join', 'ministry_highlight', 'stat1_number', '47'),
-('join', 'ministry_highlight', 'stat1_label', 'Children Supported'),
-('join', 'ministry_highlight', 'stat2_number', '25'),
-('join', 'ministry_highlight', 'stat2_label', 'Host Families'),
-('join', 'ministry_highlight', 'stat3_number', '100%'),
-('join', 'ministry_highlight', 'stat3_label', 'In School'),
-('join', 'cta', 'cta_title', 'Ready to Visit?'),
-('join', 'cta', 'cta_description', 'We can''t wait to meet you and welcome you into our church family. Come as you are - you belong here!')
+('events', 'cta', 'description', 'Stay connected with all our events and activities. Join our church family today!')
 ON CONFLICT (page, section, key) DO UPDATE SET value = EXCLUDED.value;
+
+-- ########## 6단계: 이벤트 시드 데이터 삽입 ##########
+-- 슬러그는 트리거에 의해 자동으로 생성되므로 여기에 삽입하지 않습니다.
+INSERT INTO public.events (title, description, event_date, start_time, end_time, location, category, image_url) VALUES
+('주일 예배', '매주 주일 드리는 온 가족 예배입니다. 찬양과 말씀으로 함께 은혜를 나눕니다.', '2025-07-13', '11:00', '12:30', '본당', '예배', 'https://placehold.co/600x400/FFDDC1/000000?text=Worship+Service'),
+('어린이 성경학교', '아이들이 즐겁게 성경을 배우고 신앙을 키울 수 있는 프로그램입니다.', '2025-07-20', '10:00', '12:00', '유아실', '어린이', 'https://placehold.co/600x400/D1E7FF/000000?text=Kids+Bible+School'),
+('청년부 모임', '젊은이들을 위한 교제와 신앙 성장을 위한 시간입니다.', '2025-07-15', '19:00', '21:00', '소그룹실', '청소년/청년', 'https://placehold.co/600x400/E6CCFF/000000?text=Youth+Group'),
+('수요 성경공부', '성경을 깊이 있게 공부하며 삶에 적용하는 시간입니다.', '2025-07-16', '20:00', '21:30', '온라인 (Zoom)', '성경공부', 'https://placehold.co/600x400/C1FFD1/000000?text=Bible+Study'),
+('새벽 기도회', '매일 새벽 하나님께 나아가 기도하는 시간입니다.', '2025-07-14', '06:00', '07:00', '본당', '예배', 'https://placehold.co/600x400/FFC1C1/000000?text=Morning+Prayer'),
+('여성 모임', '여성들을 위한 교제와 나눔의 시간입니다.', '2025-07-25', '14:00', '16:00', '친교실', '공동체', 'https://placehold.co/600x400/C1FFFF/000000?text=Women''s+Fellowship'),
+('남성 모임', '남성들을 위한 교제와 나눔의 시간입니다.', '2025-07-26', '14:00', '16:00', '친교실', '공동체', 'https://placehold.co/600x400/E0C1FF/000000?text=Men''s+Fellowship'),
+('새 신자 환영회', '교회에 새로 오신 분들을 환영하고 소개하는 자리입니다.', '2025-08-03', '13:00', '14:00', '카페테리아', '공동체', 'https://placehold.co/600x400/FFD700/000000?text=New+Comers');

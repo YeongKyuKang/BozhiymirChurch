@@ -32,6 +32,8 @@ async function fetchJoinContent() {
     
   if (error) {
     console.error('Failed to fetch join content on the server:', error);
+    // 오류 발생 시 빈 객체 반환
+    console.log('fetchJoinContent: Returning empty object due to error.'); // 오류 시 로그
     return {};
   }
   
@@ -42,13 +44,12 @@ async function fetchJoinContent() {
     }
     contentMap[item.section][item.key] = item.value;
   });
-  
+
   return contentMap;
 }
 
 export default async function JoinPageWrapper() {
   const initialContent = await fetchJoinContent(); 
-
   return (
     <>
       <Header />

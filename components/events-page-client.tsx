@@ -1,13 +1,13 @@
-// components/specific-events-page-client.tsx
+// components/events-page-client.tsx
 "use client";
 
 import * as React from "react";
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/auth-context";
-import { supabase } from "@/lib/supabase"; // 클라이언트용 Supabase 인스턴스
+import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
-import { Settings, Save, X, CalendarIcon, MapPin, Clock, Tag } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Settings, Save, X, CalendarIcon, MapPin, Clock } from "lucide-react";
+import { Card } from "@/components/ui/card";
 import EditableText from "@/components/editable-text";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -15,10 +15,9 @@ import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
-import Link from "next/link"; // Link 컴포넌트 임포트
-import { Database } from "@/lib/supabase"; // lib/supabase.ts에서 Database 타입 임포트
+import Link from "next/link";
+import { Database } from "@/lib/supabase";
 
-// Event 인터페이스를 Database 타입에서 파생
 type Event = Database['public']['Tables']['events']['Row'];
 
 interface SpecificEventsPageClientProps {
@@ -27,7 +26,7 @@ interface SpecificEventsPageClientProps {
 }
 
 export default function SpecificEventsPageClient({ initialContent, initialEvents }: SpecificEventsPageClientProps) {
-  const { userRole } = useAuth(); // userRole만 필요
+  const { userRole } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -36,7 +35,6 @@ export default function SpecificEventsPageClient({ initialContent, initialEvents
   const [changedContent, setChangedContent] = useState<Record<string, Record<string, string>>>({});
   const [isSavingAll, setIsSavingAll] = useState(false);
 
-  // 필터링 및 정렬 상태
   const [events, setEvents] = useState<Event[]>(initialEvents);
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
@@ -44,19 +42,16 @@ export default function SpecificEventsPageClient({ initialContent, initialEvents
   );
   const [timezoneOffset, setTimezoneOffset] = useState<number | null>(null);
 
-  // 사용자 시간대 오프셋 감지
   useEffect(() => {
     if (typeof window !== 'undefined') {
       setTimezoneOffset(new Date().getTimezoneOffset());
     }
   }, []);
 
-  // initialEvents가 변경될 때마다 이벤트 목록 업데이트
   useEffect(() => {
     setEvents(initialEvents);
   }, [initialEvents]);
 
-  // URL 쿼리 파라미터 생성 헬퍼 함수
   const createQueryString = useCallback(
     (name: string, value: string | number | null | undefined) => {
       const params = new URLSearchParams(searchParams.toString());
@@ -70,7 +65,6 @@ export default function SpecificEventsPageClient({ initialContent, initialEvents
     [searchParams]
   );
 
-  // 필터 변경 핸들러
   const handleCategoryChange = (value: string) => {
     setSelectedCategory(value);
     router.push(pathname + '?' + createQueryString('category', value));
@@ -87,7 +81,6 @@ export default function SpecificEventsPageClient({ initialContent, initialEvents
     router.push(pathname + '?' + newQueryString);
   };
 
-  // 관리자 편집 모드 관련 함수
   const handleContentChange = (section: string, key: string, value: string) => {
     setChangedContent(prev => ({
       ...prev,
@@ -142,7 +135,7 @@ export default function SpecificEventsPageClient({ initialContent, initialEvents
 
     if (updateCount > 0) {
       alert(`콘텐츠가 성공적으로 업데이트되었습니다.${revalidated ? "" : " (재검증 실패)"}`);
-      router.refresh(); // 변경된 콘텐츠를 다시 가져오기 위해 페이지 새로고침
+      router.refresh();
     } else {
       alert("변경된 내용이 없거나 저장에 실패했습니다.");
     }
@@ -155,17 +148,14 @@ export default function SpecificEventsPageClient({ initialContent, initialEvents
     }
   };
 
-  // 관리자 권한 확인
   const isAdmin = userRole === 'admin';
 
-  // 필터링된 이벤트 목록
   const filteredEvents = events.filter(event => {
     const matchesCategory = selectedCategory === 'all' || event.category === selectedCategory;
     
     let matchesDate = true;
-    if (selectedDate) {
-      const eventDate = new Date(event.date); // event.date 사용
-      // 날짜만 비교 (시간 무시)
+    if (selectedDate && event.event_date) {
+      const eventDate = new Date(event.event_date);
       matchesDate = eventDate.getFullYear() === selectedDate.getFullYear() &&
                     eventDate.getMonth() === selectedDate.getMonth() &&
                     eventDate.getDate() === selectedDate.getDate();
@@ -176,7 +166,6 @@ export default function SpecificEventsPageClient({ initialContent, initialEvents
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white py-16 pt-24">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
-        {/* 관리자 편집 모드 토글 */}
         {isAdmin && (
           <div className="flex justify-end mb-4">
             <Button
@@ -202,7 +191,6 @@ export default function SpecificEventsPageClient({ initialContent, initialEvents
           </div>
         )}
 
-        {/* Hero Section - firstorlando.com 스타일 참고 */}
         <section className="text-center mb-12">
           <h1 className="text-5xl font-extrabold text-gray-900 mb-4 leading-tight">
             <EditableText
@@ -212,11 +200,9 @@ export default function SpecificEventsPageClient({ initialContent, initialEvents
               initialValue={initialContent.header?.title || "교회 행사"}
               onContentChange={(section: string, key: string, value: string) => handleContentChange("header", "title", value)}
               isEditingPage={isPageEditing}
-              className="inline-block" // 이 className은 EditableText 내부의 최상위 div에 적용됩니다.
+              className="inline-block"
             />
           </h1>
-          {/* 이전 <p> 태그를 <div> 태그로 변경하여 하이드레이션 오류 방지 */}
-          {/* EditableText 컴포넌트의 최상위 요소가 div이므로, 이를 감싸는 부모도 div여야 합니다. */}
           <div className="text-xl text-gray-600 max-w-3xl mx-auto">
             <EditableText
               page="events"
@@ -229,9 +215,7 @@ export default function SpecificEventsPageClient({ initialContent, initialEvents
           </div>
         </section>
 
-        {/* 필터 섹션 */}
         <section className="mb-8 p-4 bg-white rounded-lg shadow-md flex flex-col sm:flex-row gap-4 items-center justify-center">
-          {/* 카테고리 필터 */}
           <div className="flex-1 min-w-[180px]">
             <label htmlFor="category-filter" className="sr-only">카테고리</label>
             <Select value={selectedCategory} onValueChange={handleCategoryChange}>
@@ -250,7 +234,6 @@ export default function SpecificEventsPageClient({ initialContent, initialEvents
             </Select>
           </div>
 
-          {/* 날짜 필터 */}
           <div className="flex-1 min-w-[180px]">
             <label htmlFor="date-filter" className="sr-only">날짜</label>
             <Popover>
@@ -283,7 +266,6 @@ export default function SpecificEventsPageClient({ initialContent, initialEvents
           </div>
         </section>
 
-        {/* 이벤트 목록 */}
         <section>
           {filteredEvents.length === 0 ? (
             <p className="text-center text-gray-600 text-lg py-10">
@@ -292,14 +274,13 @@ export default function SpecificEventsPageClient({ initialContent, initialEvents
           ) : (
             <div className="grid grid-cols-1 gap-8">
               {filteredEvents.map((event) => (
-                // Link 컴포넌트로 Card를 감싸서 클릭 가능하게 만듭니다.
-                <Link key={event.id} href={`/events/${event.id}`} passHref>
+                // 링크를 event.slug로 변경했습니다.
+                <Link key={event.id} href={`/events/${event.slug}`} passHref>
                   <Card className="overflow-hidden rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col lg:flex-row cursor-pointer">
-                    {/* 이미지 섹션 (데스크톱에서는 왼쪽, 모바일에서는 위) */}
-                    {event.icon && ( // event.icon 사용
+                    {event.image_url && (
                       <div className="relative w-full h-48 lg:h-auto lg:w-1/3 flex-shrink-0">
                         <img
-                          src={event.icon} // event.icon 사용
+                          src={event.image_url}
                           alt={event.title}
                           className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                           onError={(e) => {
@@ -314,9 +295,7 @@ export default function SpecificEventsPageClient({ initialContent, initialEvents
                       </div>
                     )}
                     
-                    {/* 콘텐츠 섹션 (데스크톱에서는 오른쪽, 모바일에서는 아래) */}
                     <div className="flex-grow p-6 flex flex-col justify-between">
-                      {/* 제목 및 설명 */}
                       <div>
                         <h3 className="text-xl font-bold text-gray-900 mb-2">{event.title}</h3>
                         <p className="text-gray-700 text-sm line-clamp-3 mb-4">
@@ -324,16 +303,19 @@ export default function SpecificEventsPageClient({ initialContent, initialEvents
                         </p>
                       </div>
 
-                      {/* 이벤트 상세 정보 */}
                       <div className="space-y-2 text-sm text-gray-600 border-t pt-4">
-                        <div className="flex items-center">
-                          <CalendarIcon className="h-4 w-4 mr-2 text-blue-500" />
-                          <span>{format(new Date(event.date), "yyyy년 MM월 dd일 (EEE)")}</span> {/* event.date 사용 */}
-                        </div>
-                        {event.time && (
+                        {event.event_date && (
+                          <div className="flex items-center">
+                            <CalendarIcon className="h-4 w-4 mr-2 text-blue-500" />
+                            <span>{format(new Date(event.event_date), "yyyy년 MM월 dd일 (EEE)")}</span>
+                          </div>
+                        )}
+                        {(event.start_time || event.end_time) && (
                           <div className="flex items-center">
                             <Clock className="h-4 w-4 mr-2 text-blue-500" />
-                            <span>{event.time}</span> {/* event.time 사용 */}
+                            <span>
+                              {event.start_time}{event.end_time ? ` - ${event.end_time}` : ''}
+                            </span>
                           </div>
                         )}
                         {event.location && (

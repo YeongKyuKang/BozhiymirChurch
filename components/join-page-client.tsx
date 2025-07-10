@@ -1,4 +1,5 @@
-"use client"; // 이 파일은 클라이언트 컴포넌트임을 명시합니다.
+// components/join-page-client.tsx
+"use client";
 
 import * as React from "react";
 import { useState } from "react";
@@ -9,11 +10,12 @@ import { Settings, Save, X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import Link from "next/link";
 import EditableText from "@/components/editable-text";
-import { MapPin, Clock, Phone, Mail, Users, Heart, Star } from "lucide-react";
-import { Input } from "@/components/ui/input"; // 폼에 사용될 Input
-import { Textarea } from "@/components/ui/textarea"; // 폼에 사용될 Textarea
-import { Checkbox } from "@/components/ui/checkbox"; // 폼에 사용될 Checkbox
-import { Label } from "@/components/ui/label"; // 폼에 사용될 Label
+import { MapPin, Clock, Phone, Mail, Users, Heart, Star, HelpingHand } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 
 interface JoinPageClientProps {
@@ -25,6 +27,24 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
   const [isPageEditing, setIsPageEditing] = useState(false);
   const [changedContent, setChangedContent] = useState<Record<string, Record<string, string>>>({});
   const [isSavingAll, setIsSavingAll] = useState(false);
+
+  const [formData, setFormData] = useState({
+    first_name: '',
+    last_name: '',
+    email: '',
+    phone: '',
+    interests: {
+      visiting: false,
+      joining: false,
+      volunteering: false,
+      ukrainianMinistry: false,
+    },
+    message: '',
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitMessage, setSubmitMessage] = useState('');
+  const [isError, setIsError] = useState(false);
+
 
   const handleContentChange = (section: string, key: string, value: string) => {
     setChangedContent(prev => ({
@@ -95,6 +115,86 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
     }
   };
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { id, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [id]: value
+    }));
+  };
+
+  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, checked } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      interests: {
+        ...prev.interests,
+        [id]: checked
+      }
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    setIsSubmitting(true);
+    setSubmitMessage('');
+    setIsError(false);
+
+    try {
+      if (!formData.first_name || !formData.last_name || !formData.email) {
+        setSubmitMessage('이름과 이메일은 필수 입력 사항입니다.');
+        setIsError(true);
+        setIsSubmitting(false);
+        return;
+      }
+
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          first_name: formData.first_name,
+          last_name: formData.last_name,
+          email: formData.email,
+          phone: formData.phone,
+          interests: Object.keys(formData.interests).filter(key => (formData.interests as any)[key]),
+          message: formData.message,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || '폼 제출에 실패했습니다.');
+      }
+
+      setSubmitMessage('메시지가 성공적으로 전송되었습니다!');
+      setFormData({
+        first_name: '',
+        last_name: '',
+        email: '',
+        phone: '',
+        interests: {
+          visiting: false,
+          joining: false,
+          volunteering: false,
+          ukrainianMinistry: false,
+        },
+        message: '',
+      });
+    } catch (error: any) {
+      console.error('폼 제출 오류:', error);
+      setSubmitMessage(`폼 제출에 실패했습니다: ${error.message}`);
+      setIsError(true);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+
+  const isAdmin = userRole === 'admin';
+
   const serviceInfo = [
     {
       time: "9:00 AM",
@@ -141,8 +241,7 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-      {/* 전역 편집 모드 버튼 */}
-      {userRole === 'admin' && (
+      {isAdmin && (
         <div className="fixed top-24 right-8 z-50 flex flex-col space-y-2">
           {!isPageEditing ? (
             <Button variant="outline" size="icon" onClick={() => setIsPageEditing(true)}>
@@ -150,10 +249,10 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
             </Button>
           ) : (
             <>
-              <Button variant="outline" size="icon" onClick={handleSaveAll} disabled={isSavingAll}>
+              <Button onClick={handleSaveAll} className="mr-2" disabled={isSavingAll}>
                 {isSavingAll ? <span className="animate-spin text-blue-500">🔄</span> : <Save className="h-5 w-5 text-green-600" />}
               </Button>
-              <Button variant="outline" size="icon" onClick={handleCancelAll} disabled={isSavingAll}>
+              <Button onClick={handleCancelAll} variant="outline">
                 <X className="h-5 w-5 text-red-600" />
               </Button>
             </>
@@ -161,7 +260,6 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
         </div>
       )}
 
-      {/* Hero Section */}
       <section className="py-16 px-4 pt-32">
         <div className="container mx-auto text-center">
           <h1 className="text-5xl font-bold text-gray-900 mb-6">
@@ -176,7 +274,6 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
                 className="text-5xl font-bold text-gray-900 mb-6"
             />
           </h1>
-          {/* <p> 태그를 <div>로 변경 */}
           <div className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
             <EditableText
                 page="join"
@@ -197,7 +294,6 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
         </div>
       </section>
 
-      {/* Service Times */}
       <section className="py-16 px-4">
         <div className="container mx-auto">
           <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
@@ -213,7 +309,7 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
                     <EditableText page="join" section="services" contentKey={service.styleKey} initialValue={initialContent?.services?.[service.styleKey]} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-lg font-semibold text-blue-600 mb-3" />
                   </h4>
                   <div className="text-gray-600">
-                    <EditableText page="join" section="services" contentKey={service.descriptionKey} initialValue={initialContent?.services?.[service.descriptionKey]} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-gray-600" />
+                    <EditableText page="join" section="services" contentKey={service.descriptionKey} initialValue={initialContent?.services?.[service.descriptionKey]} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="p" className="text-gray-600" />
                   </div>
                 </CardContent>
               </Card>
@@ -230,7 +326,6 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
         </div>
       </section>
 
-      {/* What to Expect */}
       <section className="py-16 px-4 bg-gray-50">
         <div className="container mx-auto">
           <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
@@ -254,7 +349,6 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
         </div>
       </section>
 
-      {/* Location & Contact */}
       <section className="py-16 px-4">
         <div className="container mx-auto">
           <div className="grid md:grid-cols-2 gap-12">
@@ -308,51 +402,58 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
               <h2 className="text-3xl font-bold text-gray-900 mb-8">Get Connected</h2>
               <Card>
                 <CardContent className="p-6">
-                  <form className="space-y-4">
+                  <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="grid md:grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">First Name</Label>
-                        <Input id="name" placeholder="Your first name" />
+                        <Label htmlFor="first_name" className="block text-sm font-medium text-gray-700 mb-2">First Name</Label>
+                        <Input id="first_name" placeholder="Your first name" value={formData.first_name} onChange={handleInputChange} required />
                       </div>
                       <div>
-                        <Label htmlFor="last-name" className="block text-sm font-medium text-gray-700 mb-2">Last Name</Label>
-                        <Input id="last-name" placeholder="Your last name" />
+                        <Label htmlFor="last_name" className="block text-sm font-medium text-gray-700 mb-2">Last Name</Label>
+                        <Input id="last_name" placeholder="Your last name" value={formData.last_name} onChange={handleInputChange} required />
                       </div>
                     </div>
                     <div>
                       <Label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">Email</Label>
-                      <Input id="email" type="email" placeholder="your.email@example.com" />
+                      <Input id="email" type="email" placeholder="your.email@example.com" value={formData.email} onChange={handleInputChange} required />
                     </div>
                     <div>
                       <Label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">Phone (Optional)</Label>
-                      <Input id="phone" type="tel" placeholder="(503) 555-0123" />
+                      <Input id="phone" type="tel" placeholder="(503) 555-0123" value={formData.phone} onChange={handleInputChange} />
                     </div>
                     <div>
                       <Label className="block text-sm font-medium text-gray-700 mb-2">I'm interested in:</Label>
                       <div className="space-y-2">
-                        <label htmlFor="visiting" className="flex items-center">
-                          <Checkbox id="visiting" className="mr-2" />
+                        <label htmlFor="visiting_first_time" className="flex items-center">
+                          <Checkbox id="visiting_first_time" className="mr-2" checked={formData.interests.visiting} onCheckedChange={(checked) => handleCheckboxChange({ target: { id: 'visiting', checked: checked as boolean } } as React.ChangeEvent<HTMLInputElement>)} />
                           <span className="text-sm">Visiting for the first time</span>
                         </label>
                         <label htmlFor="joining" className="flex items-center">
-                          <Checkbox id="joining" className="mr-2" />
+                          <Checkbox id="joining" className="mr-2" checked={formData.interests.joining} onCheckedChange={(checked) => handleCheckboxChange({ target: { id: 'joining', checked: checked as boolean } } as React.ChangeEvent<HTMLInputElement>)} />
                           <span className="text-sm">Joining the church</span>
                         </label>
                         <label htmlFor="volunteering" className="flex items-center">
-                          <Checkbox id="volunteering" className="mr-2" />
+                          <Checkbox id="volunteering" className="mr-2" checked={formData.interests.volunteering} onCheckedChange={(checked) => handleCheckboxChange({ target: { id: 'volunteering', checked: checked as boolean } } as React.ChangeEvent<HTMLInputElement>)} />
                           <span className="text-sm">Volunteering opportunities</span>
                         </label>
-                        <label htmlFor="ukrainian-ministry" className="flex items-center">
-                          <Checkbox id="ukrainian-ministry" className="mr-2" />
+                        <label htmlFor="ukrainianMinistry" className="flex items-center">
+                          <Checkbox id="ukrainianMinistry" className="mr-2" checked={formData.interests.ukrainianMinistry} onCheckedChange={(checked) => handleCheckboxChange({ target: { id: 'ukrainianMinistry', checked: checked as boolean } } as React.ChangeEvent<HTMLInputElement>)} />
                           <span className="text-sm">Ukrainian children ministry</span>
                         </label>
                       </div>
                     </div>
                     <div>
                       <Label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">Message (Optional)</Label>
-                      <Textarea id="message" placeholder="Tell us how we can help you connect..." rows={4} />
+                      <Textarea id="message" placeholder="Tell us how we can help you connect..." rows={4} value={formData.message} onChange={handleInputChange} />
                     </div>
-                    <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">Send Message</Button>
+                    <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={isSubmitting}>
+                      {isSubmitting ? '전송 중...' : 'Send Message'}
+                    </Button>
+                    {submitMessage && (
+                      <div className={`mt-4 p-3 rounded text-center ${isError ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+                        {submitMessage}
+                      </div>
+                    )}
                   </form>
                 </CardContent>
               </Card>
