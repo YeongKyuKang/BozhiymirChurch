@@ -1,5 +1,5 @@
 // app/admin/word-posts/page.tsx
-"use client"; // ✅ 수정: 이 줄을 파일 맨 위에 추가하여 클라이언트 컴포넌트로 지정
+"use client"; 
 
 import * as React from "react";
 import { useState, useEffect, useRef, useCallback } from "react";
@@ -13,54 +13,55 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { format, startOfDay, subDays, isFuture, isPast } from "date-fns"; // isBefore 제거
+import { format, startOfDay, subDays, isFuture, isPast } from "date-fns";
+// ✅ 추가: date-fns-tz에서 필요한 함수 임포트
+import { toZonedTime, formatInTimeZone } from 'date-fns-tz'; 
 import {
   Settings, Save, X, MessageCircle, Heart, Download, BookOpen,
   Calendar as CalendarIcon, Frown, ImageIcon, Upload, Loader2,
   CheckCircle, XCircle
 } from "lucide-react";
-import imageCompression from "browser-image-compression"; // 이미지 압축 라이브러리
+import imageCompression from "browser-image-compression";
 
-// Supabase word_posts 테이블의 행 타입 정의 (image_url 포함)
 interface WordPost {
   id: string;
   title: string;
   content: string;
-  word_date: string; // YYYY-MM-DD
+  word_date: string; 
   author_id: string;
   author_nickname: string;
   created_at: string;
   updated_at: string;
-  image_url?: string | null; // 배경 이미지 URL
+  image_url?: string | null;
 }
 
 export default function AdminWordPostsPage() {
   const { user, userProfile, userRole, loading: authLoading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const postId = searchParams.get('id'); // URL 쿼리 파라미터에서 postId 가져오기 (편집 모드용)
+  const postId = searchParams.get('id');
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [wordDate, setWordDate] = useState<Date | undefined>(startOfDay(new Date()));
+  // ✅ 수정: wordDate 초기값을 UTC 기준으로 설정
+  const [wordDate, setWordDate] = useState<Date | undefined>(startOfDay(toZonedTime(new Date(), 'UTC')));
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageUrlPreview, setImageUrlPreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCompressing, setIsCompressing] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+  const [isDateConflicting, setIsDateConflicting] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // 관리자 권한 확인 및 기존 게시물 데이터 불러오기
   useEffect(() => {
     if (!authLoading) {
       if (!user || userRole !== 'admin') {
-        router.push('/'); // 관리자가 아니면 홈으로 리다이렉트
+        router.push('/');
         return;
       }
 
       if (postId) {
-        // 편집 모드: 기존 게시물 데이터 불러오기
         const fetchPost = async () => {
           const { data, error } = await supabase
             .from('word_posts')
@@ -77,7 +78,9 @@ export default function AdminWordPostsPage() {
           if (data) {
             setTitle(data.title);
             setContent(data.content);
-            setWordDate(startOfDay(new Date(data.word_date)));
+            // ✅ 수정: 불러온 날짜도 UTC 기준으로 변환
+            const fetchedDate = startOfDay(toZonedTime(new Date(data.word_date), 'UTC'));
+            setWordDate(fetchedDate);
             setImageUrlPreview(data.image_url || null);
           }
         };
@@ -86,7 +89,34 @@ export default function AdminWordPostsPage() {
     }
   }, [authLoading, user, userRole, postId, router]);
 
-  // 이미지 파일 변경 핸들러 (압축 포함)
+  useEffect(() => {
+    if (wordDate) {
+      const checkDateConflict = async () => {
+        // ✅ 수정: 쿼리 날짜를 명시적으로 UTC로 포맷
+        const formattedDate = formatInTimeZone(wordDate, 'UTC', 'yyyy-MM-dd');
+        const { data, error } = await supabase
+          .from('word_posts')
+          .select('id')
+          .eq('word_date', formattedDate);
+
+        if (error) {
+          console.error("Error checking date conflict:", error);
+          setIsDateConflicting(false);
+          return;
+        }
+
+        const isConflict = data.some(post => post.id !== postId);
+        setIsDateConflicting(isConflict);
+        if (isConflict) {
+          setMessage({ type: 'error', text: `선택하신 날짜 (${formattedDate})에 이미 말씀 게시물이 존재합니다. 다른 날짜를 선택하거나 기존 게시물을 편집해 주세요.` });
+        } else {
+          setMessage(null);
+        }
+      };
+      checkDateConflict();
+    }
+  }, [wordDate, postId]);
+
   const handleImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -101,8 +131,8 @@ export default function AdminWordPostsPage() {
 
     try {
       const options = {
-        maxSizeMB: 1, // 최대 1MB (1024KB)
-        maxWidthOrHeight: 1920, // 최대 너비/높이 1920px
+        maxSizeMB: 1,
+        maxWidthOrHeight: 1920,
         useWebWorker: true,
       };
       const compressedFile = await imageCompression(file, options);
@@ -124,7 +154,6 @@ export default function AdminWordPostsPage() {
     }
   };
 
-  // 폼 제출 핸들러
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -137,6 +166,11 @@ export default function AdminWordPostsPage() {
     }
     if (!title.trim() || !content.trim() || !wordDate) {
       setMessage({ type: 'error', text: "제목, 내용, 날짜는 필수 입력 사항입니다." });
+      setIsSubmitting(false);
+      return;
+    }
+    if (isDateConflicting) {
+      setMessage({ type: 'error', text: "선택하신 날짜에 이미 말씀 게시물이 존재합니다. 다른 날짜를 선택하거나 기존 게시물을 편집해 주세요." });
       setIsSubmitting(false);
       return;
     }
@@ -156,7 +190,7 @@ export default function AdminWordPostsPage() {
         });
 
       if (uploadError) {
-        console.error("이미지 업로드 오류:", uploadError);
+        console.error("이미지 업로드 오류:", uploadData, uploadError);
         setMessage({ type: 'error', text: `이미지 업로드에 실패했습니다: ${uploadError.message}` });
         setIsSubmitting(false);
         return;
@@ -167,7 +201,8 @@ export default function AdminWordPostsPage() {
     const postData = {
       title,
       content,
-      word_date: format(wordDate, 'yyyy-MM-dd'),
+      // ✅ 수정: word_date를 명시적으로 UTC로 포맷하여 저장
+      word_date: formatInTimeZone(wordDate, 'UTC', 'yyyy-MM-dd'),
       author_id: user.id,
       author_nickname: userProfile.nickname || user.email || '관리자',
       image_url: finalImageUrl,
@@ -202,7 +237,8 @@ export default function AdminWordPostsPage() {
     if (!postId) {
       setTitle("");
       setContent("");
-      setWordDate(startOfDay(new Date()));
+      // ✅ 수정: 초기 날짜를 UTC 기준으로 설정
+      setWordDate(startOfDay(toZonedTime(new Date(), 'UTC')));
       setImageFile(null);
       setImageUrlPreview(null);
     }
@@ -210,23 +246,26 @@ export default function AdminWordPostsPage() {
     router.push('/word');
   };
 
-  // 달력에서 선택 불가능한 날짜를 설정하는 함수 (미래 날짜 및 5일 이전 과거 날짜)
   const getDisabledDays = useCallback(() => { 
     const today = new Date(); 
-    const startOfToday = startOfDay(today);
+    // ✅ 수정: 현재 시간을 UTC 기준으로 변환
+    const nowUtc = toZonedTime(today, 'UTC'); 
+    const startOfTodayUtc = startOfDay(nowUtc);
 
-    const fiveDaysAgo = new Date();
-    fiveDaysAgo.setDate(today.getDate() - 5); 
-    const startOfFiveDaysAgo = startOfDay(fiveDaysAgo);
-
-    const futureDates = { from: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1), to: new Date(2100, 0, 1) }; 
-    const pastBeyondFiveDays = { from: new Date(1900, 0, 1), to: startOfDay(new Date(fiveDaysAgo.getFullYear(), fiveDaysAgo.getMonth(), fiveDaysAgo.getDate() - 1)) }; 
+    const fiveDaysAgoUtc = startOfDay(subDays(nowUtc, 5)); 
     
+    // ✅ 수정: 미래 날짜 및 5일 이전 과거 날짜를 UTC 기준으로 비교
+    const futureDates = { from: startOfDay(toZonedTime(new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1), 'UTC')), to: toZonedTime(new Date(2100, 0, 1), 'UTC') }; 
+    const pastBeyondFiveDays = { from: toZonedTime(new Date(1900, 0, 1), 'UTC'), to: startOfDay(subDays(nowUtc, 6)) }; // today - 6일의 시작이 5일 이전의 과거
+
     return [
       futureDates,
       pastBeyondFiveDays
     ];
   }, []);
+
+  const fiveDaysAgoClientSide = startOfDay(toZonedTime(subDays(new Date(), 5), 'UTC')); // ✅ 수정: UTC 기준으로 fiveDaysAgoClientSide 계산
+
 
   if (authLoading || (!user && !authLoading) || (user && userRole !== 'admin')) {
     return (
@@ -264,7 +303,8 @@ export default function AdminWordPostsPage() {
                 <Calendar
                   mode="single"
                   selected={wordDate}
-                  onSelect={setWordDate}
+                  // ✅ 수정: 날짜 선택 시 UTC 기준으로 설정
+                  onSelect={(date) => setWordDate(date ? startOfDay(toZonedTime(date, 'UTC')) : undefined)}
                   initialFocus
                   disabled={getDisabledDays()}
                   className="rounded-md border shadow"
@@ -356,7 +396,7 @@ export default function AdminWordPostsPage() {
                 </p>
               </div>
 
-              <Button type="submit" className="w-full" disabled={isSubmitting || isCompressing}>
+              <Button type="submit" className="w-full" disabled={isSubmitting || isCompressing || isDateConflicting}>
                 {isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
