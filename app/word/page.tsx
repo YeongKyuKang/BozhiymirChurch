@@ -1,15 +1,20 @@
 // app/word/page.tsx
+export const revalidate = 0; // 페이지 캐싱 비활성화 (요청 시마다 최신 데이터 로드)
+
 import Header from "@/components/header";
 import Footer from "@/components/footer";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import dynamic from 'next/dynamic'; 
-import { format, subDays, isAfter, isBefore, startOfDay } from 'date-fns'; 
+import { format, subDays, isAfter, isBefore, startOfDay } from "date-fns"; 
+// ✅ 수정: utcToZonedTime -> toZonedTime
+import { toZonedTime, formatInTimeZone } from 'date-fns-tz'; 
+
 
 const WordPageClient = dynamic(() => import("@/components/word-page-client"), { ssr: false });
 
 async function fetchWordContentAndPosts({ searchParams }: { searchParams?: Record<string, string | string[]> }) {
-  const cookieStore = await cookies();
+  const cookieStore = cookies();
 
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
     console.error("Supabase 환경 변수가 설정되지 않았습니다! NEXT_PUBLIC_SUPABASE_URL 또는 NEXT_PUBLIC_SUPABASE_ANON_KEY를 확인하세요.");
@@ -54,38 +59,42 @@ async function fetchWordContentAndPosts({ searchParams }: { searchParams?: Recor
 
 
   const now = new Date(); 
-  const todayStart = startOfDay(now); 
-  const fiveDaysAgoStart = startOfDay(subDays(now, 5)); 
+  // ✅ 수정: utcToZonedTime -> toZonedTime
+  const nowUtc = toZonedTime(now, 'UTC'); 
+  const todayStartUtc = startOfDay(nowUtc); 
+  const fiveDaysAgoStartUtc = startOfDay(subDays(nowUtc, 5)); 
 
   const dateParam = typeof searchParams?.date === 'string' ? searchParams.date : undefined;
   let queryTargetDate: Date;
 
   if (dateParam) {
-    const parsedDate = startOfDay(new Date(dateParam)); 
+    // ✅ 수정: utcToZonedTime -> toZonedTime
+    const parsedDate = startOfDay(toZonedTime(new Date(dateParam), 'UTC')); 
     if (
         !isNaN(parsedDate.getTime()) && 
-        !isAfter(parsedDate, todayStart) && 
-        !isBefore(parsedDate, fiveDaysAgoStart) 
+        !isAfter(parsedDate, todayStartUtc) && 
+        !isBefore(parsedDate, fiveDaysAgoStartUtc) 
     ) {
       queryTargetDate = parsedDate;
     } else {
-      queryTargetDate = todayStart;
+      queryTargetDate = todayStartUtc; 
     }
   } else {
-    queryTargetDate = todayStart;
+    queryTargetDate = todayStartUtc; 
   }
 
-  // word_posts 데이터 가져오기 (✅ 수정: word_comments(*) 제거)
   const { data: wordPostsData, error: wordPostsError } = await supabase
     .from("word_posts")
-    .select('*, word_reactions(*), image_url') // ✅ 수정: word_comments(*) 제거
-    .eq('word_date', format(queryTargetDate, 'yyyy-MM-dd'))
+    .select('*, word_reactions(*), image_url') 
+    // ✅ 수정: toZonedTime 사용
+    .eq('word_date', formatInTimeZone(queryTargetDate, 'UTC', 'yyyy-MM-dd')) 
     .order("word_date", { ascending: false });
 
   if (wordPostsError) {
     console.error("Error fetching Word posts:", wordPostsError);
   }
-  console.log('Fetched word posts data for', format(queryTargetDate, 'yyyy-MM-dd'), ':', wordPostsData);
+  // ✅ 수정: toZonedTime 사용
+  console.log('Fetched word posts data for', formatInTimeZone(queryTargetDate, 'UTC', 'yyyy-MM-dd'), ':', wordPostsData);
 
 
   return {
