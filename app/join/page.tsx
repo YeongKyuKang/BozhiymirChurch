@@ -17,9 +17,12 @@ async function fetchJoinContent() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        getAll: () => cookieStore.getAll(),
-        setAll: (cookiesToSet) => {
-          cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options));
+        get: (name: string) => cookieStore.get(name)?.value, // ✅ 수정
+        set: (name: string, value: string, options: CookieOptions) => { // ✅ 수정
+          cookieStore.set({ name, value, ...options });
+        },
+        remove: (name: string, options: CookieOptions) => { // ✅ 수정
+          cookieStore.set({ name, value: '', ...options });
         },
       },
     }

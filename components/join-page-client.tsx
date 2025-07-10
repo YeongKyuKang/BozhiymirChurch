@@ -272,6 +272,7 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
                 onContentChange={handleContentChange}
                 tag="span"
                 className="text-5xl font-bold text-gray-900 mb-6"
+                placeholder="가입 페이지 제목" // ✅ 추가
             />
           </h1>
           <div className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
@@ -284,6 +285,7 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
                 onContentChange={handleContentChange}
                 tag="span"
                 className="text-xl text-gray-600 max-w-3xl mx-auto mb-8"
+                placeholder="가입 페이지 설명" // ✅ 추가
             />
           </div>
           <div className="flex items-center justify-center space-x-2 text-blue-600">
@@ -297,7 +299,7 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
       <section className="py-16 px-4">
         <div className="container mx-auto">
           <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
-            <EditableText page="join" section="services" contentKey="services_title" initialValue={initialContent?.services?.services_title} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-3xl font-bold text-center text-gray-900 mb-12" />
+            <EditableText page="join" section="services" contentKey="services_title" initialValue={initialContent?.services?.services_title} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-3xl font-bold text-center text-gray-900 mb-12" placeholder="예배 시간 제목" /> {/* ✅ 추가 */}
           </h2>
           <div className="grid md:grid-cols-3 gap-8">
             {serviceInfo.map((service, index) => (
@@ -306,10 +308,10 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
                   <div className="text-blue-600 mb-4 flex justify-center">{service.icon}</div>
                   <h3 className="text-2xl font-bold text-gray-900 mb-2">{service.time}</h3>
                   <h4 className="text-lg font-semibold text-blue-600 mb-3">
-                    <EditableText page="join" section="services" contentKey={service.styleKey} initialValue={initialContent?.services?.[service.styleKey]} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-lg font-semibold text-blue-600 mb-3" />
+                    <EditableText page="join" section="services" contentKey={service.styleKey} initialValue={initialContent?.services?.[service.styleKey]} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-lg font-semibold text-blue-600 mb-3" placeholder="예배 스타일" /> {/* ✅ 추가 */}
                   </h4>
                   <div className="text-gray-600">
-                    <EditableText page="join" section="services" contentKey={service.descriptionKey} initialValue={initialContent?.services?.[service.descriptionKey]} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="p" className="text-gray-600" />
+                    <EditableText page="join" section="services" contentKey={service.descriptionKey} initialValue={initialContent?.services?.[service.descriptionKey]} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="p" className="text-gray-600" placeholder="예배 설명" /> {/* ✅ 추가 */}
                   </div>
                 </CardContent>
               </Card>
@@ -317,7 +319,7 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
           </div>
           <div className="text-center mt-8">
             <div className="text-lg text-gray-600 mb-4">
-              <EditableText page="join" section="services" contentKey="services_footer_text" initialValue={initialContent?.services?.services_footer_text} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-lg text-gray-600 mb-4" />
+              <EditableText page="join" section="services" contentKey="services_footer_text" initialValue={initialContent?.services?.services_footer_text} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-lg text-gray-600 mb-4" placeholder="예배 시간 푸터 텍스트" /> {/* ✅ 추가 */}
             </div>
             <Button size="lg" className="bg-blue-600 hover:bg-blue-700">
               Plan Your Visit
@@ -329,7 +331,7 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
       <section className="py-16 px-4 bg-gray-50">
         <div className="container mx-auto">
           <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
-            <EditableText page="join" section="expect" contentKey="expect_title" initialValue={initialContent?.expect?.expect_title} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-3xl font-bold text-center text-gray-900 mb-12" />
+            <EditableText page="join" section="expect" contentKey="expect_title" initialValue={initialContent?.expect?.expect_title} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-3xl font-bold text-center text-gray-900 mb-12" placeholder="무엇을 기대할 수 있나요?" /> {/* ✅ 추가 */}
           </h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {whatToExpect.map((item, index) => (
@@ -337,10 +339,10 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
                 <CardContent className="p-6">
                   <div className="text-4xl mb-4">{item.icon}</div>
                   <h3 className="text-xl font-bold text-gray-900 mb-2">
-                    <EditableText page="join" section="expect" contentKey={item.titleKey} initialValue={initialContent?.expect?.[item.titleKey]} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-xl font-bold text-gray-900 mb-2" />
+                    <EditableText page="join" section="expect" contentKey={item.titleKey} initialValue={initialContent?.expect?.[item.titleKey]} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-xl font-bold text-gray-900 mb-2" placeholder="기대하는 점 제목" /> {/* ✅ 추가 */}
                   </h3>
                   <div className="text-gray-600">
-                    <EditableText page="join" section="expect" contentKey={item.descriptionKey} initialValue={initialContent?.expect?.[item.descriptionKey]} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-gray-600" />
+                    <EditableText page="join" section="expect" contentKey={item.descriptionKey} initialValue={initialContent?.expect?.[item.descriptionKey]} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-gray-600" placeholder="기대하는 점 설명" /> {/* ✅ 추가 */}
                   </div>
                 </CardContent>
               </Card>
@@ -355,7 +357,7 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
             {/* Contact Info */}
             <div>
               <h2 className="text-3xl font-bold text-gray-900 mb-8">
-                <EditableText page="join" section="contact" contentKey="visit_title" initialValue={initialContent?.contact?.visit_title} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-3xl font-bold text-gray-900 mb-8" />
+                <EditableText page="join" section="contact" contentKey="visit_title" initialValue={initialContent?.contact?.visit_title} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-3xl font-bold text-gray-900 mb-8" placeholder="방문 정보 제목" /> {/* ✅ 추가 */}
               </h2>
               <div className="space-y-6">
                 <div className="flex items-start">
@@ -363,7 +365,7 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
                   <div>
                     <h3 className="font-semibold text-gray-900">Address</h3>
                     <div className="text-gray-600">
-                      <EditableText page="join" section="contact" contentKey="address" initialValue={initialContent?.contact?.address} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-gray-600" isTextArea={true} />
+                      <EditableText page="join" section="contact" contentKey="address" initialValue={initialContent?.contact?.address} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-gray-600" isTextArea={true} placeholder="주소" /> {/* ✅ 추가 */}
                     </div>
                   </div>
                 </div>
@@ -372,7 +374,7 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
                   <div>
                     <h3 className="font-semibold text-gray-900">Service Times</h3>
                     <div className="text-gray-600">
-                      <EditableText page="join" section="contact" contentKey="service_times" initialValue={initialContent?.contact?.service_times} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-gray-600" isTextArea={true} />
+                      <EditableText page="join" section="contact" contentKey="service_times" initialValue={initialContent?.contact?.service_times} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-gray-600" isTextArea={true} placeholder="예배 시간" /> {/* ✅ 추가 */}
                     </div>
                   </div>
                 </div>
@@ -381,7 +383,7 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
                   <div>
                     <h3 className="font-semibold text-gray-900">Phone</h3>
                     <div className="text-gray-600">
-                      <EditableText page="join" section="contact" contentKey="phone" initialValue={initialContent?.contact?.phone} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-gray-600" />
+                      <EditableText page="join" section="contact" contentKey="phone" initialValue={initialContent?.contact?.phone} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-gray-600" placeholder="전화번호" /> {/* ✅ 추가 */}
                     </div>
                   </div>
                 </div>
@@ -390,7 +392,7 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
                   <div>
                     <h3 className="font-semibold text-gray-900">Email</h3>
                     <div className="text-gray-600">
-                      <EditableText page="join" section="contact" contentKey="email" initialValue={initialContent?.contact?.email} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-gray-600" />
+                      <EditableText page="join" section="contact" contentKey="email" initialValue={initialContent?.contact?.email} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-gray-600" placeholder="이메일" /> {/* ✅ 추가 */}
                     </div>
                   </div>
                 </div>
@@ -466,39 +468,39 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
       <section className="py-16 px-4 bg-gradient-to-r from-blue-500 to-yellow-400 text-white">
         <div className="container mx-auto text-center">
           <h2 className="text-3xl font-bold mb-8">
-            <EditableText page="join" section="ministry_highlight" contentKey="highlight_title" initialValue={initialContent?.ministry_highlight?.highlight_title} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-3xl font-bold mb-8" />
+            <EditableText page="join" section="ministry_highlight" contentKey="highlight_title" initialValue={initialContent?.ministry_highlight?.highlight_title} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-3xl font-bold mb-8" placeholder="사역 하이라이트 제목" /> {/* ✅ 추가 */}
           </h2>
           <div className="max-w-4xl mx-auto">
             <div className="text-6xl mb-6">🇺🇦</div>
             <h3 className="text-2xl font-bold mb-4">
-              <EditableText page="join" section="ministry_highlight" contentKey="highlight_subtitle" initialValue={initialContent?.ministry_highlight?.highlight_subtitle} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-2xl font-bold mb-4" />
+              <EditableText page="join" section="ministry_highlight" contentKey="highlight_subtitle" initialValue={initialContent?.ministry_highlight?.highlight_subtitle} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-2xl font-bold mb-4" placeholder="사역 하이라이트 부제목" /> {/* ✅ 추가 */}
             </h3>
             <div className="text-xl mb-8 opacity-90">
-              <EditableText page="join" section="ministry_highlight" contentKey="highlight_description" initialValue={initialContent?.ministry_highlight?.highlight_description} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-xl mb-8 opacity-90" />
+              <EditableText page="join" section="ministry_highlight" contentKey="highlight_description" initialValue={initialContent?.ministry_highlight?.highlight_description} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-xl mb-8 opacity-90" placeholder="사역 하이라이트 설명" /> {/* ✅ 추가 */}
             </div>
             <div className="grid md:grid-cols-3 gap-6 mb-8">
               <div>
                 <div className="text-3xl font-bold">
-                  <EditableText page="join" section="ministry_highlight" contentKey="stat1_number" initialValue={initialContent?.ministry_highlight?.stat1_number} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-3xl font-bold" />
+                  <EditableText page="join" section="ministry_highlight" contentKey="stat1_number" initialValue={initialContent?.ministry_highlight?.stat1_number} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-3xl font-bold" placeholder="통계 1 숫자" /> {/* ✅ 추가 */}
                 </div>
                 <div className="opacity-90">
-                  <EditableText page="join" section="ministry_highlight" contentKey="stat1_label" initialValue={initialContent?.ministry_highlight?.stat1_label} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="opacity-90" />
+                  <EditableText page="join" section="ministry_highlight" contentKey="stat1_label" initialValue={initialContent?.ministry_highlight?.stat1_label} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="opacity-90" placeholder="통계 1 라벨" /> {/* ✅ 추가 */}
                 </div>
               </div>
               <div>
                 <div className="text-3xl font-bold">
-                  <EditableText page="join" section="ministry_highlight" contentKey="stat2_number" initialValue={initialContent?.ministry_highlight?.stat2_number} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-3xl font-bold" />
+                  <EditableText page="join" section="ministry_highlight" contentKey="stat2_number" initialValue={initialContent?.ministry_highlight?.stat2_number} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-3xl font-bold" placeholder="통계 2 숫자" /> {/* ✅ 추가 */}
                 </div>
                 <div className="opacity-90">
-                  <EditableText page="join" section="ministry_highlight" contentKey="stat2_label" initialValue={initialContent?.ministry_highlight?.stat2_label} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="opacity-90" />
+                  <EditableText page="join" section="ministry_highlight" contentKey="stat2_label" initialValue={initialContent?.ministry_highlight?.stat2_label} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="opacity-90" placeholder="통계 2 라벨" /> {/* ✅ 추가 */}
                 </div>
               </div>
               <div>
                 <div className="text-3xl font-bold">
-                  <EditableText page="join" section="ministry_highlight" contentKey="stat3_number" initialValue={initialContent?.ministry_highlight?.stat3_number} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-3xl font-bold" />
+                  <EditableText page="join" section="ministry_highlight" contentKey="stat3_number" initialValue={initialContent?.ministry_highlight?.stat3_number} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-3xl font-bold" placeholder="통계 3 숫자" /> {/* ✅ 추가 */}
                 </div>
                 <div className="opacity-90">
-                  <EditableText page="join" section="ministry_highlight" contentKey="stat3_label" initialValue={initialContent?.ministry_highlight?.stat3_label} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="opacity-90" />
+                  <EditableText page="join" section="ministry_highlight" contentKey="stat3_label" initialValue={initialContent?.ministry_highlight?.stat3_label} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="opacity-90" placeholder="통계 3 라벨" /> {/* ✅ 추가 */}
                 </div>
               </div>
             </div>
@@ -513,10 +515,10 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
       <section className="py-16 px-4 text-center">
         <div className="container mx-auto">
           <h2 className="text-3xl font-bold text-gray-900 mb-6">
-            <EditableText page="join" section="cta" contentKey="cta_title" initialValue={initialContent?.cta?.cta_title} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-3xl font-bold text-gray-900 mb-6" />
+            <EditableText page="join" section="cta" contentKey="cta_title" initialValue={initialContent?.cta?.cta_title} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-3xl font-bold text-gray-900 mb-6" placeholder="CTA 제목" /> {/* ✅ 추가 */}
           </h2>
           <div className="text-xl text-gray-600 mb-8">
-            <EditableText page="join" section="cta" contentKey="cta_description" initialValue={initialContent?.cta?.cta_description} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-xl text-gray-600 mb-8" />
+            <EditableText page="join" section="cta" contentKey="cta_description" initialValue={initialContent?.cta?.cta_description} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-xl text-gray-600 mb-8" placeholder="CTA 설명" /> {/* ✅ 추가 */}
           </div>
           <div className="space-x-4">
             <Button asChild size="lg" className="bg-blue-600 hover:bg-blue-700">

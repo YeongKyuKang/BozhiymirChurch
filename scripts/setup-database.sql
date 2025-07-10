@@ -879,7 +879,45 @@ INSERT INTO public.content (page, section, key, value) VALUES
 ('events', 'guidelines', 'card3_title', 'Easy to Find'),
 ('events', 'guidelines', 'card3_description', 'All events are held at our church campus with clear directions and parking available.'),
 ('events', 'cta', 'title', 'Don''t Miss Out!'),
-('events', 'cta', 'description', 'Stay connected with all our events and activities. Join our church family today!')
+('events', 'cta', 'description', 'Stay connected with all our events and activities. Join our church family today!'),
+
+--join
+('join', 'main', 'title', 'Join Our Church Family'),
+('join', 'main', 'description', 'Discover how to connect with Bozhiymir Church, attend our services, and become part of our loving community.'),
+('join', 'services', 'services_title', 'Our Sunday Services'),
+('join', 'services', 'service_style_1', 'Traditional Service'),
+('join', 'services', 'service_description_1', 'A classic worship experience with hymns and choir.'),
+('join', 'services', 'service_style_2', 'Contemporary Service'),
+('join', 'services', 'service_description_2', 'Modern worship with a band and engaging teaching.'),
+('join', 'services', 'service_style_3', 'Family Service'),
+('join', 'services', 'service_description_3', 'A relaxed service designed for families with young children.'),
+('join', 'services', 'services_footer_text', 'No matter where you are on your spiritual journey, you are welcome here.'),
+('join', 'expect', 'expect_title', 'What to Expect on Your First Visit'),
+('join', 'expect', 'expect_title_1', 'Warm Welcome'),
+('join', 'expect', 'expect_description_1', 'Be greeted by friendly faces and helpful volunteers ready to assist you.'),
+('join', 'expect', 'expect_title_2', 'Uplifting Worship'),
+('join', 'expect', 'expect_description_2', 'Experience inspiring music and a relevant message.'),
+('join', 'expect', 'expect_title_3', 'Community & Fellowship'),
+('join', 'expect', 'expect_description_3', 'Opportunities to connect with others before and after service.'),
+('join', 'expect', 'expect_title_4', 'Kids Programs'),
+('join', 'expect', 'expect_description_4', 'Safe and engaging environments for children of all ages.'),
+('join', 'contact', 'visit_title', 'Plan Your Visit'),
+('join', 'contact', 'address', '123 Community Street\nPortland, OR 97201'),
+('join', 'contact', 'service_times', 'Sunday: 9:00 AM, 10:30 AM, 12:00 PM\nWednesday: 7:00 PM'),
+('join', 'contact', 'phone', '(503) 555-0123'),
+('join', 'contact', 'email', 'info@bozhiymirchurch.com'),
+('join', 'ministry_highlight', 'highlight_title', 'Our Special Calling'),
+('join', 'ministry_highlight', 'highlight_subtitle', 'Ukrainian Children Ministry'),
+('join', 'ministry_highlight', 'highlight_description', 'Learn about our vital ministry supporting Ukrainian children and how you can get involved.'),
+('join', 'ministry_highlight', 'stat1_number', '47+'),
+('join', 'ministry_highlight', 'stat1_label', 'Children Supported'),
+('join', 'ministry_highlight', 'stat2_number', '25+'),
+('join', 'ministry_highlight', 'stat2_label', 'Host Families'),
+('join', 'ministry_highlight', 'stat3_number', '100%'),
+('join', 'ministry_highlight', 'stat3_label', 'Needs Met'),
+('join', 'cta', 'cta_title', 'Ready to Connect?'),
+('join', 'cta', 'cta_description', 'We are excited to welcome you to our church family!')
+
 ON CONFLICT (page, section, key) DO UPDATE SET value = EXCLUDED.value;
 
 -- ########## 6단계: 이벤트 시드 데이터 삽입 ##########
