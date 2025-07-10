@@ -17,7 +17,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Textarea } from "@/components/ui/textarea"; 
 import { Calendar } from "@/components/ui/calendar"; 
 // ✅ 업데이트: date-fns에서 필요한 모든 함수들을 임포트합니다.
-import { format, isFuture, isPast, startOfDay, subDays } from "date-fns"; 
+import { format, isFuture, startOfDay, isBefore } from "date-fns"; 
 import html2canvas from 'html2canvas'; // html2canvas 임포트
 
 
@@ -434,9 +434,9 @@ export default function WordPageClient({ initialContent, initialWordPosts }: Wor
                 <Card className="shadow-sm rounded-lg border bg-card text-card-foreground p-6 text-center py-12 w-full max-w-md mx-auto"> 
                   <Frown className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                   <p className="text-xl text-gray-600 font-medium">
-                    {selectedDate && !isFuture(selectedDate) && !isPast(selectedDate, { compareDate: fiveDaysAgoClientSide }) 
-                      ? `${format(selectedDate, 'yyyy년 MM월 dd일')}의 말씀이 없습니다.`
-                      : "현재 표시할 수 있는 말씀 게시물이 없습니다."}
+                   {selectedDate && !isFuture(selectedDate) && !isBefore(selectedDate, fiveDaysAgoClientSide)
+                  ? `${format(selectedDate, 'yyyy년 MM월 dd일')}의 말씀이 없습니다.`
+                  : "현재 표시할 수 있는 말씀 게시물이 없습니다."}
                   </p>
                   {userRole === 'admin' && (
                     <p className="text-md text-gray-500 mt-2">관리자님, 새로운 말씀을 작성해주세요!</p>
