@@ -1,3 +1,4 @@
+// components/ui/calendar.tsx
 "use client"
 
 import * as React from "react"
@@ -19,6 +20,7 @@ function Calendar({
   buttonVariant = "ghost",
   formatters,
   components,
+  initialFocus, // ✅ 수정: initialFocus prop을 명시적으로 분리
   ...props
 }: React.ComponentProps<typeof DayPicker> & {
   buttonVariant?: React.ComponentProps<typeof Button>["variant"]
@@ -27,6 +29,7 @@ function Calendar({
 
   return (
     <DayPicker
+      initialFocus={initialFocus} // ✅ 수정: DayPicker에 initialFocus를 명시적으로 전달
       showOutsideDays={showOutsideDays}
       className={cn(
         "bg-background group/calendar p-3 [--cell-size:2rem] [[data-slot=card-content]_&]:bg-transparent [[data-slot=popover-content]_&]:bg-transparent",
@@ -164,7 +167,7 @@ function Calendar({
         },
         ...components,
       }}
-      {...props}
+      {...props} // ✅ 수정: initialFocus를 분리했으므로, 남은 props만 전달
     />
   )
 }

@@ -3,10 +3,12 @@ import Header from "@/components/header";
 import Footer from "@/components/footer";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
-import WordPageClient from "@/components/word-page-client"; // WordPageClient 임포트
+import WordPageClient from "@/components/word-page-client";
+// date-fns에서 필요한 함수들을 임포트합니다. isFuture, isPast, startOfDay 추가
+import { format, subDays, isAfter, isBefore, startOfDay } from 'date-fns'; 
 
 // 말씀 게시물 및 관련 데이터를 가져오는 함수
-async function fetchWordContentAndPosts() {
+async function fetchWordContentAndPosts({ searchParams }: { searchParams?: Record<string, string | string[]> }) {
   const cookieStore = await cookies();
 
   const supabase = createServerClient(
@@ -29,7 +31,7 @@ async function fetchWordContentAndPosts() {
   const { data: contentData, error: contentError } = await supabase
     .from("content")
     .select("*")
-    .eq("page", "word"); // 페이지 이름을 'word'로 지정
+    .eq("page", "word");
 
   const contentMap: Record<string, any> = {};
   contentData?.forEach((item) => {
@@ -43,11 +45,34 @@ async function fetchWordContentAndPosts() {
     console.error("Error fetching Word page content:", contentError);
   }
 
+  const now = new Date(); 
+  const todayStart = startOfDay(now); 
+  const fiveDaysAgoStart = startOfDay(subDays(now, 5)); 
+
+  const dateParam = typeof searchParams?.date === 'string' ? searchParams.date : undefined;
+  let queryTargetDate: Date;
+
+  if (dateParam) {
+    const parsedDate = startOfDay(new Date(dateParam)); 
+    if (
+        !isNaN(parsedDate.getTime()) && // 유효한 날짜인지 확인 (NaN이 아닌지)
+        !isAfter(parsedDate, todayStart) && 
+        !isBefore(parsedDate, fiveDaysAgoStart) 
+    ) {
+      queryTargetDate = parsedDate;
+    } else {
+      queryTargetDate = todayStart;
+    }
+  } else {
+    queryTargetDate = todayStart;
+  }
+
   // word_posts, word_reactions, word_comments 데이터를 함께 가져오기
   const { data: wordPostsData, error: wordPostsError } = await supabase
     .from("word_posts")
-    .select('*, word_reactions(*), word_comments(*)') // word_reactions과 word_comments를 조인하여 가져옴
-    .order("word_date", { ascending: false }); // 최신 말씀이 먼저 오도록 날짜 기준으로 정렬
+    .select('*, word_reactions(*), word_comments(*), image_url') 
+    .eq('word_date', format(queryTargetDate, 'yyyy-MM-dd'))
+    .order("word_date", { ascending: false });
 
   if (wordPostsError) {
     console.error("Error fetching Word posts:", wordPostsError);
@@ -55,18 +80,21 @@ async function fetchWordContentAndPosts() {
 
   return {
     content: contentMap,
-    wordPosts: wordPostsData || [], // 가져온 데이터를 반환
+    wordPosts: wordPostsData || [],
   };
 }
 
 // Word 페이지 컴포넌트
-export default async function WordPage() {
-  const { content, wordPosts } = await fetchWordContentAndPosts(); // 데이터 가져오는 함수 호출
+export default async function WordPage({
+  searchParams,
+}: {
+  searchParams?: Record<string, string | string[]>;
+}) {
+  const { content, wordPosts } = await fetchWordContentAndPosts({ searchParams });
 
   return (
     <>
       <Header />
-      {/* 가져온 데이터를 initialContent와 initialWordPosts prop으로 WordPageClient에 전달 */}
       <WordPageClient initialContent={content} initialWordPosts={wordPosts} />
       <Footer />
     </>

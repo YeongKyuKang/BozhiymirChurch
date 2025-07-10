@@ -3,17 +3,16 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { Settings, User, MessageSquareText, MailCheck } from 'lucide-react'; // MailCheck 아이콘 추가
+import { Settings, User, MessageSquareText, MailCheck, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge'; // Badge 컴포넌트 임포트
-import { Database } from '@/lib/supabase'; // Database 타입 임포트
+import { Badge } from '@/components/ui/badge';
+import { Database } from '@/lib/supabase';
 
-export const revalidate = 0; // 페이지 캐싱 비활성화
+export const revalidate = 0;
 
 async function fetchAdminData() {
   const cookieStore = cookies();
-
   const supabase = createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -31,7 +30,6 @@ async function fetchAdminData() {
   );
 
   const { data: user } = await supabase.auth.getUser();
-
   if (!user.user) {
     redirect('/login');
   }
@@ -44,10 +42,9 @@ async function fetchAdminData() {
 
   if (profileError || userProfile?.role !== 'admin') {
     console.error('Admin check failed:', profileError);
-    redirect('/'); // 관리자가 아니면 홈으로 리다이렉트
+    redirect('/');
   }
 
-  // 읽지 않은 contact_forms 개수 가져오기
   const { count: unreadContactFormsCount, error: countError } = await supabase
     .from('contact_forms')
     .select('id', { count: 'exact' })
@@ -55,7 +52,6 @@ async function fetchAdminData() {
 
   if (countError) {
     console.error('Error fetching unread contact forms count:', countError);
-    // 오류 발생 시 카운트를 0으로 처리하거나 적절하게 처리
   }
 
   return { unreadContactFormsCount: unreadContactFormsCount || 0 };
@@ -80,7 +76,8 @@ export default async function AdminPage() {
             </CardHeader>
             <CardContent>
               <Button asChild>
-                <Link href="/admin/users">Go to Users</Link>
+                {/* ✅ 수정: Link 컴포넌트의 자식을 명시적으로 단일 <span>으로 감싸기 */}
+                <Link href="/admin/users"><span>Go to Users</span></Link>
               </Button>
             </CardContent>
           </Card>
@@ -100,7 +97,8 @@ export default async function AdminPage() {
             </CardHeader>
             <CardContent>
               <Button asChild>
-                <Link href="/admin/contact-forms">View Forms</Link>
+                {/* ✅ 수정: Link 컴포넌트의 자식을 명시적으로 단일 <span>으로 감싸기 */}
+                <Link href="/admin/contact-forms"><span>View Forms</span></Link>
               </Button>
             </CardContent>
           </Card>
@@ -115,12 +113,29 @@ export default async function AdminPage() {
             </CardHeader>
             <CardContent>
               <Button asChild>
-                <Link href="/admin/content-edit">Edit Content</Link> {/* 필요시 해당 라우트 추가 */}
+                {/* ✅ 수정: Link 컴포넌트의 자식을 명시적으로 단일 <span>으로 감싸기 */}
+                <Link href="/admin/content-edit"><span>Edit Content</span></Link>
               </Button>
             </CardContent>
           </Card>
           
-          {/* 관리자 설정 카드 (새로운 delete-password 설정 관련) */}
+          {/* 말씀 게시물 관리 카드 */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <BookOpen className="h-5 w-5" /> <span>Daily Word Posts</span>
+              </CardTitle>
+              <CardDescription>Create and manage daily word posts.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button asChild>
+                {/* ✅ 수정: Link 컴포넌트의 자식을 명시적으로 단일 <span>으로 감싸기 */}
+                <Link href="/admin/word-posts"><span>Manage Posts</span></Link>
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* 관리자 설정 카드 */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
@@ -130,7 +145,8 @@ export default async function AdminPage() {
             </CardHeader>
             <CardContent>
               <Button asChild>
-                <Link href="/admin/settings">Go to Settings</Link>
+                {/* ✅ 수정: Link 컴포넌트의 자식을 명시적으로 단일 <span>으로 감싸기 */}
+                <Link href="/admin/settings"><span>Go to Settings</span></Link>
               </Button>
             </CardContent>
           </Card>
