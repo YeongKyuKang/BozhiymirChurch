@@ -2,6 +2,8 @@ import type React from "react"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next" // Vercel 애널리틱스 컴포넌트
+import { Suspense } from "react" // Suspense 임포트
+
 import "./globals.css"
 
 // AuthProvider를 import 하는 라인이 누락되어 있었습니다. 다시 추가합니다.
@@ -49,7 +51,10 @@ export default function RootLayout({
           이렇게 해야 useAuth() 훅이 정상적으로 동작합니다.
         */}
         <AuthProvider>
-          {children}
+          {/* useSearchParams 오류 해결을 위해 Suspense로 children을 감쌉니다. */}
+          <Suspense fallback={<div>로딩 중...</div>}>
+            {children}
+          </Suspense>
           <Analytics />
         </AuthProvider>
       </body>
