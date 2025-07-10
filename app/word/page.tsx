@@ -1,21 +1,19 @@
 // app/word/page.tsx
-export const revalidate = 0; // 페이지 캐싱 비활성화 (요청 시마다 최신 데이터 로드)
-
 import Header from "@/components/header";
 import Footer from "@/components/footer";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
-import WordPageClient from "@/components/word-page-client";
+import dynamic from 'next/dynamic'; 
 import { format, subDays, isAfter, isBefore, startOfDay } from 'date-fns'; 
 
-// 말씀 게시물 및 관련 데이터를 가져오는 함수
+const WordPageClient = dynamic(() => import("@/components/word-page-client"), { ssr: false });
+
 async function fetchWordContentAndPosts({ searchParams }: { searchParams?: Record<string, string | string[]> }) {
   const cookieStore = await cookies();
 
-  // Supabase 환경 변수 확인 및 로그 (이전 단계에서 추가됨)
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
     console.error("Supabase 환경 변수가 설정되지 않았습니다! NEXT_PUBLIC_SUPABASE_URL 또는 NEXT_PUBLIC_SUPABASE_ANON_KEY를 확인하세요.");
-    return { content: {}, wordPosts: [] }; // 환경 변수 없으면 빈 값 반환
+    return { content: {}, wordPosts: [] }; 
   }
 
   const supabase = createServerClient(
@@ -34,7 +32,6 @@ async function fetchWordContentAndPosts({ searchParams }: { searchParams?: Recor
     }
   );
 
-  // 'word' 페이지의 content 데이터 가져오기
   const { data: contentData, error: contentError } = await supabase
     .from("content")
     .select("*")
@@ -78,10 +75,10 @@ async function fetchWordContentAndPosts({ searchParams }: { searchParams?: Recor
     queryTargetDate = todayStart;
   }
 
-  // 말씀 게시물 데이터 가져오기 (✅ 수정: 원래의 포괄적인 쿼리로 되돌리기)
+  // word_posts 데이터 가져오기 (✅ 수정: word_comments(*) 제거)
   const { data: wordPostsData, error: wordPostsError } = await supabase
     .from("word_posts")
-    .select('*, word_reactions(*), word_comments(*), image_url') // ✅ 수정: 원래 쿼리로 복원
+    .select('*, word_reactions(*), image_url') // ✅ 수정: word_comments(*) 제거
     .eq('word_date', format(queryTargetDate, 'yyyy-MM-dd'))
     .order("word_date", { ascending: false });
 
@@ -97,7 +94,6 @@ async function fetchWordContentAndPosts({ searchParams }: { searchParams?: Recor
   };
 }
 
-// Word 페이지 컴포넌트
 export default async function WordPage({
   searchParams,
 }: {

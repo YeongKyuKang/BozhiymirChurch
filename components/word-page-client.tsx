@@ -25,8 +25,7 @@ interface WordPost {
   author_profile_picture_url?: string;
   created_at: string;
   likes: { user_id: string }[]; 
-  // comments: { id: string; content: string; author_nickname: string; created_at: string }[]; // ✅ 제거
-  post_date: string;
+  word_date: string; 
   image_url?: string; 
   imageContainerRef?: React.RefObject<HTMLDivElement>; 
 }
@@ -51,8 +50,6 @@ export default function WordPageClient({ initialContent, initialWordPosts }: Wor
       imageContainerRef: React.createRef<HTMLDivElement>() 
     }))
   );
-  // const [newCommentContent, setNewCommentContent] = useState<string>(""); // ✅ 제거
-  // const [isSubmittingComment, setIsSubmittingComment] = useState<boolean>(false); // ✅ 제거
   const initialDateFromParams = searchParams.get('date');
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
     initialDateFromParams ? new Date(initialDateFromParams) : new Date() 
@@ -212,7 +209,6 @@ export default function WordPageClient({ initialContent, initialWordPosts }: Wor
 
     try {
         const cardElement = post.imageContainerRef.current;
-        // 캡처할 영역을 말씀카드 부분으로 제한
         const targetElement = cardElement.querySelector('.word-card-content') as HTMLElement;
         
         if (!targetElement) {
@@ -225,7 +221,6 @@ export default function WordPageClient({ initialContent, initialWordPosts }: Wor
             scrollY: -window.scrollY, 
             useCORS: true, 
             scale: 3, 
-            imageSmoothingEnabled: true, // ✅ 수정: 이미지 스무딩 활성화 (선명도 개선)
         });
 
         const targetWidth = 1080; 
@@ -278,9 +273,6 @@ export default function WordPageClient({ initialContent, initialWordPosts }: Wor
   const handleMarkAsRead = (postId: string) => {
     alert(`"${postId}" 말씀 카드에 대한 읽음 표시 기능은 백엔드 구현이 필요합니다. (현재는 알림만 표시)`);
   };
-
-  // ✅ 제거: 댓글 작성 기능 관련 함수 제거
-  // const handleAddComment = async (postId: string) => { /* ... */ };
 
 
   const handleDateSelect = (date: Date | undefined) => {
@@ -335,9 +327,9 @@ export default function WordPageClient({ initialContent, initialWordPosts }: Wor
       )}
 
       {/* Hero Section */}
-      <section className="py-16 px-4 pt-32 text-center">
+      <section className="py-12 px-4 pt-20 text-center"> {/* py-16 -> py-12, pt-32 -> pt-24 */}
         <div className="container mx-auto">
-          <h1 className="text-5xl font-bold text-gray-900 mb-6">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4"> {/* text-5xl -> text-4xl, mb-6 -> mb-4 */}
             <EditableText
               page="word" 
               section="main"
@@ -346,10 +338,10 @@ export default function WordPageClient({ initialContent, initialWordPosts }: Wor
               isEditingPage={isPageEditing}
               onContentChange={handleContentChange}
               tag="span"
-              className="text-5xl font-bold text-gray-900"
+              className="text-4xl font-bold text-gray-900"
             />
           </h1>
-          <div className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
+          <div className="text-lg text-gray-600 max-w-2xl mx-auto mb-1"> {/* text-xl -> text-lg, max-w-3xl -> max-w-2xl, mb-8 -> mb-6 */}
             <EditableText
               page="word" 
               section="main"
@@ -358,60 +350,47 @@ export default function WordPageClient({ initialContent, initialWordPosts }: Wor
               isEditingPage={isPageEditing}
               onContentChange={handleContentChange}
               tag="span"
-              className="text-xl text-gray-600"
+              className="text-lg text-gray-600"
             />
           </div>
         </div>
       </section>
 
       {/* Word Posts List and Calendar */}
-      <section className="py-8 px-4">
-        <div className="container mx-auto max-w-4xl space-y-8 flex flex-col items-center">
-          {/* 선택된 날짜 표시 및 지우기 카드 */}
-          {selectedDate && (
-            <Card className="shadow-md border bg-white p-4 mb-6 flex items-center justify-between w-full">
-              <div className="flex items-center text-lg font-semibold text-gray-800">
-                <CalendarIcon className="h-5 w-5 mr-3 text-blue-600" />
-                선택된 날짜: {format(selectedDate, 'yyyy년 MM월 dd일 (EEE)')}
-              </div>
-              <Button variant="outline" size="sm" onClick={() => handleDateSelect(undefined)}>
-                날짜 선택 지우기
-              </Button>
-            </Card>
-          )}
-
+      <section className="py-6 px-4"> {/* py-8 -> py-6 */}
+        <div className="container mx-auto max-w-2xl space-y-6 flex flex-col items-center"> {/* max-w-4xl -> max-w-2xl, space-y-8 -> space-y-6 */}
           {/* 새로운 그리드 컨테이너: 말씀 카드와 달력을 나란히 배치 */}
-          <div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[1fr_auto] gap-8 items-start"> 
+          <div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[1fr_auto] gap-6 items-start"> {/* gap-8 -> gap-6 */}
             {/* 말씀 게시물 목록 컨테이너 (좌측 컬럼) */}
-            <div className="w-full space-y-8">
+            <div className="w-full space-y-6"> {/* space-y-8 -> space-y-6 */}
               {wordPosts.length === 0 ? (
-                <Card className="shadow-sm rounded-lg border bg-card text-card-foreground p-6 text-center py-12 w-full max-w-sm mx-auto"> 
-                  <Frown className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-xl text-gray-600 font-medium">
+                <Card className="shadow-sm rounded-lg border bg-card text-card-foreground p-5 text-center py-10 w-full max-w-xs mx-auto"> {/* p-6 -> p-5, py-12 -> py-10, max-w-sm -> max-w-xs */}
+                  <Frown className="h-10 w-10 text-gray-400 mx-auto mb-3" /> {/* h-12 w-12 -> h-10 w-10, mb-4 -> mb-3 */}
+                  <p className="text-lg text-gray-600 font-medium"> {/* text-xl -> text-lg */}
                    {selectedDate && !isFuture(selectedDate) && !isBefore(selectedDate, fiveDaysAgoClientSide)
                   ? `${format(selectedDate, 'yyyy년 MM월 dd일')}의 말씀이 없습니다.`
                   : "현재 표시할 수 있는 말씀 게시물이 없습니다."}
                   </p>
                   {userRole === 'admin' && (
-                    <p className="text-md text-gray-500 mt-2">관리자님, 새로운 말씀을 작성해주세요!</p>
+                    <p className="text-sm text-gray-500 mt-2">관리자님, 새로운 말씀을 작성해주세요!</p>
                   )}
                 </Card>
               ) : (
                 wordPosts.map(post => (
-                  <Card key={post.id} ref={post.imageContainerRef} className="relative shadow-sm rounded-lg border bg-card text-card-foreground hover:shadow-lg transition-shadow duration-300 overflow-hidden w-full max-w-sm mx-auto"> 
+                  <Card key={post.id} ref={post.imageContainerRef} className="relative shadow-sm rounded-lg border bg-card text-card-foreground hover:shadow-lg transition-shadow duration-300 overflow-hidden w-full max-w-xs mx-auto"> {/* max-w-sm -> max-w-xs */}
                     {post.image_url ? (
-                      <div className="word-card-content relative w-full aspect-[9/16] max-h-[80vh] flex items-center justify-center bg-gray-200 overflow-hidden"> 
+                      <div className="word-card-content relative w-full aspect-[9/16] max-h-[70vh] flex items-center justify-center bg-gray-200 overflow-hidden"> {/* max-h-[80vh] -> max-h-[70vh] */}
                         <img
                           src={post.image_url}
                           alt={`말씀카드 - ${post.title}`}
                           className="absolute inset-0 w-full h-full object-contain" 
                           onError={(e) => e.currentTarget.src = "/placeholder.svg"} 
                         />
-                        <div className="absolute inset-0 bg-black/70 flex flex-col justify-center items-center p-4 text-white text-center"> 
-                          <CardTitle className="text-3xl font-extrabold mb-2 break-words"> 
+                        <div className="absolute inset-0 bg-black/70 flex flex-col justify-center items-center p-3 text-white text-center"> {/* p-4 -> p-3 */}
+                          <CardTitle className="text-2xl font-extrabold mb-1 break-words"> {/* text-3xl -> text-2xl, mb-2 -> mb-1 */}
                             {post.title}
                           </CardTitle>
-                          <CardDescription className="text-xl leading-relaxed break-words"> 
+                          <CardDescription className="text-base leading-relaxed break-words"> {/* text-xl -> text-base */}
                             {post.content}
                           </CardDescription>
                         </div>
@@ -428,91 +407,36 @@ export default function WordPageClient({ initialContent, initialWordPosts }: Wor
                     )}
 
                     {/* 좋아요, 다운로드, 읽음 버튼 */}
-                    <div className="flex justify-between items-center px-6 pb-4 pt-0">
-                      <div className="flex space-x-2"> 
-                        <Button variant="ghost" size="sm" onClick={() => handleLike(post.id)} disabled={!user} className="flex items-center space-x-1">
-                          <Heart className={`h-4 w-4 ${(post.likes ?? []).some(l => l.user_id === user?.id) ? 'text-red-500 fill-current' : 'text-gray-500'}`} />
-                          <span>{(post.likes ?? []).length}</span>
+                    <div className="flex justify-between items-center px-4 pb-3 pt-0"> {/* px-6 -> px-4, pb-4 -> pb-3 */}
+                      <div className="flex space-x-1"> {/* space-x-2 -> space-x-1 */}
+                        <Button variant="ghost" size="sm" onClick={() => handleLike(post.id)} disabled={!user} className="flex items-center space-x-0.5 px-1 py-0.5"> {/* space-x-1 -> space-x-0.5, px-6 py-3 -> px-1 py-0.5 */}
+                          <Heart className={`h-3 w-3 ${(post.likes ?? []).some(l => l.user_id === user?.id) ? 'text-red-500 fill-current' : 'text-gray-500'}`} /> {/* h-4 w-4 -> h-3 w-3 */}
+                          <span className="text-xs">{(post.likes ?? []).length}</span> {/* 폰트 크기 추가 */}
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => handleDownload(post)} className="flex items-center space-x-1"> 
-                          <Download className="h-4 w-4 text-gray-500" />
-                          <span>다운로드 (이미지)</span> 
+                        <Button variant="ghost" size="sm" onClick={() => handleDownload(post)} className="flex items-center space-x-0.5 px-1 py-0.5"> 
+                          <Download className="h-3 w-3 text-gray-500" /> 
+                          <span className="text-xs">다운로드</span> 
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => handleMarkAsRead(post.id)} disabled={!user} className="flex items-center space-x-1"> 
-                          <BookOpen className="h-4 w-4 text-gray-500" />
-                          <span>읽음</span>
+                        <Button variant="ghost" size="sm" onClick={() => handleMarkAsRead(post.id)} disabled={!user} className="flex items-center space-x-0.5 px-1 py-0.5"> 
+                          <BookOpen className="h-3 w-3 text-gray-500" /> 
+                          <span className="text-xs">읽음</span>
                         </Button>
                       </div>
-                      {/* ✅ 제거: 댓글 수 표시 아이콘 제거 */}
-                      {/* <div className="flex items-center space-x-1 text-gray-500">
-                        <MessageCircle className="h-4 w-4" />
-                        <span>{(post.comments ?? []).length}</span>
-                      </div> */}
                     </div>
-                    {/* ✅ 제거: 댓글 목록 및 작성 폼 섹션 제거 */}
-                    {/* <div className="px-6 py-4 bg-gray-50 border-t border-gray-100">
-                        <h4 className="text-lg font-semibold text-gray-800 mb-3">댓글 ({(post.comments ?? []).length})</h4>
-                        {(post.comments ?? []).length === 0 ? (
-                            <p className="text-sm text-gray-500 mb-4">아직 댓글이 없습니다. 첫 댓글을 남겨주세요!</p>
-                        ) : (
-                            <div className="space-y-4 mb-4 max-h-48 overflow-y-auto pr-2">
-                                {(post.comments ?? []).map(comment => (
-                                    <div key={comment.id} className="border-b border-gray-200 pb-2 last:border-b-0">
-                                        <div className="flex items-center text-sm font-medium text-gray-700 mb-1">
-                                            <Avatar className="h-6 w-6 mr-2">
-                                                <AvatarImage src={post.author_profile_picture_url || "/placeholder.svg"} alt={post.author_nickname} />
-                                                <AvatarFallback className="text-xs">{comment.author_nickname?.charAt(0) || "U"}</AvatarFallback>
-                                            </Avatar>
-                                            {comment.author_nickname}
-                                            <span className="ml-2 text-xs text-gray-500">
-                                                {new Date(comment.created_at).toLocaleString()}
-                                            </span>
-                                        </div>
-                                        <p className="text-sm text-gray-600 whitespace-pre-wrap">{comment.content}</p>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-
-                        {user && (userProfile?.can_comment || userRole === 'admin') ? (
-                            <div className="mt-4">
-                                <Textarea
-                                    value={newCommentContent}
-                                    onChange={(e) => setNewCommentContent(e.target.value)}
-                                    placeholder="댓글을 작성하세요..."
-                                    rows={3}
-                                    className="mb-2"
-                                    disabled={isSubmittingComment}
-                                />
-                                <Button
-                                    onClick={() => handleAddComment(post.id)}
-                                    disabled={isSubmittingComment || !newCommentContent.trim()}
-                                    className="w-full"
-                                    >
-                                    {isSubmittingComment ? "댓글 작성 중..." : "댓글 제출"}
-                                </Button>
-                            </div>
-                        ) : (
-                            <p className="text-sm text-gray-500 mt-4 text-center">
-                                댓글을 작성하려면 <a href="/login" className="text-blue-600 hover:underline">로그인</a>하시거나,
-                                댓글 작성 권한이 필요합니다.
-                            </p>
-                        )}
-                    </div> */}
                   </Card>
                 ))
               )}
-            </div> 
+            </div> {/* 말씀 게시물 목록 컨테이너 끝 */}
 
             {/* 달력 카드 (우측 컬럼) */}
             <div className="w-full md:w-auto flex justify-center"> 
-                <Card className="shadow-sm rounded-lg border bg-card text-card-foreground p-6 hover:shadow-lg transition-shadow duration-300 max-w-[300px] mx-auto"> 
-                    <CardHeader className="mb-4">
-                        <CardTitle className="flex items-center text-xl font-bold text-gray-900">
-                            <CalendarIcon className="h-6 w-6 mr-3 text-blue-600" /> 
+                <Card className="shadow-sm rounded-lg border bg-card text-card-foreground p-4 hover:shadow-lg transition-shadow duration-300 max-w-[250px] mx-auto"> {/* p-6 -> p-4, max-w-[300px] -> max-w-[250px] */}
+                    <CardHeader className="mb-3 p-0"> {/* mb-4 -> mb-3, p-0 추가 */}
+                        <CardTitle className="flex items-center text-lg font-bold text-gray-900"> {/* text-xl -> text-lg */}
+                            <CalendarIcon className="h-5 w-5 mr-2 text-blue-600" /> {/* h-6 w-6 -> h-5 w-5 */}
                             말씀 달력
                         </CardTitle>
-                        <CardDescription>날짜를 선택하여 해당 날짜의 말씀을 확인하세요.</CardDescription>
+                        <CardDescription className="text-sm">날짜를 선택하여 해당 날짜의 말씀을 확인하세요.</CardDescription> {/* text-sm 추가 */}
                     </CardHeader>
                     <CardContent className="p-0 flex justify-center">
                       <Calendar
@@ -524,16 +448,16 @@ export default function WordPageClient({ initialContent, initialWordPosts }: Wor
                       />
                     </CardContent>
                     {selectedDate && (
-                        <div className="text-center mt-4">
+                        <div className="text-center mt-3"> {/* mt-4 -> mt-3 */}
                             <Button variant="ghost" onClick={() => handleDateSelect(undefined)}>
                                 선택된 날짜 지우기
                             </Button>
                         </div>
                     )}
                 </Card>
-            </div> 
-          </div> 
-        </div> 
+            </div> {/* 달력 카드 끝 */}
+          </div> {/* 새로운 그리드 컨테이너 끝 */}
+        </div> {/* container mx-auto 끝 */}
       </section>
     </div>
   );
