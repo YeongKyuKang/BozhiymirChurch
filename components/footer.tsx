@@ -36,11 +36,6 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/ministries" className="text-gray-400 hover:text-white transition-colors">
-                  Ministries
-                </Link>
-              </li>
-              <li>
                 <Link href="/join" className="text-gray-400 hover:text-white transition-colors">
                   Join Us
                 </Link>
