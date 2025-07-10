@@ -17,12 +17,12 @@
    const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
    const backgroundImages = [
-    "/images/bozhiymir.png",
      "/images/bozhiymir2.jpg",
      "/images/bozhiymir3.jpg",
-     "/images/세.png",
-     "/images/요.png",
-     "/images/!!.png",
+     "/images/bozhiymir4.jpg",
+     "/images/bozhiymir5.jpg",
+     "/images/bozhiymir6.jpg",
+     "/images/bozhiymir7.jpg",
    ];
 
    useEffect(() => {
