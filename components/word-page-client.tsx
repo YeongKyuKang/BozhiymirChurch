@@ -2,23 +2,18 @@
 "use client";
 
 import * as React from "react";
-// ✅ 업데이트: 필요한 모든 React 훅들을 명시적으로 임포트합니다.
 import { useState, useEffect, useRef, useCallback } from "react"; 
-// ✅ 업데이트: next/navigation 관련 훅들을 임포트합니다.
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'; 
 import { useAuth } from "@/contexts/auth-context";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
-// ✅ 업데이트: 필요한 모든 lucide-react 아이콘들을 정확히 임포트합니다.
-import { Settings, Save, X, MessageCircle, Heart, Download, BookOpen, Calendar as CalendarIcon, Frown, ImageIcon } from "lucide-react"; 
+import { Settings, Save, X, Heart, Download, BookOpen, Calendar as CalendarIcon, Frown, ImageIcon } from "lucide-react"; 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import EditableText from "@/components/editable-text";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Textarea } from "@/components/ui/textarea"; 
 import { Calendar } from "@/components/ui/calendar"; 
-// ✅ 업데이트: date-fns에서 필요한 모든 함수들을 임포트합니다.
 import { format, isFuture, startOfDay, isBefore } from "date-fns"; 
-import html2canvas from 'html2canvas'; // html2canvas 임포트
+import html2canvas from 'html2canvas'; 
 
 
 interface WordPost {
@@ -29,11 +24,11 @@ interface WordPost {
   author_nickname: string;
   author_profile_picture_url?: string;
   created_at: string;
-  likes: { user_id: string }[];
-  comments: { id: string; content: string; author_nickname: string; created_at: string }[];
+  likes: { user_id: string }[]; 
+  // comments: { id: string; content: string; author_nickname: string; created_at: string }[]; // ✅ 제거
   post_date: string;
-  image_url?: string; // 이미지 URL 필드 추가
-  imageContainerRef?: React.RefObject<HTMLDivElement>; // HTML2Canvas를 위한 ref 추가
+  image_url?: string; 
+  imageContainerRef?: React.RefObject<HTMLDivElement>; 
 }
 
 interface WordPageClientProps {
@@ -51,37 +46,33 @@ export default function WordPageClient({ initialContent, initialWordPosts }: Wor
   const [changedContent, setChangedContent] = useState<Record<string, Record<string, string>>>({});
   const [isSavingAll, setIsSavingAll] = useState(false);
   const [wordPosts, setWordPosts] = useState<WordPost[]>(
-    // initialWordPosts가 변경될 때마다 ref 객체도 새로 생성하여 할당합니다.
     initialWordPosts.map(post => ({
       ...post,
       imageContainerRef: React.createRef<HTMLDivElement>() 
     }))
   );
-  const [newCommentContent, setNewCommentContent] = useState<string>(""); // 새 댓글 내용 상태
-  const [isSubmittingComment, setIsSubmittingComment] = useState<boolean>(false); // 댓글 제출 중 상태
+  // const [newCommentContent, setNewCommentContent] = useState<string>(""); // ✅ 제거
+  // const [isSubmittingComment, setIsSubmittingComment] = useState<boolean>(false); // ✅ 제거
   const initialDateFromParams = searchParams.get('date');
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
     initialDateFromParams ? new Date(initialDateFromParams) : new Date() 
   );
 
   useEffect(() => {
-    // initialWordPosts가 변경될 때마다 ref 객체도 새로 생성하여 할당합니다.
     setWordPosts(initialWordPosts.map(post => ({
       ...post,
       imageContainerRef: React.createRef<HTMLDivElement>() 
     })));
-    // URL에 날짜 파라미터가 없으면, 오늘 날짜로 selectedDate 설정 (최초 진입 시)
     if (!initialDateFromParams) {
       setSelectedDate(new Date());
     }
   }, [initialWordPosts, initialDateFromParams]);
 
-  // createQueryString 헬퍼 함수
   const createQueryString = useCallback(
-    (name: string, value: string | number | null | undefined) => { // value 타입에 number 추가
+    (name: string, value: string | number | null | undefined) => {
       const params = new URLSearchParams(searchParams.toString());
-      if (value !== null && value !== undefined && value !== '') { // null, undefined, 빈 문자열 체크
-        params.set(name, String(value)); // 숫자를 문자열로 변환하여 저장
+      if (value !== null && value !== undefined && value !== '') {
+        params.set(name, String(value));
       } else {
         params.delete(name);
       }
@@ -159,7 +150,6 @@ export default function WordPageClient({ initialContent, initialWordPosts }: Wor
     }
   };
 
-  // 좋아요 처리 함수
   const handleLike = async (postId: string) => {
     if (!user) {
       alert("로그인해야 좋아요를 누를 수 있습니다.");
@@ -167,7 +157,7 @@ export default function WordPageClient({ initialContent, initialWordPosts }: Wor
     }
 
     const { data: existingLike, error: fetchError } = await supabase
-      .from('word_post_likes') 
+      .from('word_reactions') 
       .select('*')
       .eq('post_id', postId)
       .eq('user_id', user.id)
@@ -180,7 +170,7 @@ export default function WordPageClient({ initialContent, initialWordPosts }: Wor
 
     if (existingLike) {
       const { error } = await supabase
-        .from('word_post_likes')
+        .from('word_reactions')
         .delete()
         .eq('id', existingLike.id);
       if (error) {
@@ -195,9 +185,10 @@ export default function WordPageClient({ initialContent, initialWordPosts }: Wor
         )
       );
     } else {
-      const { error } = await supabase.from('word_post_likes').insert({
+      const { error } = await supabase.from('word_reactions').insert({
         post_id: postId,
         user_id: user.id,
+        reaction_type: 'like', 
       });
       if (error) {
         console.error("Error liking post:", error.message);
@@ -206,27 +197,35 @@ export default function WordPageClient({ initialContent, initialWordPosts }: Wor
       setWordPosts(prevPosts =>
         prevPosts.map(post =>
           post.id === postId
-            ? { ...post, likes: [...(post.likes ?? []), { user_id: user.id }] } 
+            ? { ...post, likes: [...(post.likes ?? []), { user_id: user.id, reaction_type: 'like' }] } 
             : post
         )
       );
     }
   };
 
-  // ✅ 추가: 다운로드 기능
   const handleDownload = async (post: WordPost) => {
-    // 캡처할 요소는 이제 post.imageContainerRef입니다.
     if (!post.imageContainerRef || !post.imageContainerRef.current) { 
         alert("다운로드할 카드 요소를 찾을 수 없습니다.");
         return;
     }
 
     try {
-        const capturedCanvas = await html2canvas(post.imageContainerRef.current, { 
+        const cardElement = post.imageContainerRef.current;
+        // 캡처할 영역을 말씀카드 부분으로 제한
+        const targetElement = cardElement.querySelector('.word-card-content') as HTMLElement;
+        
+        if (!targetElement) {
+            alert("말씀 카드 콘텐츠 영역을 찾을 수 없습니다.");
+            return;
+        }
+
+        const capturedCanvas = await html2canvas(targetElement, { 
             scrollX: 0,
             scrollY: -window.scrollY, 
             useCORS: true, 
-            scale: 3 // ✅ 수정: 캡처 스케일을 3으로 조정 (성능과 품질의 균형)
+            scale: 3, 
+            imageSmoothingEnabled: true, // ✅ 수정: 이미지 스무딩 활성화 (선명도 개선)
         });
 
         const targetWidth = 1080; 
@@ -241,7 +240,7 @@ export default function WordPageClient({ initialContent, initialWordPosts }: Wor
             throw new Error("Failed to get 2D context from canvas");
         }
 
-        ctx.imageSmoothingEnabled = false; // 이미지 스무딩 비활성화 유지 (글자 선명도)
+        ctx.imageSmoothingEnabled = true; 
 
         const aspectRatio = capturedCanvas.width / capturedCanvas.height;
         let drawWidth = targetWidth;
@@ -258,12 +257,11 @@ export default function WordPageClient({ initialContent, initialWordPosts }: Wor
 
         ctx.drawImage(capturedCanvas, dx, dy, drawWidth, drawHeight);
 
-
         const image = finalCanvas.toDataURL('image/png');
 
         const link = document.createElement('a');
         link.href = image;
-        link.download = `${post.title.replace(/[^a-zA-Z0-9가-힣]/g, '_')}_${targetWidth}x${targetHeight}.png`;
+        link.download = `${post.title.replace(/[^a-zA-Z0-9가-힣]/g, '_')}_${format(new Date(post.word_date), 'yyyyMMdd')}.png`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -281,60 +279,16 @@ export default function WordPageClient({ initialContent, initialWordPosts }: Wor
     alert(`"${postId}" 말씀 카드에 대한 읽음 표시 기능은 백엔드 구현이 필요합니다. (현재는 알림만 표시)`);
   };
 
-  // ✅ 추가: 댓글 작성 기능
-  const handleAddComment = async (postId: string) => {
-    if (!user || !userProfile?.id || !userProfile?.nickname) {
-      alert("로그인해야 댓글을 작성할 수 있습니다.");
-      return;
-    }
-    if (!userProfile.can_comment && userRole !== 'admin') {
-      alert("댓글을 작성할 권한이 없습니다. 관리자에게 문의하세요.");
-      return;
-    }
-    if (!newCommentContent.trim()) {
-      alert("댓글 내용을 입력해주세요.");
-      return;
-    }
+  // ✅ 제거: 댓글 작성 기능 관련 함수 제거
+  // const handleAddComment = async (postId: string) => { /* ... */ };
 
-    setIsSubmittingComment(true);
-    try {
-      const { data, error } = await supabase.from('word_comments').insert({
-        post_id: postId,
-        author_id: user.id,
-        comment: newCommentContent,
-        author_nickname: userProfile.nickname,
-      }).select();
 
-      if (error) {
-        throw error;
-      }
-
-      if (data && data.length > 0) {
-        setWordPosts(prevPosts =>
-          prevPosts.map(post =>
-            post.id === postId
-              ? { ...post, comments: [...(post.comments ?? []), data[0]] } 
-              : post
-          )
-        );
-        setNewCommentContent(""); 
-      }
-    } catch (error: any) {
-      console.error("Error adding comment:", error);
-      alert(`댓글 작성 중 오류가 발생했습니다: ${error.message}`);
-    } finally {
-      setIsSubmittingComment(false);
-    }
-  };
-
-  // 날짜 선택 핸들러
   const handleDateSelect = (date: Date | undefined) => {
     setSelectedDate(date);
     const dateString = date ? format(date, 'yyyy-MM-dd') : '';
     router.push(pathname + '?' + createQueryString('date', dateString));
   };
 
-  // 달력에서 선택 불가능한 날짜를 설정하는 함수 (미래 날짜 및 5일 이전 과거 날짜)
   const getDisabledDays = useCallback(() => { 
     const today = new Date(); 
     const startOfToday = startOfDay(today);
@@ -431,7 +385,7 @@ export default function WordPageClient({ initialContent, initialWordPosts }: Wor
             {/* 말씀 게시물 목록 컨테이너 (좌측 컬럼) */}
             <div className="w-full space-y-8">
               {wordPosts.length === 0 ? (
-                <Card className="shadow-sm rounded-lg border bg-card text-card-foreground p-6 text-center py-12 w-full max-w-md mx-auto"> 
+                <Card className="shadow-sm rounded-lg border bg-card text-card-foreground p-6 text-center py-12 w-full max-w-sm mx-auto"> 
                   <Frown className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                   <p className="text-xl text-gray-600 font-medium">
                    {selectedDate && !isFuture(selectedDate) && !isBefore(selectedDate, fiveDaysAgoClientSide)
@@ -444,38 +398,33 @@ export default function WordPageClient({ initialContent, initialWordPosts }: Wor
                 </Card>
               ) : (
                 wordPosts.map(post => (
-                  // ✅ 수정: Card 컴포넌트에 ref 할당 및 이미지 렌더링 방식 변경
-                  <Card key={post.id} ref={post.imageContainerRef} className="relative shadow-sm rounded-lg border bg-card text-card-foreground hover:shadow-lg transition-shadow duration-300 overflow-hidden w-full max-w-md mx-auto"> 
+                  <Card key={post.id} ref={post.imageContainerRef} className="relative shadow-sm rounded-lg border bg-card text-card-foreground hover:shadow-lg transition-shadow duration-300 overflow-hidden w-full max-w-sm mx-auto"> 
                     {post.image_url ? (
-                      // ✅ 수정: 말씀 카드 이미지 컨테이너 비율을 9:16으로 변경 및 max-h 제한
-                      <div className="relative w-full aspect-[9/16] max-h-[80vh] flex items-center justify-center bg-gray-200 overflow-hidden"> {/* max-h-[80vh] 추가 및 overflow-hidden */}
-                        {/* 이미지 배경 */}
+                      <div className="word-card-content relative w-full aspect-[9/16] max-h-[80vh] flex items-center justify-center bg-gray-200 overflow-hidden"> 
                         <img
                           src={post.image_url}
                           alt={`말씀카드 - ${post.title}`}
                           className="absolute inset-0 w-full h-full object-contain" 
                           onError={(e) => e.currentTarget.src = "/placeholder.svg"} 
                         />
-                        {/* 텍스트 오버레이 */}
                         <div className="absolute inset-0 bg-black/70 flex flex-col justify-center items-center p-4 text-white text-center"> 
-                          <CardTitle className="text-4xl font-extrabold mb-2 break-words"> 
+                          <CardTitle className="text-3xl font-extrabold mb-2 break-words"> 
                             {post.title}
                           </CardTitle>
-                          <CardDescription className="text-2xl leading-relaxed break-words"> 
+                          <CardDescription className="text-xl leading-relaxed break-words"> 
                             {post.content}
                           </CardDescription>
                         </div>
                       </div>
                     ) : (
-                      // image_url이 없을 경우 기존 방식대로 렌더링
-                      <>
+                      <div className="word-card-content"> 
                         <CardHeader>
                           <CardTitle className="text-xl font-semibold">{post.title}</CardTitle>
                         </CardHeader>
                         <CardContent>
                           <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{post.content}</p>
                         </CardContent>
-                      </>
+                      </div>
                     )}
 
                     {/* 좋아요, 다운로드, 읽음 버튼 */}
@@ -494,13 +443,14 @@ export default function WordPageClient({ initialContent, initialWordPosts }: Wor
                           <span>읽음</span>
                         </Button>
                       </div>
-                      <div className="flex items-center space-x-1 text-gray-500">
+                      {/* ✅ 제거: 댓글 수 표시 아이콘 제거 */}
+                      {/* <div className="flex items-center space-x-1 text-gray-500">
                         <MessageCircle className="h-4 w-4" />
                         <span>{(post.comments ?? []).length}</span>
-                      </div>
+                      </div> */}
                     </div>
-                    {/* 댓글 목록 및 작성 폼 */}
-                    <div className="px-6 py-4 bg-gray-50 border-t border-gray-100">
+                    {/* ✅ 제거: 댓글 목록 및 작성 폼 섹션 제거 */}
+                    {/* <div className="px-6 py-4 bg-gray-50 border-t border-gray-100">
                         <h4 className="text-lg font-semibold text-gray-800 mb-3">댓글 ({(post.comments ?? []).length})</h4>
                         {(post.comments ?? []).length === 0 ? (
                             <p className="text-sm text-gray-500 mb-4">아직 댓글이 없습니다. 첫 댓글을 남겨주세요!</p>
@@ -548,14 +498,14 @@ export default function WordPageClient({ initialContent, initialWordPosts }: Wor
                                 댓글 작성 권한이 필요합니다.
                             </p>
                         )}
-                    </div>
+                    </div> */}
                   </Card>
                 ))
               )}
-            </div> {/* 말씀 게시물 목록 컨테이너 끝 */}
+            </div> 
 
             {/* 달력 카드 (우측 컬럼) */}
-            <div className="w-full md:w-auto flex justify-center"> {/* flex justify-center to center calendar within its column */}
+            <div className="w-full md:w-auto flex justify-center"> 
                 <Card className="shadow-sm rounded-lg border bg-card text-card-foreground p-6 hover:shadow-lg transition-shadow duration-300 max-w-[300px] mx-auto"> 
                     <CardHeader className="mb-4">
                         <CardTitle className="flex items-center text-xl font-bold text-gray-900">
@@ -581,9 +531,9 @@ export default function WordPageClient({ initialContent, initialWordPosts }: Wor
                         </div>
                     )}
                 </Card>
-            </div> {/* 달력 카드 끝 */}
-          </div> {/* 새로운 그리드 컨테이너 끝 */}
-        </div> {/* container mx-auto 끝 */}
+            </div> 
+          </div> 
+        </div> 
       </section>
     </div>
   );

@@ -43,7 +43,7 @@ export default function LeadershipPageClient({ initialContent }: LeadershipPageC
       for (const key in changedContent[section]) {
         const value = changedContent[section][key];
         const { error } = await supabase.from('content').upsert({
-          page: 'leadership', // 'beliefs'에서 'leadership'으로 변경
+          page: 'leadership',
           section: section,
           key: key,
           value: value,

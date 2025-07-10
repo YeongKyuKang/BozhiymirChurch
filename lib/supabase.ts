@@ -119,14 +119,14 @@ export type Database = {
           updated_at?: string
         }
       }
-      contact_forms: { // contact_forms 테이블 정의
+      contact_forms: { 
         Row: {
           id: string
           first_name: string
           last_name: string
           email: string
           phone: string | null
-          interests: string[] | Record<string, boolean> | null // Json -> string[] | Record<string, boolean>로 변경
+          interests: string[] | Record<string, boolean> | null 
           message: string | null
           is_read: boolean
           created_at: string
@@ -137,7 +137,7 @@ export type Database = {
           last_name: string
           email: string
           phone?: string | null
-          interests?: string[] | Record<string, boolean> | null // Json -> string[] | Record<string, boolean>로 변경
+          interests?: string[] | Record<string, boolean> | null 
           message?: string | null
           is_read?: boolean
           created_at?: string
@@ -148,24 +148,23 @@ export type Database = {
           last_name?: string
           email?: string
           phone?: string | null
-          interests?: string[] | Record<string, boolean> | null // Json -> string[] | Record<string, boolean>로 변경
+          interests?: string[] | Record<string, boolean> | null 
           message?: string | null
           is_read?: boolean
           created_at?: string
         }
       }
-      // ✅ 추가: word_posts 테이블 정의 (image_url 포함)
       word_posts: {
         Row: {
           id: string
           title: string
           content: string
-          word_date: string // YYYY-MM-DD
+          word_date: string 
           author_id: string
           author_nickname: string
           created_at: string
           updated_at: string
-          image_url: string | null // 배경 이미지 URL
+          image_url: string | null 
         }
         Insert: {
           id?: string
@@ -190,8 +189,7 @@ export type Database = {
           image_url?: string | null
         }
       }
-      // ✅ 추가: word_reactions 테이블 정의 (좋아요)
-      word_reactions: {
+      word_reactions: { // ✅ 유지: word_reactions 테이블 정의는 유지 (좋아요 기능 유지)
         Row: {
           id: string
           user_id: string
@@ -214,33 +212,32 @@ export type Database = {
           created_at?: string
         }
       }
-      // ✅ 추가: word_comments 테이블 정의 (댓글)
-      word_comments: {
-        Row: {
-          id: string
-          post_id: string
-          author_id: string
-          comment: string
-          author_nickname: string
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          post_id: string
-          author_id: string
-          comment: string
-          author_nickname: string
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          post_id?: string
-          author_id?: string
-          comment?: string
-          author_nickname?: string
-          created_at?: string
-        }
-      }
+      // word_comments: { // ✅ 제거
+      //   Row: {
+      //     id: string
+      //     post_id: string
+      //     author_id: string
+      //     comment: string
+      //     author_nickname: string
+      //     created_at: string
+      //   }
+      //   Insert: {
+      //     id?: string
+      //     post_id: string
+      //     author_id: string
+      //     comment: string
+      //     author_nickname: string
+      //     created_at?: string
+      //   }
+      //   Update: {
+      //     id?: string
+      //     post_id?: string
+      //     author_id?: string
+      //     comment?: string
+      //     author_nickname?: string
+      //     created_at?: string
+      //   }
+      // }
     }
     Views: {
       [_ in never]: never
@@ -257,7 +254,7 @@ export type Database = {
   }
   storage: {
     Buckets: {
-      'word-backgrounds': { // ✅ 추가: word-backgrounds 버킷 타입 정의
+      'word-backgrounds': { 
         Objects: {
           Row: {
             bucket_id: string;
@@ -291,7 +288,6 @@ export type Database = {
           };
         };
       };
-      // 기존 profile-pictures 버킷도 여기에 정의되어 있어야 합니다.
       'profile-pictures': {
         Objects: {
           Row: {
@@ -330,7 +326,6 @@ export type Database = {
   };
 }
 
-// Json 타입은 더 이상 interests에 직접 사용되지 않지만, 다른 곳에서 사용될 수 있으므로 유지합니다.
 export type Json =
   | string
   | number
