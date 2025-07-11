@@ -53,9 +53,10 @@ async function fetchThanksContentAndPosts(searchParams: Record<string, string | 
     .from("thanks_posts")
     .select("*, thanks_reactions(*), thanks_comments(*), author:users(role)");
 
-  if (roleFilter !== "all") {
-    query = query.filter("author.role", "eq", roleFilter);
-  }
+  // 이전의 roleFilter에 따른 쿼리 필터링 제거 (Node.js 레벨에서 필터링)
+  // if (roleFilter !== "all") {
+  //   query = query.filter("author.role", "eq", roleFilter);
+  // }
 
   if (dateFilter) {
     const year = parseInt(dateFilter.substring(0, 4));
@@ -96,15 +97,22 @@ async function fetchThanksContentAndPosts(searchParams: Record<string, string | 
     console.error("Error fetching Thanks posts:", thanksPostsError);
   }
 
-  const processedThanksPosts =
-    thanksPostsData?.map((post) => ({
+  let processedThanksPosts = thanksPostsData;
+
+  // ✅ 추가: 서버 측에서 역할 필터링 적용
+  if (roleFilter !== "all" && processedThanksPosts) {
+    processedThanksPosts = processedThanksPosts.filter(post => post.author && (post.author as { role: string | null }).role === roleFilter);
+  }
+
+  const finalThanksPosts =
+    processedThanksPosts?.map((post) => ({
       ...post,
       author_role: post.author ? (post.author as { role: string | null }).role : null,
     })) || [];
 
   return {
     content: contentMap,
-    thanksPosts: processedThanksPosts,
+    thanksPosts: finalThanksPosts,
   };
 }
 

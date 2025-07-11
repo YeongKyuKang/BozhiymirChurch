@@ -2,15 +2,15 @@
 "use client";
 
 import * as React from "react";
-import Image from "next/image"; // Image 컴포넌트 임포트
-import { Button } from "@/components/ui/button"; // Button 컴포넌트 임포트
-import { Users, Heart, Home, Globe } from "lucide-react"; // 필요한 아이콘 임포트
+import Image from "next/image"; 
+import { Button } from "@/components/ui/button"; 
+import { Users, Heart, Home, Globe } from "lucide-react"; 
 import EditableText from "@/components/editable-text";
-import Link from "next/link"; // Link 컴포넌트 임포트
-import { Database } from "@/lib/supabase"; // Database 타입 임포트
+import Link from "next/link"; 
+import { Database } from "@/lib/supabase"; 
 
 interface CommunitySectionProps {
-  initialContent: Record<string, any>; // initialContent로 통합
+  initialContent: Record<string, any>; 
   isEditingPage: boolean;
   onContentChange: (section: string, key: string, value: string) => void;
 }
@@ -68,7 +68,7 @@ export default function CommunitySection({ initialContent, isEditingPage, onCont
                   section="community_about"
                   contentKey="paragraph_1"
                   initialValue={initialContent?.community_about?.paragraph_1}
-                  tag="span" // p 태그 대신 span 태그 사용
+                  tag="span" 
                   className="leading-relaxed"
                   isTextArea={true}
                   placeholder="커뮤니티 설명 첫 번째 문단"
@@ -83,7 +83,7 @@ export default function CommunitySection({ initialContent, isEditingPage, onCont
                   section="community_about"
                   contentKey="paragraph_2"
                   initialValue={initialContent?.community_about?.paragraph_2}
-                  tag="span" // p 태그 대신 span 태그 사용
+                  tag="span" 
                   className="leading-relaxed"
                   isTextArea={true}
                   placeholder="커뮤니티 설명 두 번째 문단"
@@ -119,15 +119,21 @@ export default function CommunitySection({ initialContent, isEditingPage, onCont
             </div>
 
             <div className="flex flex-col sm:flex-row gap-6 mt-8">
-              <Button className="bg-blue-600 hover:bg-blue-800 text-white px-8 py-4 rounded-full font-bold text-lg shadow-lg transform hover:scale-105 transition-transform">
-                Join Our Family Today
+              {/* "Join Our Family Today" 버튼 */}
+              <Button asChild className="bg-blue-600 hover:bg-blue-800 text-white px-8 py-4 rounded-full font-bold text-lg shadow-lg transform hover:scale-105 transition-transform">
+                <Link href="/join">
+                  Join Our Family Today
+                </Link>
               </Button>
+              {/* "Visit This Sunday" 버튼 제거 */}
+              {/*
               <Button
                 variant="outline"
                 className="border-4 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white px-8 py-4 rounded-full font-bold text-lg transition-all"
               >
                 Visit This Sunday
               </Button>
+              */}
             </div>
           </div>
         </div>

@@ -4,7 +4,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
-import { supabase } from "@/lib/supabase"; // For client-side interactions if needed (though API route is used for delete)
+import { supabase } from "@/lib/supabase"; 
 import {
   Table,
   TableHeader,
@@ -30,9 +30,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Loader2, CheckCircle, XCircle, Trash2, User } from "lucide-react";
+import { Loader2, CheckCircle, XCircle, Trash2, User, Settings } from "lucide-react"; 
 import { format } from "date-fns";
 import { Database } from "@/lib/supabase";
+import { Switch } from "@/components/ui/switch"; 
+import { toast, Toaster } from "sonner"; 
+
 
 // User 타입 정의 (Database에서 필요한 필드를 직접 가져옴)
 type UserProfile = Database['public']['Tables']['users']['Row'];
@@ -49,8 +52,9 @@ export default function AdminUsersClient({ initialUsers }: AdminUsersClientProps
   const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
   const [adminPassword, setAdminPassword] = useState<string>("");
   const [isDeleting, setIsDeleting] = useState(false);
-  const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
-  const [dialogOpen, setDialogOpen] = useState(false); // AlertDialog 상태 제어
+  const [permissionLoading, setPermissionLoading] = useState<Record<string, boolean>>({}); 
+  const [dialogOpen, setDialogOpen] = useState(false); 
+  const [deleteMessage, setDeleteMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null); 
 
   // initialUsers가 변경될 때마다 사용자 목록 업데이트 (서버에서 다시 가져올 때)
   useEffect(() => {
@@ -66,16 +70,16 @@ export default function AdminUsersClient({ initialUsers }: AdminUsersClientProps
 
   const handleDeleteClick = (userId: string) => {
     setDeletingUserId(userId);
-    setAdminPassword(""); // 비밀번호 초기화
-    setMessage(null); // 메시지 초기화
-    setDialogOpen(true); // 다이얼로그 열기
+    setAdminPassword(""); 
+    setDeleteMessage(null); 
+    setDialogOpen(true); 
   };
 
   const confirmDelete = async () => {
     if (!deletingUserId) return;
 
     setIsDeleting(true);
-    setMessage(null);
+    setDeleteMessage(null); 
 
     try {
       const response = await fetch('/api/admin/delete-user', {
@@ -92,20 +96,60 @@ export default function AdminUsersClient({ initialUsers }: AdminUsersClientProps
         throw new Error(result.error || '사용자 삭제에 실패했습니다.');
       }
 
-      setMessage({ type: 'success', text: `사용자 '${deletingUserId}'가 성공적으로 삭제되었습니다.` });
-      setUsers(prevUsers => prevUsers.filter(u => u.id !== deletingUserId)); // UI에서 사용자 제거
+      toast.success(`사용자 '${deletingUserId}'가 성공적으로 삭제되었습니다.`);
+      setUsers(prevUsers => prevUsers.filter(u => u.id !== deletingUserId)); 
       
-      // 사용자 목록 다시 가져오기 (데이터 일관성 유지)
       router.refresh(); 
 
     } catch (error: any) {
       console.error("User deletion error:", error);
-      setMessage({ type: 'error', text: `사용자 삭제 중 오류 발생: ${error.message}` });
+      setDeleteMessage({ type: 'error', text: `사용자 삭제 중 오류 발생: ${error.message}` });
+      toast.error(`사용자 삭제 중 오류 발생: ${error.message}`);
     } finally {
       setIsDeleting(false);
-      setDeletingUserId(null); // 삭제 대상 ID 초기화
-      setAdminPassword(""); // 비밀번호 초기화
-      setDialogOpen(false); // 다이얼로그 닫기
+      setDeletingUserId(null); 
+      setAdminPassword(""); 
+      setDialogOpen(false); 
+    }
+  };
+
+  // can_comment 토글 핸들러
+  const handleToggleCanComment = async (userId: string, currentCanComment: boolean) => {
+    setPermissionLoading(prev => ({ ...prev, [userId]: true }));
+    const newCanCommentStatus = !currentCanComment;
+    
+    try {
+      const passwordPrompt = prompt("댓글 권한을 변경하려면 관리자 비밀번호를 입력하세요.");
+      if (!passwordPrompt) {
+        setPermissionLoading(prev => ({ ...prev, [userId]: false }));
+        toast.info("관리자 비밀번호 입력이 취소되었습니다.");
+        return;
+      }
+
+      const response = await fetch('/api/admin/update-user-permission', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId, can_comment: newCanCommentStatus, adminPassword: passwordPrompt }), // ✅ 수정: prompt로 받은 비밀번호를 직접 전달
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || '권한 변경에 실패했습니다.');
+      }
+
+      toast.success(`사용자 '${userId}'의 댓글 권한이 성공적으로 변경되었습니다.`);
+      setUsers(prevUsers =>
+        prevUsers.map(u => (u.id === userId ? { ...u, can_comment: newCanCommentStatus } : u))
+      );
+      router.refresh(); 
+    } catch (error: any) {
+      console.error("Permission update error:", error);
+      toast.error(`권한 변경 중 오류 발생: ${error.message}`);
+    } finally {
+      setPermissionLoading(prev => ({ ...prev, [userId]: false }));
     }
   };
 
@@ -144,11 +188,11 @@ export default function AdminUsersClient({ initialUsers }: AdminUsersClientProps
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {message && (
-              <Alert variant={message.type === 'error' ? 'destructive' : 'default'} className="mb-4">
-                {message.type === 'error' ? <XCircle className="h-4 w-4" /> : <CheckCircle className="h-4 w-4" />}
-                <AlertTitle>{message.type === 'error' ? "오류!" : "성공!"}</AlertTitle>
-                <AlertDescription>{message.text}</AlertDescription>
+            {deleteMessage && ( 
+              <Alert variant={deleteMessage.type === 'error' ? 'destructive' : 'default'} className="mb-4">
+                {deleteMessage.type === 'error' ? <XCircle className="h-4 w-4" /> : <CheckCircle className="h-4 w-4" />}
+                <AlertTitle>{deleteMessage.type === 'error' ? "오류!" : "성공!"}</AlertTitle>
+                <AlertDescription>{deleteMessage.text}</AlertDescription>
               </Alert>
             )}
 
@@ -158,35 +202,37 @@ export default function AdminUsersClient({ initialUsers }: AdminUsersClientProps
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>이메일</TableHead>
-                    <TableHead>닉네임</TableHead>
-                    <TableHead>역할</TableHead>
-                    <TableHead>댓글 권한</TableHead>
-                    <TableHead>가입일</TableHead>
-                    <TableHead className="text-right">액션</TableHead>
+                    <TableHead>이메일</TableHead><TableHead>닉네임</TableHead><TableHead>역할</TableHead><TableHead>댓글 권한</TableHead><TableHead>가입일</TableHead><TableHead className="text-right">액션</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {users.map((userItem) => (
                     <TableRow key={userItem.id}>
-                      <TableCell className="font-medium">{userItem.email}</TableCell>
-                      <TableCell>{userItem.nickname || '-'}</TableCell>
-                      <TableCell>
+                      <TableCell className="font-medium">{userItem.email}</TableCell><TableCell>{userItem.nickname || '-'}</TableCell><TableCell>
                         <Badge variant={getRoleBadgeVariant(userItem.role)}>
                           {userItem.role === 'admin' ? '관리자' : userItem.role === 'user' ? '멤버' : '어린이'}
                         </Badge>
                       </TableCell>
-                      <TableCell>{userItem.can_comment ? '예' : '아니오'}</TableCell>
-                      <TableCell>{format(new Date(userItem.created_at), 'yyyy-MM-dd')}</TableCell>
-                      <TableCell className="text-right">
-                        {userItem.id === user?.id ? ( // 현재 로그인된 관리자 본인은 삭제 못하게
+                      <TableCell>
+                        {userItem.id === user?.id ? ( 
+                          <Badge variant="secondary">본인</Badge>
+                        ) : (
+                          <Switch
+                            checked={userItem.can_comment}
+                            onCheckedChange={() => handleToggleCanComment(userItem.id, userItem.can_comment)}
+                            disabled={permissionLoading[userItem.id] || isDeleting}
+                          />
+                        )}
+                      </TableCell>
+                      <TableCell>{format(new Date(userItem.created_at), 'yyyy-MM-dd')}</TableCell><TableCell className="text-right">
+                        {userItem.id === user?.id ? ( 
                           <Button variant="outline" size="sm" disabled>본인</Button>
                         ) : (
                           <Button
                             variant="destructive"
                             size="sm"
                             onClick={() => handleDeleteClick(userItem.id)}
-                            disabled={isDeleting}
+                            disabled={isDeleting || permissionLoading[userItem.id]}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -209,6 +255,12 @@ export default function AdminUsersClient({ initialUsers }: AdminUsersClientProps
             <AlertDialogDescription>
               사용자 계정 및 관련 데이터(게시물, 댓글 등)가 영구적으로 삭제됩니다. 이 작업은 되돌릴 수 없습니다. 삭제를 진행하려면 관리자 비밀번호를 입력하세요.
             </AlertDialogDescription>
+            {deleteMessage && deleteMessage.type === 'error' && ( 
+              <Alert variant="destructive">
+                <AlertTitle>오류!</AlertTitle>
+                <AlertDescription>{deleteMessage.text}</AlertDescription>
+              </Alert>
+            )}
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
                 <Label htmlFor="adminPassword">관리자 비밀번호</Label>
@@ -222,12 +274,6 @@ export default function AdminUsersClient({ initialUsers }: AdminUsersClientProps
                 />
               </div>
             </div>
-            {message && message.type === 'error' && ( // 다이얼로그 내에서만 오류 메시지 표시
-              <Alert variant="destructive">
-                <AlertTitle>오류!</AlertTitle>
-                <AlertDescription>{message.text}</AlertDescription>
-              </Alert>
-            )}
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isDeleting} onClick={() => setDialogOpen(false)}>취소</AlertDialogCancel>
@@ -248,6 +294,7 @@ export default function AdminUsersClient({ initialUsers }: AdminUsersClientProps
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      <Toaster /> 
     </div>
   );
 }

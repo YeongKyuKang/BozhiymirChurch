@@ -81,10 +81,18 @@ DROP POLICY IF EXISTS "Word reactions are public" ON public.word_reactions;
 DROP POLICY IF EXISTS "Authenticated users can add word reactions" ON public.word_reactions;
 DROP POLICY IF EXISTS "Users can remove their own word reactions" ON public.word_reactions;
 
+DROP POLICY IF EXISTS "Anyone can view profile pictures" ON storage.objects;
+DROP POLICY IF EXISTS "Users can upload their own profile pictures" ON storage.objects;
+DROP POLICY IF EXISTS "Users can update their own profile pictures" ON storage.objects;
+DROP POLICY IF EXISTS "Users can delete their own profile pictures" ON storage.objects;
+DROP POLICY IF EXISTS "Anyone can view word backgrounds" ON storage.objects;
+DROP POLICY IF EXISTS "Admins can upload word backgrounds" ON storage.objects;
+DROP POLICY IF EXISTS "Admins can update word backgrounds" ON storage.objects;
+DROP POLICY IF EXISTS "Admins can delete word backgrounds" ON storage.objects;
 
 -- 기존 테이블 삭제 (CASCADE 옵션으로 의존 객체까지 삭제)
 DROP TABLE IF EXISTS public.content CASCADE;
--- DROP TABLE IF EXISTS public.users CASCADE; -- users 테이블 삭제 부분 제거
+--DROP TABLE IF EXISTS public.users CASCADE; -- users 테이블 삭제 부분 제거
 DROP TABLE IF EXISTS public.posts CASCADE;
 DROP TABLE IF EXISTS public.comments CASCADE;
 DROP TABLE IF EXISTS public.likes CASCADE;
@@ -107,17 +115,17 @@ DROP TABLE IF EXISTS public.word_reactions CASCADE;
 
 -- ########## 2단계: 최신 스키마로 다시 생성 ##########
 -- users 테이블 생성 (새로운 컬럼들을 처음부터 포함) - 이 부분도 제거합니다.
--- CREATE TABLE public.users (
---   id UUID REFERENCES auth.users(id) PRIMARY KEY,
---   email TEXT NOT NULL,
---   role TEXT DEFAULT 'user' CHECK (role IN ('admin', 'user', 'child')), -- 'child' 역할 추가
---   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
---   nickname TEXT,
---   gender TEXT CHECK (gender IN ('male', 'female')),
---   profile_picture_url TEXT,
---   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
---   can_comment BOOLEAN DEFAULT FALSE -- 댓글 허용 여부 컬럼 추가
--- );
+--CREATE TABLE public.users (
+-- id UUID REFERENCES auth.users(id) PRIMARY KEY,
+--  email TEXT NOT NULL,
+--  role TEXT DEFAULT 'user' CHECK (role IN ('admin', 'user', 'child')), -- 'child' 역할 추가
+--  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+--  nickname TEXT,
+--  gender TEXT CHECK (gender IN ('male', 'female')),
+--  profile_picture_url TEXT,
+--  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+--  can_comment BOOLEAN DEFAULT FALSE -- 댓글 허용 여부 컬럼 추가
+--);
 
 -- content 테이블 생성
 CREATE TABLE public.content (
@@ -235,7 +243,9 @@ CREATE TABLE public.thanks_posts (
   author_id UUID REFERENCES public.users(id) ON DELETE CASCADE NOT NULL,
   author_nickname TEXT NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  author_profile_picture_url TEXT,
+  author_role TEXT
 );
 
 -- thanks_comments 테이블 생성 (새로 추가: 감사 제목 댓글)
@@ -266,7 +276,8 @@ CREATE TABLE public.word_posts (
   author_id UUID REFERENCES public.users(id) ON DELETE CASCADE NOT NULL, -- 주로 관리자가 작성
   author_nickname TEXT NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  image_url TEXT -- 배경 이미지 URL
 );
 
 -- word_comments 테이블 생성 (새로 추가: 매일 말씀 댓글)
@@ -537,10 +548,7 @@ CREATE POLICY "Admins or request authors can update prayer request answers" ON p
     auth.uid() = author_id 
     OR EXISTS (SELECT 1 FROM public.users WHERE users.id = auth.uid() AND users.role = 'admin')
   )
-  WITH CHECK (
-    auth.uid() = author_id 
-    OR EXISTS (SELECT 1 FROM public.users WHERE users.id = auth.uid() AND users.role = 'admin')
-  );
+  WITH CHECK (auth.uid() = author_id OR EXISTS(SELECT 1 FROM public.users WHERE users.id = auth.uid() AND users.role = 'admin'));
 CREATE POLICY "Request authors or admins can delete prayer requests" ON public.prayer_requests
   FOR DELETE USING (auth.uid() = author_id OR EXISTS(SELECT 1 FROM public.users WHERE users.id = auth.uid() AND users.role = 'admin'));
 
@@ -630,6 +638,11 @@ INSERT INTO storage.buckets (id, name, public)
 VALUES ('profile-pictures', 'profile-pictures', true)
 ON CONFLICT (id) DO NOTHING;
 
+-- ✅ 추가: word-backgrounds 스토리지 버킷 생성
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('word-backgrounds', 'word-backgrounds', true)
+ON CONFLICT (id) DO NOTHING;
+
 -- 프로필 사진에 대한 스토리지 정책 설정
 CREATE POLICY "Anyone can view profile pictures" ON storage.objects
   FOR SELECT USING (bucket_id = 'profile-pictures');
@@ -647,6 +660,22 @@ CREATE POLICY "Users can delete their own profile pictures" ON storage.objects
   FOR DELETE USING (
     bucket_id = 'profile-pictures'
     AND auth.uid()::text = (storage.foldername(name))[1]
+  );
+
+-- ✅ 추가: word-backgrounds에 대한 스토리지 정책 설정
+CREATE POLICY "Anyone can view word backgrounds" ON storage.objects
+  FOR SELECT USING (bucket_id = 'word-backgrounds');
+CREATE POLICY "Admins can upload word backgrounds" ON storage.objects
+  FOR INSERT WITH CHECK (
+    bucket_id = 'word-backgrounds' AND EXISTS (SELECT 1 FROM public.users WHERE users.id = auth.uid() AND users.role = 'admin')
+  );
+CREATE POLICY "Admins can update word backgrounds" ON storage.objects
+  FOR UPDATE USING (
+    bucket_id = 'word-backgrounds' AND EXISTS (SELECT 1 FROM public.users WHERE users.id = auth.uid() AND users.role = 'admin')
+  );
+CREATE POLICY "Admins can delete word backgrounds" ON storage.objects
+  FOR DELETE USING (
+    bucket_id = 'word-backgrounds' AND EXISTS (SELECT 1 FROM public.users WHERE users.id = auth.uid() AND users.role = 'admin')
   );
 
 

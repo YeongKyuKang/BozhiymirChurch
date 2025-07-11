@@ -2,8 +2,14 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import AdminUsersClient from '@/components/admin-users-client'; // 새로 생성할 클라이언트 컴포넌트
-import { Database } from '@/lib/supabase'; // Database 타입 임포트
+// import AdminUsersClient from '@/components/admin-users-client'; // ✅ 제거: 동적 임포트로 변경
+import { Database } from '@/lib/supabase';
+import Header from '@/components/header';
+import Footer from '@/components/footer';
+import dynamic from 'next/dynamic'; // ✅ 추가: dynamic 임포트
+
+// ✅ 추가: AdminUsersClient를 동적으로 임포트 (SSR 비활성화)
+const AdminUsersClient = dynamic(() => import("@/components/admin-users-client"), { ssr: false });
 
 export const revalidate = 0; // 페이지 캐싱 비활성화
 
@@ -16,12 +22,8 @@ async function fetchUsersForAdmin() {
     {
       cookies: {
         get: (name: string) => cookieStore.get(name)?.value,
-        set: (name: string, value: string, options: CookieOptions) => {
-          cookieStore.set({ name, value, ...options });
-        },
-        remove: (name: string, options: CookieOptions) => {
-          cookieStore.set({ name, value: '', ...options });
-        },
+        set: () => {}, 
+        remove: () => {}, 
       },
     }
   );
@@ -29,7 +31,7 @@ async function fetchUsersForAdmin() {
   // 사용자 인증 및 관리자 역할 확인
   const { data: user } = await supabase.auth.getUser();
   if (!user.user) {
-    redirect('/login'); // 로그인하지 않았으면 로그인 페이지로 리다이렉트
+    redirect('/login'); 
   }
 
   const { data: userProfile, error: profileError } = await supabase
@@ -40,17 +42,17 @@ async function fetchUsersForAdmin() {
 
   if (profileError || userProfile?.role !== 'admin') {
     console.error('Admin access denied:', profileError);
-    redirect('/'); // 관리자가 아니면 홈으로 리다이렉트
+    redirect('/'); 
   }
 
-  // 모든 사용자 정보 가져오기 (✅ 수정: gender, profile_picture_url, updated_at 추가)
+  // 모든 사용자 정보 가져오기
   const { data: usersData, error: usersError } = await supabase
     .from('users')
-    .select('id, email, nickname, role, created_at, can_comment, gender, profile_picture_url, updated_at'); // 필요한 필드 모두 선택
+    .select('id, email, nickname, role, created_at, can_comment, gender, profile_picture_url, updated_at'); 
 
   if (usersError) {
     console.error('Error fetching users:', usersError);
-    return []; // 오류 발생 시 빈 배열 반환
+    return []; 
   }
 
   return usersData;
@@ -60,6 +62,11 @@ export default async function AdminUsersPage() {
   const initialUsers = await fetchUsersForAdmin();
 
   return (
-    <AdminUsersClient initialUsers={initialUsers} />
+    <>
+      <Header />
+      {/* fallback은 선택 사항이며, 로딩 중 표시할 내용을 정의할 수 있습니다. */}
+      <AdminUsersClient initialUsers={initialUsers} />
+      <Footer />
+    </>
   );
 }
