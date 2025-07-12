@@ -9,7 +9,6 @@ import { Settings, Save, X } from "lucide-react";
 import HeroSection from "@/components/hero-section"; // 기존 HeroSection 컴포넌트 import
 import CommunitySection from "@/components/community-section"; // 기존 CommunitySection 컴포넌트 import
 import MinistriesShowcase from "@/components/ministries-showcase";
-import KidsMessageForm from "@/components/kids-message-form";
 import { useRouter } from "next/navigation"; // useRouter import for router.refresh()
 import { Database } from "@/lib/supabase"; // Database 타입 임포트
 
@@ -131,7 +130,6 @@ export default function HomePageClient({ initialContent }: HomePageClientProps) 
         isEditingPage={isPageEditing} 
         onContentChange={handleContentChange} 
       />
-      <KidsMessageForm />
     </div>
   );
 }
