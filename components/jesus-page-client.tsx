@@ -1,235 +1,318 @@
-// yeongkyukang/bozhiymirchurch/BozhiymirChurch-3007c4235d54890bd3db6acc74558b701965297b/components/about-jesus-page-client.tsx
-"use client";
+"use client"
 
-import * as React from "react";
-import { useState } from "react";
-import { useAuth } from "@/contexts/auth-context";
-import { supabase } from "@/lib/supabase";
-import { Button } from "@/components/ui/button";
-import { Settings, Save, X } from "lucide-react";
-import EditableText from "@/components/editable-text";
-import Link from "next/link"; // Link import 추가
+import { Card, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Heart, Cross, Star, Users, BookOpen, Lightbulb } from "lucide-react"
+import Link from "next/link"
+import EditableText from "@/components/editable-text"
 
-interface AboutJesusPageClientProps {
-  initialContent: Record<string, any>;
+interface JesusPageClientProps {
+  initialContent: Record<string, any>
 }
 
-export default function AboutJesusPageClient({ initialContent }: AboutJesusPageClientProps) {
-  const { userRole } = useAuth();
-  const [isPageEditing, setIsPageEditing] = useState(false);
-  const [changedContent, setChangedContent] = useState<Record<string, Record<string, string>>>({});
-  const [isSavingAll, setIsSavingAll] = useState(false);
+export default function JesusPageClient({ initialContent }: JesusPageClientProps) {
+  const content = initialContent
 
-  const handleContentChange = (section: string, key: string, value: string) => {
-    setChangedContent(prev => ({
-      ...prev,
-      [section]: {
-        ...(prev[section] || {}),
-        [key]: value
-      }
-    }));
-  };
-
-  const handleSaveAll = async () => {
-    setIsSavingAll(true);
-    let updateCount = 0;
-    let revalidated = false;
-
-    for (const section in changedContent) {
-      for (const key in changedContent[section]) {
-        const value = changedContent[section][key];
-        const { error } = await supabase.from('content').upsert({
-          page: 'jesus', // 페이지 이름 지정
-          section: section,
-          key: key,
-          value: value,
-          updated_at: new Date().toISOString()
-        });
-
-        if (error) {
-          console.error(`Error updating content for jesus.${section}.${key}:`, error);
-        } else {
-          updateCount++;
-        }
-      }
-    }
-
-    if (updateCount > 0) {
-      try {
-        const revalidateResponse = await fetch(`/api/revalidate?secret=${process.env.NEXT_PUBLIC_MY_SECRET_TOKEN}&path=/jesus`); // 경로를 '/jesus'로 변경
-        if (!revalidateResponse.ok) {
-          const errorData = await revalidateResponse.json();
-          console.error("Revalidation failed:", errorData.message);
-        } else {
-          revalidated = true;
-          console.log("Jesus page revalidated successfully!");
-        }
-      } catch (err) {
-        console.error("Failed to call revalidate API:", err);
-      }
-    }
-
-    setIsSavingAll(false);
-    setIsPageEditing(false);
-    setChangedContent({});
-
-    if (updateCount > 0 && revalidated) {
-      alert("모든 변경 사항이 저장되고 예수님 페이지가 업데이트되었습니다. 새로고침하면 반영됩니다.");
-    } else if (updateCount > 0 && !revalidated) {
-        alert("일부 변경 사항은 저장되었지만, 예수님 페이지 재검증에 실패했습니다. 수동 새로고침이 필요할 수 있습니다.");
-    } else {
-        alert("변경된 내용이 없거나 저장에 실패했습니다.");
-    }
-  };
-
-  const handleCancelAll = () => {
-    if (confirm("모든 변경 사항을 취소하시겠습니까?")) {
-      setChangedContent({});
-      setIsPageEditing(false);
-    }
-  };
+  const teachings = [
+    {
+      icon: <Heart className="h-6 w-6 md:h-8 md:w-8 text-red-500" />,
+      titleKey: "teaching1_title",
+      descriptionKey: "teaching1_description",
+      verseKey: "teaching1_verse",
+    },
+    {
+      icon: <Cross className="h-6 w-6 md:h-8 md:w-8 text-blue-600" />,
+      titleKey: "teaching2_title",
+      descriptionKey: "teaching2_description",
+      verseKey: "teaching2_verse",
+    },
+    {
+      icon: <Star className="h-6 w-6 md:h-8 md:w-8 text-yellow-500" />,
+      titleKey: "teaching3_title",
+      descriptionKey: "teaching3_description",
+      verseKey: "teaching3_verse",
+    },
+    {
+      icon: <Users className="h-6 w-6 md:h-8 md:w-8 text-green-600" />,
+      titleKey: "teaching4_title",
+      descriptionKey: "teaching4_description",
+      verseKey: "teaching4_verse",
+    },
+    {
+      icon: <BookOpen className="h-6 w-6 md:h-8 md:w-8 text-purple-600" />,
+      titleKey: "teaching5_title",
+      descriptionKey: "teaching5_description",
+      verseKey: "teaching5_verse",
+    },
+    {
+      icon: <Lightbulb className="h-6 w-6 md:h-8 md:w-8 text-orange-500" />,
+      titleKey: "teaching6_title",
+      descriptionKey: "teaching6_description",
+      verseKey: "teaching6_verse",
+    },
+  ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-purple-50 to-white">
-      {userRole === 'admin' && (
-        <div className="fixed top-24 right-8 z-50 flex flex-col space-y-2">
-          {!isPageEditing ? (
-            <Button variant="outline" size="icon" onClick={() => setIsPageEditing(true)}>
-              <Settings className="h-5 w-5" />
-            </Button>
-          ) : (
-            <>
-              <Button variant="outline" size="icon" onClick={handleSaveAll} disabled={isSavingAll}>
-                {isSavingAll ? <span className="animate-spin text-purple-500">🔄</span> : <Save className="h-5 w-5 text-green-600" />}
-              </Button>
-              <Button variant="outline" size="icon" onClick={handleCancelAll} disabled={isSavingAll}>
-                <X className="h-5 w-5 text-red-600" />
-              </Button>
-            </>
-          )}
-        </div>
-      )}
-
-      <section className="py-16 px-4 pt-32 text-center">
-        <div className="container mx-auto">
-          <h1 className="text-5xl font-bold text-gray-900 mb-6">
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+      {/* Hero Section */}
+      <section className="py-8 md:py-12 lg:py-16 px-4 pt-20 md:pt-24 lg:pt-32">
+        <div className="container mx-auto text-center">
+          <div className="text-4xl md:text-6xl mb-4 md:mb-6">✝️</div>
+          <h1 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-gray-900 mb-4 md:mb-6">
             <EditableText
               page="jesus"
-              section="main"
+              section="hero"
               contentKey="title"
-              initialValue={initialContent?.main?.title || "About Jesus"}
-              isEditingPage={isPageEditing}
-              onContentChange={handleContentChange}
+              initialValue={content?.hero?.title}
               tag="span"
-              className="text-5xl font-bold text-gray-900"
+              className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-gray-900"
             />
           </h1>
-          <div className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
+          <div className="text-base md:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto mb-6 md:mb-8">
             <EditableText
               page="jesus"
-              section="main"
-              contentKey="description"
-              initialValue={initialContent?.main?.description || "Discover the life, teachings, and significance of Jesus Christ."}
-              isEditingPage={isPageEditing}
-              onContentChange={handleContentChange}
+              section="hero"
+              contentKey="subtitle"
+              initialValue={content?.hero?.subtitle}
               tag="span"
-              className="text-xl text-gray-600"
-            />
-          </div>
-        </div>
-      </section>
-
-      <section className="py-16 px-4">
-        <div className="container mx-auto max-w-4xl text-center">
-          <h2 className="text-3xl font-bold text-gray-900 mb-8">
-            <EditableText
-              page="jesus"
-              section="life"
-              contentKey="heading"
-              initialValue={initialContent?.life?.heading || "His Life and Ministry"}
-              isEditingPage={isPageEditing}
-              onContentChange={handleContentChange}
-              tag="span"
-              className="text-3xl font-bold text-gray-900"
-            />
-          </h2>
-          <div className="text-lg text-gray-700 leading-relaxed">
-            <EditableText
-              page="jesus"
-              section="life"
-              contentKey="body"
-              initialValue={initialContent?.life?.body || "Jesus Christ, the central figure of Christianity, lived a life of profound impact. Born in Bethlehem, He began His public ministry around the age of 30, traveling throughout Galilee and Judea, teaching, healing, and performing miracles. His teachings, found primarily in the Gospels, emphasize love, compassion, forgiveness, and the Kingdom of God. He gathered disciples, challenging societal norms and religious traditions with His message of radical grace and truth."}
-              isEditingPage={isPageEditing}
-              onContentChange={handleContentChange}
-              tag="span"
-              className="text-lg text-gray-700 leading-relaxed"
+              className="text-base md:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto"
               isTextArea={true}
             />
           </div>
-        </div>
-      </section>
-
-      <section className="py-16 px-4 bg-purple-600 text-white">
-        <div className="container mx-auto max-w-4xl text-center">
-          <h2 className="text-3xl font-bold mb-8">
-            <EditableText
-              page="jesus"
-              section="significance"
-              contentKey="heading"
-              initialValue={initialContent?.significance?.heading || "The Significance of Jesus"}
-              isEditingPage={isPageEditing}
-              onContentChange={handleContentChange}
-              tag="span"
-              className="text-3xl font-bold text-white"
-            />
-          </h2>
-          <div className="text-lg leading-relaxed opacity-90">
-            <EditableText
-              page="jesus"
-              section="significance"
-              contentKey="body"
-              initialValue={initialContent?.significance?.body || "For Christians, Jesus is believed to be the Son of God, the Messiah prophesied in the Old Testament. His death on the cross is understood as a sacrifice for the sins of humanity, and His resurrection as the victory over death and the promise of eternal life for believers. He is revered as Lord and Savior, the Way, the Truth, and the Life, offering hope and redemption to all who follow Him. His teachings continue to inspire billions worldwide, shaping moral values, ethical conduct, and spiritual understanding."}
-              isEditingPage={isPageEditing}
-              onContentChange={handleContentChange}
-              tag="span"
-              className="text-lg leading-relaxed opacity-90"
-              isTextArea={true}
-            />
+          <div className="flex items-center justify-center space-x-2 text-blue-600">
+            <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+            <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
+            <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
           </div>
         </div>
       </section>
 
-      <section className="py-16 px-4 text-center bg-gray-50">
+      {/* Main Scripture */}
+      <section className="py-8 md:py-12 lg:py-16 px-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white">
+        <div className="container mx-auto text-center">
+          <blockquote className="text-lg md:text-xl lg:text-2xl italic mb-4 md:mb-6 max-w-4xl mx-auto">
+            <EditableText
+              page="jesus"
+              section="main_scripture"
+              contentKey="quote"
+              initialValue={content?.main_scripture?.quote}
+              tag="span"
+              className="text-lg md:text-xl lg:text-2xl italic"
+              isTextArea={true}
+            />
+          </blockquote>
+          <p className="text-base md:text-lg lg:text-xl font-semibold opacity-90">
+            <EditableText
+              page="jesus"
+              section="main_scripture"
+              contentKey="reference"
+              initialValue={content?.main_scripture?.reference}
+              tag="span"
+              className="text-base md:text-lg lg:text-xl font-semibold opacity-90"
+            />
+          </p>
+        </div>
+      </section>
+
+      {/* Who is Jesus */}
+      <section className="py-8 md:py-12 lg:py-16 px-4">
         <div className="container mx-auto">
-          <h2 className="text-3xl font-bold text-gray-900 mb-6">
+          <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-center text-gray-900 mb-6 md:mb-8">
+            <EditableText
+              page="jesus"
+              section="who_is_jesus"
+              contentKey="title"
+              initialValue={content?.who_is_jesus?.title}
+              tag="span"
+              className="text-xl md:text-2xl lg:text-3xl font-bold text-center text-gray-900"
+            />
+          </h2>
+          <div className="max-w-4xl mx-auto">
+            <Card className="mb-6 md:mb-8">
+              <CardContent className="p-6 md:p-8">
+                <div className="text-sm md:text-base lg:text-lg text-gray-700 leading-relaxed space-y-4">
+                  <div>
+                    <EditableText
+                      page="jesus"
+                      section="who_is_jesus"
+                      contentKey="description1"
+                      initialValue={content?.who_is_jesus?.description1}
+                      tag="p"
+                      className="text-sm md:text-base lg:text-lg text-gray-700 leading-relaxed mb-4"
+                      isTextArea={true}
+                    />
+                  </div>
+                  <div>
+                    <EditableText
+                      page="jesus"
+                      section="who_is_jesus"
+                      contentKey="description2"
+                      initialValue={content?.who_is_jesus?.description2}
+                      tag="p"
+                      className="text-sm md:text-base lg:text-lg text-gray-700 leading-relaxed mb-4"
+                      isTextArea={true}
+                    />
+                  </div>
+                  <div>
+                    <EditableText
+                      page="jesus"
+                      section="who_is_jesus"
+                      contentKey="description3"
+                      initialValue={content?.who_is_jesus?.description3}
+                      tag="p"
+                      className="text-sm md:text-base lg:text-lg text-gray-700 leading-relaxed"
+                      isTextArea={true}
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Jesus' Teachings */}
+      <section className="py-8 md:py-12 lg:py-16 px-4 bg-gray-50">
+        <div className="container mx-auto">
+          <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-center text-gray-900 mb-8 md:mb-12">
+            <EditableText
+              page="jesus"
+              section="teachings"
+              contentKey="title"
+              initialValue={content?.teachings?.title}
+              tag="span"
+              className="text-xl md:text-2xl lg:text-3xl font-bold text-center text-gray-900"
+            />
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
+            {teachings.map((teaching, index) => (
+              <Card key={index} className="hover:shadow-lg transition-shadow duration-300">
+                <CardContent className="p-4 md:p-6 text-center">
+                  <div className="flex justify-center mb-3 md:mb-4">{teaching.icon}</div>
+                  <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-2 md:mb-3">
+                    <EditableText
+                      page="jesus"
+                      section="teachings"
+                      contentKey={teaching.titleKey}
+                      initialValue={content?.teachings?.[teaching.titleKey]}
+                      tag="span"
+                      className="text-lg md:text-xl font-bold text-gray-900"
+                    />
+                  </h3>
+                  <div className="text-sm md:text-base text-gray-600 mb-3 md:mb-4 leading-relaxed">
+                    <EditableText
+                      page="jesus"
+                      section="teachings"
+                      contentKey={teaching.descriptionKey}
+                      initialValue={content?.teachings?.[teaching.descriptionKey]}
+                      tag="span"
+                      className="text-sm md:text-base text-gray-600 leading-relaxed"
+                      isTextArea={true}
+                    />
+                  </div>
+                  <div className="bg-blue-50 p-3 rounded-lg">
+                    <p className="text-xs md:text-sm text-blue-800 italic font-medium">
+                      <EditableText
+                        page="jesus"
+                        section="teachings"
+                        contentKey={teaching.verseKey}
+                        initialValue={content?.teachings?.[teaching.verseKey]}
+                        tag="span"
+                        className="text-xs md:text-sm text-blue-800 italic font-medium"
+                      />
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Salvation Message */}
+      <section className="py-8 md:py-12 lg:py-16 px-4 bg-gradient-to-r from-red-500 to-pink-600 text-white">
+        <div className="container mx-auto text-center">
+          <h2 className="text-xl md:text-2xl lg:text-3xl font-bold mb-6 md:mb-8">
+            <EditableText
+              page="jesus"
+              section="salvation"
+              contentKey="title"
+              initialValue={content?.salvation?.title}
+              tag="span"
+              className="text-xl md:text-2xl lg:text-3xl font-bold"
+            />
+          </h2>
+          <div className="max-w-4xl mx-auto">
+            <div className="text-base md:text-lg lg:text-xl mb-6 md:mb-8 opacity-95">
+              <EditableText
+                page="jesus"
+                section="salvation"
+                contentKey="message"
+                initialValue={content?.salvation?.message}
+                tag="span"
+                className="text-base md:text-lg lg:text-xl opacity-95"
+                isTextArea={true}
+              />
+            </div>
+            <blockquote className="text-lg md:text-xl lg:text-2xl italic mb-4 md:mb-6">
+              <EditableText
+                page="jesus"
+                section="salvation"
+                contentKey="verse"
+                initialValue={content?.salvation?.verse}
+                tag="span"
+                className="text-lg md:text-xl lg:text-2xl italic"
+                isTextArea={true}
+              />
+            </blockquote>
+            <p className="text-base md:text-lg font-semibold opacity-90 mb-6 md:mb-8">
+              <EditableText
+                page="jesus"
+                section="salvation"
+                contentKey="verse_reference"
+                initialValue={content?.salvation?.verse_reference}
+                tag="span"
+                className="text-base md:text-lg font-semibold opacity-90"
+              />
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Call to Action */}
+      <section className="py-8 md:py-12 lg:py-16 px-4 text-center">
+        <div className="container mx-auto">
+          <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 mb-4 md:mb-6">
             <EditableText
               page="jesus"
               section="cta"
               contentKey="title"
-              initialValue={initialContent?.cta?.title || "Want to learn more about Jesus?"}
-              isEditingPage={isPageEditing}
-              onContentChange={handleContentChange}
+              initialValue={content?.cta?.title}
               tag="span"
-              className="text-3xl font-bold text-gray-900 mb-6"
+              className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900"
             />
           </h2>
-          <div className="text-xl text-gray-600 mb-8">
+          <div className="text-base md:text-lg lg:text-xl text-gray-600 mb-6 md:mb-8 max-w-3xl mx-auto">
             <EditableText
               page="jesus"
               section="cta"
               contentKey="description"
-              initialValue={initialContent?.cta?.description || "Join us for a deeper exploration of His word and impact on our lives."}
-              isEditingPage={isPageEditing}
-              onContentChange={handleContentChange}
+              initialValue={content?.cta?.description}
               tag="span"
-              className="text-xl text-gray-600 mb-8"
+              className="text-base md:text-lg lg:text-xl text-gray-600"
+              isTextArea={true}
             />
           </div>
-          <Button asChild size="lg" className="bg-purple-600 hover:bg-purple-700">
-            <Link href="/join">Connect With Us</Link>
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center items-center">
+            <Button asChild size="lg" className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto">
+              <Link href="/join">Accept Jesus Today</Link>
+            </Button>
+            <Button asChild variant="outline" size="lg" className="w-full sm:w-auto bg-transparent">
+              <Link href="/prayer">Request Prayer</Link>
+            </Button>
+          </div>
         </div>
       </section>
     </div>
-  );
+  )
 }

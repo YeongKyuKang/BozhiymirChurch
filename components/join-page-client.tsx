@@ -1,291 +1,125 @@
-// components/join-page-client.tsx
-"use client";
+"use client"
 
-import * as React from "react";
-import { useState } from "react";
-import { useAuth } from "@/contexts/auth-context";
-import { supabase } from "@/lib/supabase";
-import { Button } from "@/components/ui/button";
-import { Settings, Save, X } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import Link from "next/link";
-import EditableText from "@/components/editable-text";
-import { MapPin, Clock, Phone, Mail, Users, Heart, Star, HelpingHand } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import type React from "react"
 
+import { useState } from "react"
+import { Card, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Heart, Users, Calendar, Mail, Phone, MapPin } from "lucide-react"
+import EditableText from "@/components/editable-text"
+import { useToast } from "@/components/ui/use-toast"
 
 interface JoinPageClientProps {
-  initialContent: Record<string, any>;
+  initialContent: Record<string, any>
 }
 
 export default function JoinPageClient({ initialContent }: JoinPageClientProps) {
-  const { userRole } = useAuth();
-  const [isPageEditing, setIsPageEditing] = useState(false);
-  const [changedContent, setChangedContent] = useState<Record<string, Record<string, string>>>({});
-  const [isSavingAll, setIsSavingAll] = useState(false);
-
+  const content = initialContent
+  const { toast } = useToast()
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState({
-    first_name: '',
-    last_name: '',
-    email: '',
-    phone: '',
-    interests: {
-      visiting: false,
-      joining: false,
-      volunteering: false,
-      ukrainianMinistry: false,
-    },
-    message: '',
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitMessage, setSubmitMessage] = useState('');
-  const [isError, setIsError] = useState(false);
+    name: "",
+    email: "",
+    phone: "",
+    age: "",
+    interests: [] as string[],
+    message: "",
+    newsletter: false,
+  })
 
-
-  const handleContentChange = (section: string, key: string, value: string) => {
-    setChangedContent(prev => ({
-      ...prev,
-      [section]: {
-        ...(prev[section] || {}),
-        [key]: value
-      }
-    }));
-  };
-
-  const handleSaveAll = async () => {
-    setIsSavingAll(true);
-    let updateCount = 0;
-    let revalidated = false;
-
-    for (const section in changedContent) {
-      for (const key in changedContent[section]) {
-        const value = changedContent[section][key];
-        const { error } = await supabase.from('content').upsert({
-          page: 'join',
-          section: section,
-          key: key,
-          value: value,
-          updated_at: new Date().toISOString()
-        });
-
-        if (error) {
-          console.error(`Error updating content for join.${section}.${key}:`, error);
-        } else {
-          updateCount++;
-        }
-      }
-    }
-
-    if (updateCount > 0) {
-      try {
-        const revalidateResponse = await fetch(`/api/revalidate?secret=${process.env.NEXT_PUBLIC_MY_SECRET_TOKEN}&path=/join`);
-        if (!revalidateResponse.ok) {
-          const errorData = await revalidateResponse.json();
-          console.error("Revalidation failed:", errorData.message);
-        } else {
-          revalidated = true;
-          console.log("Join page revalidated successfully!");
-        }
-      } catch (err) {
-        console.error("Failed to call revalidate API:", err);
-      }
-    }
-
-    setIsSavingAll(false);
-    setIsPageEditing(false);
-    setChangedContent({});
-
-    if (updateCount > 0 && revalidated) {
-      alert("모든 변경 사항이 저장되고 가입 페이지가 업데이트되었습니다. 새로고침하면 반영됩니다.");
-    } else if (updateCount > 0 && !revalidated) {
-        alert("일부 변경 사항은 저장되었지만, 가입 페이지 재검증에 실패했습니다. 수동 새로고침이 필요할 수 있습니다.");
-    } else {
-        alert("변경된 내용이 없거나 저장에 실패했습니다.");
-    }
-  };
-
-  const handleCancelAll = () => {
-    if (confirm("모든 변경 사항을 취소하시겠습니까?")) {
-      setChangedContent({});
-      setIsPageEditing(false);
-    }
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { id, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [id]: value
-    }));
-  };
-
-  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { id, checked } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      interests: {
-        ...prev.interests,
-        [id]: checked
-      }
-    }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    setIsSubmitting(true);
-    setSubmitMessage('');
-    setIsError(false);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsSubmitting(true)
 
     try {
-      if (!formData.first_name || !formData.last_name || !formData.email) {
-        setSubmitMessage('이름과 이메일은 필수 입력 사항입니다.');
-        setIsError(true);
-        setIsSubmitting(false);
-        return;
-      }
-
-      const response = await fetch('/api/contact', {
-        method: 'POST',
+      const response = await fetch("/api/contact", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          first_name: formData.first_name,
-          last_name: formData.last_name,
-          email: formData.email,
-          phone: formData.phone,
-          interests: Object.keys(formData.interests).filter(key => (formData.interests as any)[key]),
-          message: formData.message,
+          ...formData,
+          type: "join_request",
+          subject: "새로운 교회 가입 신청",
         }),
-      });
+      })
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || '폼 제출에 실패했습니다.');
+      if (response.ok) {
+        toast({
+          title: "신청이 완료되었습니다!",
+          description: "곧 연락드리겠습니다. 감사합니다.",
+        })
+        setFormData({
+          name: "",
+          email: "",
+          phone: "",
+          age: "",
+          interests: [],
+          message: "",
+          newsletter: false,
+        })
+      } else {
+        throw new Error("Failed to submit")
       }
-
-      setSubmitMessage('메시지가 성공적으로 전송되었습니다!');
-      setFormData({
-        first_name: '',
-        last_name: '',
-        email: '',
-        phone: '',
-        interests: {
-          visiting: false,
-          joining: false,
-          volunteering: false,
-          ukrainianMinistry: false,
-        },
-        message: '',
-      });
-    } catch (error: any) {
-      console.error('폼 제출 오류:', error);
-      setSubmitMessage(`폼 제출에 실패했습니다: ${error.message}`);
-      setIsError(true);
+    } catch (error) {
+      toast({
+        title: "오류가 발생했습니다",
+        description: "다시 시도해주세요.",
+        variant: "destructive",
+      })
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
+  const handleInterestChange = (interest: string, checked: boolean) => {
+    setFormData((prev) => ({
+      ...prev,
+      interests: checked ? [...prev.interests, interest] : prev.interests.filter((i) => i !== interest),
+    }))
+  }
 
-  const isAdmin = userRole === 'admin';
-
-  const serviceInfo = [
-    {
-      time: "9:00 AM",
-      styleKey: "service_style_1",
-      descriptionKey: "service_description_1",
-      icon: <Star className="h-6 w-6" />,
-    },
-    {
-      time: "10:30 AM",
-      styleKey: "service_style_2",
-      descriptionKey: "service_description_2",
-      icon: <Heart className="h-6 w-6" />,
-    },
-    {
-      time: "12:00 PM",
-      styleKey: "service_style_3",
-      descriptionKey: "service_description_3",
-      icon: <Users className="h-6 w-6" />,
-    },
-  ]
-
-  const whatToExpect = [
-    {
-      titleKey: "expect_title_1",
-      descriptionKey: "expect_description_1",
-      icon: "🤝",
-    },
-    {
-      titleKey: "expect_title_2",
-      descriptionKey: "expect_description_2",
-      icon: "🎶",
-    },
-    {
-      titleKey: "expect_title_3",
-      descriptionKey: "expect_description_3",
-      icon: "🫂",
-    },
-    {
-      titleKey: "expect_title_4",
-      descriptionKey: "expect_description_4",
-      icon: "👧",
-    },
+  const interests = [
+    "주일 예배",
+    "성경 공부",
+    "찬양팀",
+    "청년부",
+    "어린이부",
+    "봉사활동",
+    "우크라이나 사역",
+    "기도 모임",
   ]
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-      {isAdmin && (
-        <div className="fixed top-24 right-8 z-50 flex flex-col space-y-2">
-          {!isPageEditing ? (
-            <Button variant="outline" size="icon" onClick={() => setIsPageEditing(true)}>
-              <Settings className="h-5 w-5" />
-            </Button>
-          ) : (
-            <>
-              <Button onClick={handleSaveAll} className="mr-2" disabled={isSavingAll}>
-                {isSavingAll ? <span className="animate-spin text-blue-500">🔄</span> : <Save className="h-5 w-5 text-green-600" />}
-              </Button>
-              <Button onClick={handleCancelAll} variant="outline">
-                <X className="h-5 w-5 text-red-600" />
-              </Button>
-            </>
-          )}
-        </div>
-      )}
-
-      <section className="py-16 px-4 pt-32">
+      {/* Hero Section */}
+      <section className="py-8 md:py-12 lg:py-16 px-4 pt-20 md:pt-24 lg:pt-32">
         <div className="container mx-auto text-center">
-          <h1 className="text-5xl font-bold text-gray-900 mb-6">
+          <div className="text-4xl md:text-6xl mb-4 md:mb-6">🏠</div>
+          <h1 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-gray-900 mb-4 md:mb-6">
             <EditableText
-                page="join"
-                section="main"
-                contentKey="title"
-                initialValue={initialContent?.main?.title}
-                isEditingPage={isPageEditing}
-                onContentChange={handleContentChange}
-                tag="span"
-                className="text-5xl font-bold text-gray-900 mb-6"
-                placeholder="가입 페이지 제목" // ✅ 추가
+              page="join"
+              section="hero"
+              contentKey="title"
+              initialValue={content?.hero?.title}
+              tag="span"
+              className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-gray-900"
             />
           </h1>
-          <div className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
+          <div className="text-base md:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto mb-6 md:mb-8">
             <EditableText
-                page="join"
-                section="main"
-                contentKey="description"
-                initialValue={initialContent?.main?.description}
-                isEditingPage={isPageEditing}
-                onContentChange={handleContentChange}
-                tag="span"
-                className="text-xl text-gray-600 max-w-3xl mx-auto mb-8"
-                placeholder="가입 페이지 설명" // ✅ 추가
+              page="join"
+              section="hero"
+              contentKey="subtitle"
+              initialValue={content?.hero?.subtitle}
+              tag="span"
+              className="text-base md:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto"
+              isTextArea={true}
             />
           </div>
           <div className="flex items-center justify-center space-x-2 text-blue-600">
@@ -296,240 +130,299 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
         </div>
       </section>
 
-      <section className="py-16 px-4">
+      {/* Why Join Us */}
+      <section className="py-8 md:py-12 lg:py-16 px-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white">
         <div className="container mx-auto">
-          <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
-            <EditableText page="join" section="services" contentKey="services_title" initialValue={initialContent?.services?.services_title} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-3xl font-bold text-center text-gray-900 mb-12" placeholder="예배 시간 제목" /> {/* ✅ 추가 */}
+          <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-center mb-8 md:mb-12">
+            <EditableText
+              page="join"
+              section="why_join"
+              contentKey="title"
+              initialValue={content?.why_join?.title}
+              tag="span"
+              className="text-xl md:text-2xl lg:text-3xl font-bold text-center"
+            />
           </h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            {serviceInfo.map((service, index) => (
-              <Card key={index} className="hover:shadow-lg transition-shadow text-center">
-                <CardContent className="p-6">
-                  <div className="text-blue-600 mb-4 flex justify-center">{service.icon}</div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-2">{service.time}</h3>
-                  <h4 className="text-lg font-semibold text-blue-600 mb-3">
-                    <EditableText page="join" section="services" contentKey={service.styleKey} initialValue={initialContent?.services?.[service.styleKey]} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-lg font-semibold text-blue-600 mb-3" placeholder="예배 스타일" /> {/* ✅ 추가 */}
-                  </h4>
-                  <div className="text-gray-600">
-                    <EditableText page="join" section="services" contentKey={service.descriptionKey} initialValue={initialContent?.services?.[service.descriptionKey]} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="p" className="text-gray-600" placeholder="예배 설명" /> {/* ✅ 추가 */}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-          <div className="text-center mt-8">
-            <div className="text-lg text-gray-600 mb-4">
-              <EditableText page="join" section="services" contentKey="services_footer_text" initialValue={initialContent?.services?.services_footer_text} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-lg text-gray-600 mb-4" placeholder="예배 시간 푸터 텍스트" /> {/* ✅ 추가 */}
-            </div>
-            <Button size="lg" className="bg-blue-600 hover:bg-blue-700">
-              Plan Your Visit
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      <section className="py-16 px-4 bg-gray-50">
-        <div className="container mx-auto">
-          <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
-            <EditableText page="join" section="expect" contentKey="expect_title" initialValue={initialContent?.expect?.expect_title} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-3xl font-bold text-center text-gray-900 mb-12" placeholder="무엇을 기대할 수 있나요?" /> {/* ✅ 추가 */}
-          </h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {whatToExpect.map((item, index) => (
-              <Card key={index} className="text-center hover:shadow-lg transition-shadow">
-                <CardContent className="p-6">
-                  <div className="text-4xl mb-4">{item.icon}</div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">
-                    <EditableText page="join" section="expect" contentKey={item.titleKey} initialValue={initialContent?.expect?.[item.titleKey]} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-xl font-bold text-gray-900 mb-2" placeholder="기대하는 점 제목" /> {/* ✅ 추가 */}
-                  </h3>
-                  <div className="text-gray-600">
-                    <EditableText page="join" section="expect" contentKey={item.descriptionKey} initialValue={initialContent?.expect?.[item.descriptionKey]} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-gray-600" placeholder="기대하는 점 설명" /> {/* ✅ 추가 */}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="py-16 px-4">
-        <div className="container mx-auto">
-          <div className="grid md:grid-cols-2 gap-12">
-            {/* Contact Info */}
-            <div>
-              <h2 className="text-3xl font-bold text-gray-900 mb-8">
-                <EditableText page="join" section="contact" contentKey="visit_title" initialValue={initialContent?.contact?.visit_title} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-3xl font-bold text-gray-900 mb-8" placeholder="방문 정보 제목" /> {/* ✅ 추가 */}
-              </h2>
-              <div className="space-y-6">
-                <div className="flex items-start">
-                  <MapPin className="h-6 w-6 text-blue-600 mr-4 mt-1" />
-                  <div>
-                    <h3 className="font-semibold text-gray-900">Address</h3>
-                    <div className="text-gray-600">
-                      <EditableText page="join" section="contact" contentKey="address" initialValue={initialContent?.contact?.address} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-gray-600" isTextArea={true} placeholder="주소" /> {/* ✅ 추가 */}
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-start">
-                  <Clock className="h-6 w-6 text-blue-600 mr-4 mt-1" />
-                  <div>
-                    <h3 className="font-semibold text-gray-900">Service Times</h3>
-                    <div className="text-gray-600">
-                      <EditableText page="join" section="contact" contentKey="service_times" initialValue={initialContent?.contact?.service_times} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-gray-600" isTextArea={true} placeholder="예배 시간" /> {/* ✅ 추가 */}
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-start">
-                  <Phone className="h-6 w-6 text-blue-600 mr-4 mt-1" />
-                  <div>
-                    <h3 className="font-semibold text-gray-900">Phone</h3>
-                    <div className="text-gray-600">
-                      <EditableText page="join" section="contact" contentKey="phone" initialValue={initialContent?.contact?.phone} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-gray-600" placeholder="전화번호" /> {/* ✅ 추가 */}
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-start">
-                  <Mail className="h-6 w-6 text-blue-600 mr-4 mt-1" />
-                  <div>
-                    <h3 className="font-semibold text-gray-900">Email</h3>
-                    <div className="text-gray-600">
-                      <EditableText page="join" section="contact" contentKey="email" initialValue={initialContent?.contact?.email} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-gray-600" placeholder="이메일" /> {/* ✅ 추가 */}
-                    </div>
-                  </div>
-                </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+            <div className="text-center">
+              <Heart className="h-8 w-8 md:h-12 md:w-12 mx-auto mb-3 md:mb-4 text-yellow-400" />
+              <h3 className="text-lg md:text-xl font-bold mb-2">
+                <EditableText
+                  page="join"
+                  section="why_join"
+                  contentKey="reason1_title"
+                  initialValue={content?.why_join?.reason1_title}
+                  tag="span"
+                  className="text-lg md:text-xl font-bold"
+                />
+              </h3>
+              <div className="text-sm md:text-base opacity-90">
+                <EditableText
+                  page="join"
+                  section="why_join"
+                  contentKey="reason1_description"
+                  initialValue={content?.why_join?.reason1_description}
+                  tag="span"
+                  className="text-sm md:text-base opacity-90"
+                  isTextArea={true}
+                />
               </div>
             </div>
-
-            {/* Contact Form */}
-            <div>
-              <h2 className="text-3xl font-bold text-gray-900 mb-8">Get Connected</h2>
-              <Card>
-                <CardContent className="p-6">
-                  <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="first_name" className="block text-sm font-medium text-gray-700 mb-2">First Name</Label>
-                        <Input id="first_name" placeholder="Your first name" value={formData.first_name} onChange={handleInputChange} required />
-                      </div>
-                      <div>
-                        <Label htmlFor="last_name" className="block text-sm font-medium text-gray-700 mb-2">Last Name</Label>
-                        <Input id="last_name" placeholder="Your last name" value={formData.last_name} onChange={handleInputChange} required />
-                      </div>
-                    </div>
-                    <div>
-                      <Label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">Email</Label>
-                      <Input id="email" type="email" placeholder="your.email@example.com" value={formData.email} onChange={handleInputChange} required />
-                    </div>
-                    <div>
-                      <Label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">Phone (Optional)</Label>
-                      <Input id="phone" type="tel" placeholder="(503) 555-0123" value={formData.phone} onChange={handleInputChange} />
-                    </div>
-                    <div>
-                      <Label className="block text-sm font-medium text-gray-700 mb-2">I'm interested in:</Label>
-                      <div className="space-y-2">
-                        <label htmlFor="visiting_first_time" className="flex items-center">
-                          <Checkbox id="visiting_first_time" className="mr-2" checked={formData.interests.visiting} onCheckedChange={(checked) => handleCheckboxChange({ target: { id: 'visiting', checked: checked as boolean } } as React.ChangeEvent<HTMLInputElement>)} />
-                          <span className="text-sm">Visiting for the first time</span>
-                        </label>
-                        <label htmlFor="joining" className="flex items-center">
-                          <Checkbox id="joining" className="mr-2" checked={formData.interests.joining} onCheckedChange={(checked) => handleCheckboxChange({ target: { id: 'joining', checked: checked as boolean } } as React.ChangeEvent<HTMLInputElement>)} />
-                          <span className="text-sm">Joining the church</span>
-                        </label>
-                        <label htmlFor="volunteering" className="flex items-center">
-                          <Checkbox id="volunteering" className="mr-2" checked={formData.interests.volunteering} onCheckedChange={(checked) => handleCheckboxChange({ target: { id: 'volunteering', checked: checked as boolean } } as React.ChangeEvent<HTMLInputElement>)} />
-                          <span className="text-sm">Volunteering opportunities</span>
-                        </label>
-                        <label htmlFor="ukrainianMinistry" className="flex items-center">
-                          <Checkbox id="ukrainianMinistry" className="mr-2" checked={formData.interests.ukrainianMinistry} onCheckedChange={(checked) => handleCheckboxChange({ target: { id: 'ukrainianMinistry', checked: checked as boolean } } as React.ChangeEvent<HTMLInputElement>)} />
-                          <span className="text-sm">Ukrainian children ministry</span>
-                        </label>
-                      </div>
-                    </div>
-                    <div>
-                      <Label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">Message (Optional)</Label>
-                      <Textarea id="message" placeholder="Tell us how we can help you connect..." rows={4} value={formData.message} onChange={handleInputChange} />
-                    </div>
-                    <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={isSubmitting}>
-                      {isSubmitting ? '전송 중...' : 'Send Message'}
-                    </Button>
-                    {submitMessage && (
-                      <div className={`mt-4 p-3 rounded text-center ${isError ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
-                        {submitMessage}
-                      </div>
-                    )}
-                  </form>
-                </CardContent>
-              </Card>
+            <div className="text-center">
+              <Users className="h-8 w-8 md:h-12 md:w-12 mx-auto mb-3 md:mb-4 text-yellow-400" />
+              <h3 className="text-lg md:text-xl font-bold mb-2">
+                <EditableText
+                  page="join"
+                  section="why_join"
+                  contentKey="reason2_title"
+                  initialValue={content?.why_join?.reason2_title}
+                  tag="span"
+                  className="text-lg md:text-xl font-bold"
+                />
+              </h3>
+              <div className="text-sm md:text-base opacity-90">
+                <EditableText
+                  page="join"
+                  section="why_join"
+                  contentKey="reason2_description"
+                  initialValue={content?.why_join?.reason2_description}
+                  tag="span"
+                  className="text-sm md:text-base opacity-90"
+                  isTextArea={true}
+                />
+              </div>
+            </div>
+            <div className="text-center">
+              <Calendar className="h-8 w-8 md:h-12 md:w-12 mx-auto mb-3 md:mb-4 text-yellow-400" />
+              <h3 className="text-lg md:text-xl font-bold mb-2">
+                <EditableText
+                  page="join"
+                  section="why_join"
+                  contentKey="reason3_title"
+                  initialValue={content?.why_join?.reason3_title}
+                  tag="span"
+                  className="text-lg md:text-xl font-bold"
+                />
+              </h3>
+              <div className="text-sm md:text-base opacity-90">
+                <EditableText
+                  page="join"
+                  section="why_join"
+                  contentKey="reason3_description"
+                  initialValue={content?.why_join?.reason3_description}
+                  tag="span"
+                  className="text-sm md:text-base opacity-90"
+                  isTextArea={true}
+                />
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Ukrainian Ministry Highlight */}
-      <section className="py-16 px-4 bg-gradient-to-r from-blue-500 to-yellow-400 text-white">
-        <div className="container mx-auto text-center">
-          <h2 className="text-3xl font-bold mb-8">
-            <EditableText page="join" section="ministry_highlight" contentKey="highlight_title" initialValue={initialContent?.ministry_highlight?.highlight_title} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-3xl font-bold mb-8" placeholder="사역 하이라이트 제목" /> {/* ✅ 추가 */}
+      {/* Join Form */}
+      <section className="py-8 md:py-12 lg:py-16 px-4">
+        <div className="container mx-auto max-w-4xl">
+          <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-center text-gray-900 mb-6 md:mb-8">
+            <EditableText
+              page="join"
+              section="form"
+              contentKey="title"
+              initialValue={content?.form?.title}
+              tag="span"
+              className="text-xl md:text-2xl lg:text-3xl font-bold text-center text-gray-900"
+            />
           </h2>
-          <div className="max-w-4xl mx-auto">
-            <div className="text-6xl mb-6">🇺🇦</div>
-            <h3 className="text-2xl font-bold mb-4">
-              <EditableText page="join" section="ministry_highlight" contentKey="highlight_subtitle" initialValue={initialContent?.ministry_highlight?.highlight_subtitle} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-2xl font-bold mb-4" placeholder="사역 하이라이트 부제목" /> {/* ✅ 추가 */}
-            </h3>
-            <div className="text-xl mb-8 opacity-90">
-              <EditableText page="join" section="ministry_highlight" contentKey="highlight_description" initialValue={initialContent?.ministry_highlight?.highlight_description} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-xl mb-8 opacity-90" placeholder="사역 하이라이트 설명" /> {/* ✅ 추가 */}
-            </div>
-            <div className="grid md:grid-cols-3 gap-6 mb-8">
-              <div>
-                <div className="text-3xl font-bold">
-                  <EditableText page="join" section="ministry_highlight" contentKey="stat1_number" initialValue={initialContent?.ministry_highlight?.stat1_number} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-3xl font-bold" placeholder="통계 1 숫자" /> {/* ✅ 추가 */}
+          <Card>
+            <CardContent className="p-6 md:p-8">
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                  <div>
+                    <Label htmlFor="name" className="text-sm md:text-base">
+                      이름 *
+                    </Label>
+                    <Input
+                      id="name"
+                      type="text"
+                      required
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      className="mt-1"
+                      placeholder="성함을 입력해주세요"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="email" className="text-sm md:text-base">
+                      이메일 *
+                    </Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      required
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      className="mt-1"
+                      placeholder="이메일을 입력해주세요"
+                    />
+                  </div>
                 </div>
-                <div className="opacity-90">
-                  <EditableText page="join" section="ministry_highlight" contentKey="stat1_label" initialValue={initialContent?.ministry_highlight?.stat1_label} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="opacity-90" placeholder="통계 1 라벨" /> {/* ✅ 추가 */}
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                  <div>
+                    <Label htmlFor="phone" className="text-sm md:text-base">
+                      전화번호
+                    </Label>
+                    <Input
+                      id="phone"
+                      type="tel"
+                      value={formData.phone}
+                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      className="mt-1"
+                      placeholder="전화번호를 입력해주세요"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="age" className="text-sm md:text-base">
+                      연령대
+                    </Label>
+                    <Select value={formData.age} onValueChange={(value) => setFormData({ ...formData, age: value })}>
+                      <SelectTrigger className="mt-1">
+                        <SelectValue placeholder="연령대를 선택해주세요" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="10s">10대</SelectItem>
+                        <SelectItem value="20s">20대</SelectItem>
+                        <SelectItem value="30s">30대</SelectItem>
+                        <SelectItem value="40s">40대</SelectItem>
+                        <SelectItem value="50s">50대</SelectItem>
+                        <SelectItem value="60s">60대 이상</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
-              </div>
-              <div>
-                <div className="text-3xl font-bold">
-                  <EditableText page="join" section="ministry_highlight" contentKey="stat2_number" initialValue={initialContent?.ministry_highlight?.stat2_number} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-3xl font-bold" placeholder="통계 2 숫자" /> {/* ✅ 추가 */}
+
+                <div>
+                  <Label className="text-sm md:text-base mb-3 block">관심 있는 활동 (복수 선택 가능)</Label>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {interests.map((interest) => (
+                      <div key={interest} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={interest}
+                          checked={formData.interests.includes(interest)}
+                          onCheckedChange={(checked) => handleInterestChange(interest, checked as boolean)}
+                        />
+                        <Label htmlFor={interest} className="text-xs md:text-sm cursor-pointer">
+                          {interest}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <div className="opacity-90">
-                  <EditableText page="join" section="ministry_highlight" contentKey="stat2_label" initialValue={initialContent?.ministry_highlight?.stat2_label} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="opacity-90" placeholder="통계 2 라벨" /> {/* ✅ 추가 */}
+
+                <div>
+                  <Label htmlFor="message" className="text-sm md:text-base">
+                    메시지
+                  </Label>
+                  <Textarea
+                    id="message"
+                    value={formData.message}
+                    onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                    className="mt-1"
+                    rows={4}
+                    placeholder="교회에 대해 궁금한 점이나 하고 싶은 말씀을 자유롭게 적어주세요"
+                  />
                 </div>
-              </div>
-              <div>
-                <div className="text-3xl font-bold">
-                  <EditableText page="join" section="ministry_highlight" contentKey="stat3_number" initialValue={initialContent?.ministry_highlight?.stat3_number} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-3xl font-bold" placeholder="통계 3 숫자" /> {/* ✅ 추가 */}
+
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="newsletter"
+                    checked={formData.newsletter}
+                    onCheckedChange={(checked) => setFormData({ ...formData, newsletter: checked as boolean })}
+                  />
+                  <Label htmlFor="newsletter" className="text-xs md:text-sm cursor-pointer">
+                    교회 소식 및 이벤트 알림을 받겠습니다
+                  </Label>
                 </div>
-                <div className="opacity-90">
-                  <EditableText page="join" section="ministry_highlight" contentKey="stat3_label" initialValue={initialContent?.ministry_highlight?.stat3_label} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="opacity-90" placeholder="통계 3 라벨" /> {/* ✅ 추가 */}
-                </div>
-              </div>
-            </div>
-            <Button asChild size="lg" className="bg-white text-blue-600 hover:bg-gray-100">
-              <Link href="/ukrainian-ministry">Learn More</Link>
-            </Button>
-          </div>
+
+                <Button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-base md:text-lg py-3"
+                >
+                  {isSubmitting ? "제출 중..." : "가입 신청하기"}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
         </div>
       </section>
 
-      {/* Final CTA */}
-      <section className="py-16 px-4 text-center">
+      {/* Contact Info */}
+      <section className="py-8 md:py-12 lg:py-16 px-4 bg-gray-50">
         <div className="container mx-auto">
-          <h2 className="text-3xl font-bold text-gray-900 mb-6">
-            <EditableText page="join" section="cta" contentKey="cta_title" initialValue={initialContent?.cta?.cta_title} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-3xl font-bold text-gray-900 mb-6" placeholder="CTA 제목" /> {/* ✅ 추가 */}
+          <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-center text-gray-900 mb-8 md:mb-12">
+            <EditableText
+              page="join"
+              section="contact"
+              contentKey="title"
+              initialValue={content?.contact?.title}
+              tag="span"
+              className="text-xl md:text-2xl lg:text-3xl font-bold text-center text-gray-900"
+            />
           </h2>
-          <div className="text-xl text-gray-600 mb-8">
-            <EditableText page="join" section="cta" contentKey="cta_description" initialValue={initialContent?.cta?.cta_description} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-xl text-gray-600 mb-8" placeholder="CTA 설명" /> {/* ✅ 추가 */}
-          </div>
-          <div className="space-x-4">
-            <Button asChild size="lg" className="bg-blue-600 hover:bg-blue-700">
-              <Link href="tel:(503)555-0123">Call Us</Link>
-            </Button>
-            <Button asChild variant="outline" size="lg">
-              <Link href="/">Back to Home</Link>
-            </Button>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+            <Card className="text-center hover:shadow-lg transition-shadow">
+              <CardContent className="p-6">
+                <MapPin className="h-8 w-8 md:h-12 md:w-12 mx-auto mb-3 md:mb-4 text-blue-600" />
+                <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-2">주소</h3>
+                <div className="text-sm md:text-base text-gray-600">
+                  <EditableText
+                    page="join"
+                    section="contact"
+                    contentKey="address"
+                    initialValue={content?.contact?.address}
+                    tag="span"
+                    className="text-sm md:text-base text-gray-600"
+                    isTextArea={true}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="text-center hover:shadow-lg transition-shadow">
+              <CardContent className="p-6">
+                <Phone className="h-8 w-8 md:h-12 md:w-12 mx-auto mb-3 md:mb-4 text-green-600" />
+                <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-2">전화</h3>
+                <div className="text-sm md:text-base text-gray-600">
+                  <EditableText
+                    page="join"
+                    section="contact"
+                    contentKey="phone"
+                    initialValue={content?.contact?.phone}
+                    tag="span"
+                    className="text-sm md:text-base text-gray-600"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="text-center hover:shadow-lg transition-shadow">
+              <CardContent className="p-6">
+                <Mail className="h-8 w-8 md:h-12 md:w-12 mx-auto mb-3 md:mb-4 text-purple-600" />
+                <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-2">이메일</h3>
+                <div className="text-sm md:text-base text-gray-600">
+                  <EditableText
+                    page="join"
+                    section="contact"
+                    contentKey="email"
+                    initialValue={content?.contact?.email}
+                    tag="span"
+                    className="text-sm md:text-base text-gray-600"
+                  />
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </section>
     </div>
-  );
+  )
 }

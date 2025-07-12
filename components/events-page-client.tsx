@@ -2,12 +2,12 @@
 "use client";
 
 import * as React from "react";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react"; // useMemo 임포트
 import { useAuth } from "@/contexts/auth-context";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
-import { Settings, Save, X, CalendarIcon, MapPin, Clock } from "lucide-react";
-import { Card } from "@/components/ui/card";
+import { Settings, Save, X, CalendarIcon, MapPin, Clock, Filter } from "lucide-react"; // Filter 아이콘 임포트
+import { Card, CardContent } from "@/components/ui/card";
 import EditableText from "@/components/editable-text";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -25,7 +25,7 @@ interface SpecificEventsPageClientProps {
   initialEvents: Event[];
 }
 
-export default function SpecificEventsPageClient({ initialContent, initialEvents }: SpecificEventsPageClientProps) {
+export default function SpecificEventsPageClient({ initialEvents, initialContent }: SpecificEventsPageClientProps) {
   const { userRole } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
@@ -150,18 +150,35 @@ export default function SpecificEventsPageClient({ initialContent, initialEvents
 
   const isAdmin = userRole === 'admin';
 
-  const filteredEvents = events.filter(event => {
-    const matchesCategory = selectedCategory === 'all' || event.category === selectedCategory;
-    
-    let matchesDate = true;
-    if (selectedDate && event.event_date) {
-      const eventDate = new Date(event.event_date);
-      matchesDate = eventDate.getFullYear() === selectedDate.getFullYear() &&
-                    eventDate.getMonth() === selectedDate.getMonth() &&
-                    eventDate.getDate() === selectedDate.getDate();
-    }
-    return matchesCategory && matchesDate;
-  });
+  const categories = useMemo(() => {
+    const cats = ["all", ...new Set(events.map((event) => event.category).filter(Boolean) as string[])]; // ✅ 수정: filter(Boolean)으로 null 제거 후 string[]으로 타입 캐스팅
+    return cats;
+  }, [events]);
+
+  const filteredEvents = useMemo(() => {
+    if (selectedCategory === "all") return events;
+    return events.filter((event) => event.category === selectedCategory);
+  }, [events, selectedCategory]);
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("ko-KR", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      weekday: "long",
+    });
+  };
+
+  const formatTime = (timeString: string | null) => { // timeString이 null일 수 있으므로 타입 변경
+    if (!timeString) return "시간 미정"; // null 처리
+    const [hours, minutes] = timeString.split(":");
+    const hour = Number.parseInt(hours);
+    const ampm = hour >= 12 ? "PM" : "AM";
+    const displayHour = hour % 12 || 12;
+    return `${displayHour}:${minutes} ${ampm}`;
+  };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white py-16 pt-24">
@@ -191,8 +208,8 @@ export default function SpecificEventsPageClient({ initialContent, initialEvents
           </div>
         )}
 
-        <section className="text-center mb-12">
-          <h1 className="text-5xl font-extrabold text-gray-900 mb-4 leading-tight">
+        <section className="text-center mb-8 pt-4"> 
+          <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-3 leading-tight"> 
             <EditableText
               page="events"
               section="header"
@@ -203,7 +220,7 @@ export default function SpecificEventsPageClient({ initialContent, initialEvents
               className="inline-block"
             />
           </h1>
-          <div className="text-xl text-gray-600 max-w-3xl mx-auto">
+          <div className="text-base md:text-lg text-gray-600 max-w-2xl mx-auto"> 
             <EditableText
               page="events"
               section="header"
@@ -215,33 +232,30 @@ export default function SpecificEventsPageClient({ initialContent, initialEvents
           </div>
         </section>
 
-        <section className="mb-8 p-4 bg-white rounded-lg shadow-md flex flex-col sm:flex-row gap-4 items-center justify-center">
-          <div className="flex-1 min-w-[180px]">
+        <section className="mb-6 p-3 bg-white rounded-lg shadow-md flex flex-col sm:flex-row gap-3 items-center justify-center"> 
+          <div className="flex-1 min-w-[150px]"> 
             <label htmlFor="category-filter" className="sr-only">카테고리</label>
             <Select value={selectedCategory} onValueChange={handleCategoryChange}>
-              <SelectTrigger id="category-filter" className="w-full">
+              <SelectTrigger id="category-filter" className="w-full h-9 text-sm"> 
                 <SelectValue placeholder="모든 카테고리" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">모든 카테고리</SelectItem>
-                <SelectItem value="예배">예배</SelectItem>
-                <SelectItem value="어린이">어린이</SelectItem>
-                <SelectItem value="청소년/청년">청소년/청년</SelectItem>
-                <SelectItem value="성경공부">성경공부</SelectItem>
-                <SelectItem value="공동체">공동체</SelectItem>
-                <SelectItem value="특별행사">특별 행사</SelectItem>
+                {categories.map(category => (
+                  <SelectItem key={category} value={category}>{category}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
 
-          <div className="flex-1 min-w-[180px]">
+          <div className="flex-1 min-w-[150px]"> 
             <label htmlFor="date-filter" className="sr-only">날짜</label>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
                   variant={"outline"}
                   className={cn(
-                    "w-full justify-start text-left font-normal",
+                    "w-full justify-start text-left font-normal h-9 text-sm", 
                     !selectedDate && "text-muted-foreground"
                   )}
                 >
@@ -268,17 +282,20 @@ export default function SpecificEventsPageClient({ initialContent, initialEvents
 
         <section>
           {filteredEvents.length === 0 ? (
-            <p className="text-center text-gray-600 text-lg py-10">
-              선택한 필터에 해당하는 이벤트가 없습니다.
-            </p>
+            <div className="text-center py-8"> 
+              <div className="text-4xl md:text-6xl mb-4">📭</div>
+              <h3 className="text-lg md:text-xl font-semibold text-gray-700 mb-2">
+                선택한 카테고리에 이벤트가 없습니다
+              </h3>
+              <p className="text-sm md:text-base text-gray-500">다른 카테고리를 선택해보세요.</p>
+            </div>
           ) : (
-            <div className="grid grid-cols-1 gap-8">
+            <div className="grid grid-cols-1 gap-4"> 
               {filteredEvents.map((event) => (
-                // 링크를 event.slug로 변경했습니다.
                 <Link key={event.id} href={`/events/${event.slug}`} passHref>
                   <Card className="overflow-hidden rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col lg:flex-row cursor-pointer">
                     {event.image_url && (
-                      <div className="relative w-full h-48 lg:h-auto lg:w-1/3 flex-shrink-0">
+                      <div className="relative w-full h-40 lg:h-auto lg:w-1/3 flex-shrink-0"> 
                         <img
                           src={event.image_url}
                           alt={event.title}
@@ -288,39 +305,40 @@ export default function SpecificEventsPageClient({ initialContent, initialEvents
                           }}
                         />
                         {event.category && (
-                          <span className="absolute top-3 left-3 bg-blue-600 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md">
+                          <span className="absolute top-2 left-2 bg-blue-600 text-white text-xs font-semibold px-2 py-1 rounded-full shadow-md"> 
                             {event.category}
                           </span>
                         )}
                       </div>
                     )}
                     
-                    <div className="flex-grow p-6 flex flex-col justify-between">
+                    <div className="flex-grow p-4 flex flex-col justify-between"> 
                       <div>
-                        <h3 className="text-xl font-bold text-gray-900 mb-2">{event.title}</h3>
-                        <p className="text-gray-700 text-sm line-clamp-3 mb-4">
-                          {event.description || "이벤트 설명이 없습니다."}
+                        <h3 className="text-lg font-bold text-gray-900 mb-1 line-clamp-2">{event.title}</h3> 
+                        <p className="text-sm text-gray-600 mb-3 line-clamp-3 leading-relaxed"> 
+                          {event.description}
                         </p>
                       </div>
 
-                      <div className="space-y-2 text-sm text-gray-600 border-t pt-4">
+                      <div className="space-y-1 text-xs text-gray-600 border-t pt-3"> 
                         {event.event_date && (
                           <div className="flex items-center">
-                            <CalendarIcon className="h-4 w-4 mr-2 text-blue-500" />
-                            <span>{format(new Date(event.event_date), "yyyy년 MM월 dd일 (EEE)")}</span>
+                            <CalendarIcon className="h-3.5 w-3.5 mr-1.5 text-blue-500" /> 
+                            <span>{formatDate(event.event_date)}</span>
                           </div>
                         )}
                         {(event.start_time || event.end_time) && (
                           <div className="flex items-center">
-                            <Clock className="h-4 w-4 mr-2 text-blue-500" />
+                            <Clock className="h-3.5 w-3.5 mr-1.5 text-blue-500" />
                             <span>
-                              {event.start_time}{event.end_time ? ` - ${event.end_time}` : ''}
+                              {formatTime(event.start_time)}
+                              {event.end_time && ` - ${formatTime(event.end_time)}`}
                             </span>
                           </div>
                         )}
                         {event.location && (
                           <div className="flex items-center">
-                            <MapPin className="h-4 w-4 mr-2 text-blue-500" />
+                            <MapPin className="h-3.5 w-3.5 mr-1.5 text-blue-500" />
                             <span>{event.location}</span>
                           </div>
                         )}
