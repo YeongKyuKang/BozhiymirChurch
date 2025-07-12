@@ -1,5 +1,7 @@
 "use client"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
+import type React from "react"
+
 import Image from "next/image"
 import EditableText from "@/components/editable-text"
 
@@ -11,6 +13,9 @@ interface HeroSectionProps {
 
 export default function HeroSection({ heroContent, isEditingPage, onContentChange }: HeroSectionProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const [touchStart, setTouchStart] = useState<number | null>(null)
+  const [touchEnd, setTouchEnd] = useState<number | null>(null)
+  const intervalRef = useRef<NodeJS.Timeout | null>(null)
 
   const backgroundImages = [
     "/images/bozhiymir2.jpg",
@@ -21,17 +26,59 @@ export default function HeroSection({ heroContent, isEditingPage, onContentChang
     "/images/bozhiymir7.jpg",
   ]
 
-  useEffect(() => {
-    const interval = setInterval(() => {
+  // 자동 슬라이드 기능
+  const startAutoSlide = () => {
+    if (intervalRef.current) clearInterval(intervalRef.current)
+    intervalRef.current = setInterval(() => {
       setCurrentImageIndex((prevIndex) => (prevIndex + 1) % backgroundImages.length)
     }, 5000)
+  }
 
-    return () => clearInterval(interval)
+  const stopAutoSlide = () => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current)
+      intervalRef.current = null
+    }
+  }
+
+  useEffect(() => {
+    startAutoSlide()
+    return () => stopAutoSlide()
   }, [backgroundImages.length])
 
+  // 터치 이벤트 핸들러
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null)
+    setTouchStart(e.targetTouches[0].clientX)
+    stopAutoSlide()
+  }
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX)
+  }
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) {
+      startAutoSlide()
+      return
+    }
+
+    const distance = touchStart - touchEnd
+    const isLeftSwipe = distance > 50
+    const isRightSwipe = distance < -50
+
+    if (isLeftSwipe) {
+      setCurrentImageIndex((prevIndex) => (prevIndex + 1) % backgroundImages.length)
+    } else if (isRightSwipe) {
+      setCurrentImageIndex((prevIndex) => (prevIndex === 0 ? backgroundImages.length - 1 : prevIndex - 1))
+    }
+
+    setTimeout(() => startAutoSlide(), 1000)
+  }
+
   return (
-    <section className="relative h-screen flex items-center justify-center overflow-hidden pt-16 md:pt-20 lg:pt-24">
-      <div className="absolute inset-0">
+    <section className="relative h-[70vh] md:h-[80vh] lg:h-screen flex items-center justify-center overflow-hidden pt-16 md:pt-20 lg:pt-24">
+      <div className="absolute inset-0" onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}>
         {backgroundImages.map((image, index) => (
           <div
             key={index}
@@ -44,36 +91,47 @@ export default function HeroSection({ heroContent, isEditingPage, onContentChang
               alt={`Bozhiymir Church community photo ${index + 1}`}
               fill
               sizes="100vw"
-              style={{ objectFit: "contain" }}
+              style={{ objectFit: "cover", objectPosition: "center" }}
               priority={index === 0}
               unoptimized={true}
             />
           </div>
         ))}
-        <div className="absolute inset-0 bg-black/50"></div>
+        <div className="absolute inset-0 bg-black/60"></div>
       </div>
 
-      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-2 z-20">
+      {/* 모바일 친화적 인디케이터 */}
+      <div className="absolute bottom-4 md:bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-2 z-20">
         {backgroundImages.map((_, index) => (
           <button
             key={index}
-            onClick={() => setCurrentImageIndex(index)}
-            className={`w-3 h-3 rounded-full transition-all duration-300 ${
+            onClick={() => {
+              setCurrentImageIndex(index)
+              stopAutoSlide()
+              setTimeout(() => startAutoSlide(), 2000)
+            }}
+            className={`w-2 h-2 md:w-3 md:h-3 rounded-full transition-all duration-300 ${
               index === currentImageIndex ? "bg-white scale-125" : "bg-white/50 hover:bg-white/75"
             }`}
           />
         ))}
       </div>
 
+      {/* 스와이프 힌트 (모바일에서만 표시) */}
+      <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2 text-white/70 text-xs md:hidden z-20">
+        ← 스와이프하여 이미지 변경 →
+      </div>
+
       {/* Floating Ukrainian Elements */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-20 left-10 w-3 h-3 bg-blue-400 rounded-full animate-pulse"></div>
-        <div className="absolute top-32 right-20 w-2 h-2 bg-yellow-400 rounded-full animate-pulse delay-1000"></div>
-        <div className="absolute bottom-40 left-16 w-4 h-4 bg-blue-300 rounded-full animate-pulse delay-500"></div>
-        <div className="absolute bottom-60 right-32 w-3 h-3 bg-yellow-300 rounded-full animate-pulse delay-700"></div>
+        <div className="absolute top-20 left-10 w-2 h-2 md:w-3 md:h-3 bg-blue-400 rounded-full animate-pulse"></div>
+        <div className="absolute top-32 right-20 w-1.5 h-1.5 md:w-2 md:h-2 bg-yellow-400 rounded-full animate-pulse delay-1000"></div>
+        <div className="absolute bottom-40 left-16 w-3 h-3 md:w-4 md:h-4 bg-blue-300 rounded-full animate-pulse delay-500"></div>
+        <div className="absolute bottom-60 right-32 w-2 h-2 md:w-3 md:h-3 bg-yellow-300 rounded-full animate-pulse delay-700"></div>
       </div>
-      <div className="relative z-10 text-center text-white px-4 max-w-5xl mx-auto">
-        <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 leading-tight">
+
+      <div className="relative z-10 text-center text-white px-4 max-w-4xl mx-auto">
+        <h1 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold mb-3 md:mb-4 leading-tight">
           <EditableText
             page="home"
             section="hero"
@@ -89,8 +147,8 @@ export default function HeroSection({ heroContent, isEditingPage, onContentChang
           <span className="text-blue-300">Bozhiymir Church</span>
         </h1>
 
-        <div className="mb-6">
-          <div className="text-base md:text-lg font-medium mb-2">
+        <div className="mb-4 md:mb-6">
+          <div className="text-sm md:text-base lg:text-lg font-medium mb-2">
             <EditableText
               page="home"
               section="hero"
@@ -103,7 +161,7 @@ export default function HeroSection({ heroContent, isEditingPage, onContentChang
               onContentChange={onContentChange}
             />
           </div>
-          <div className="text-lg md:text-xl font-bold tracking-wide">
+          <div className="text-base md:text-lg lg:text-xl font-bold tracking-wide">
             <EditableText
               page="home"
               section="hero"
@@ -116,7 +174,7 @@ export default function HeroSection({ heroContent, isEditingPage, onContentChang
               onContentChange={onContentChange}
             />
           </div>
-          <div className="text-sm md:text-base text-blue-200 mt-4 font-medium">
+          <div className="text-xs md:text-sm lg:text-base text-blue-200 mt-3 md:mt-4 font-medium">
             <EditableText
               page="home"
               section="hero"
@@ -146,8 +204,8 @@ export default function HeroSection({ heroContent, isEditingPage, onContentChang
           </div>
         </div>
 
-        <div className="mt-8">
-          <div className="text-lg text-white/90 mb-4">
+        <div className="mt-6 md:mt-8">
+          <div className="text-sm md:text-base lg:text-lg text-white/90 mb-3 md:mb-4">
             <EditableText
               page="home"
               section="hero"
@@ -160,7 +218,7 @@ export default function HeroSection({ heroContent, isEditingPage, onContentChang
               onContentChange={onContentChange}
             />
           </div>
-          <p className="text-sm text-blue-200">
+          <p className="text-xs md:text-sm text-blue-200 leading-relaxed">
             "He defends the cause of the fatherless and the widow, and loves the foreigner residing among you" -
             Deuteronomy 10:18
           </p>

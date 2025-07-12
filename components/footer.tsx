@@ -53,7 +53,7 @@ export default function Footer() {
                 <span className="text-sm">
                   123 Community Street
                   <br />
-                  Portland, OR 97201
+                  Poland, OR 97201
                 </span>
               </div>
               <div className="flex items-center text-gray-400">

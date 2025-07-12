@@ -16,8 +16,8 @@ const inter = Inter({ subsets: ["latin"] })
 export const metadata: Metadata = {
   title: "Bozhiymir Church - Welcome to Our Community",
   description:
-    "A welcoming community in Portland where families grow together in faith and fellowship. Supporting Ukrainian children with love and hope.",
-  keywords: "church, bozhiymir, worship, community, faith, events, kids, family, ukrainian, portland",
+    "A welcoming community in Poland where families grow together in faith and fellowship. Supporting Ukrainian children with love and hope.",
+  keywords: "church, bozhiymir, worship, community, faith, events, kids, family, ukrainian, Poland",
   authors: [{ name: "Bozhiymir Church" }],
   generator: 'v0.dev'
 }

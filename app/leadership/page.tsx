@@ -1,55 +1,45 @@
-// app/leadership/page.tsx
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Mail, Phone, Heart, Globe, BookOpen } from "lucide-react";
-import Link from "next/link";
-import Image from "next/image";
-import Header from "@/components/header";
-import Footer from "@/components/footer";
-import EditableText from "@/components/editable-text";
-// 수정: createClient로 변경하고, createServerClient 및 cookies 관련 import 제거
-import { createClient } from "@supabase/supabase-js";
+import { Card, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Mail, Phone, Heart, Globe, BookOpen } from "lucide-react"
+import Link from "next/link"
+import Image from "next/image"
+import Header from "@/components/header"
+import Footer from "@/components/footer"
+import EditableText from "@/components/editable-text"
+import { createClient } from "@supabase/supabase-js"
 
 async function fetchLeadershipContent() {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
 
-  const { data, error } = await supabase
-    .from('content')
-    .select('page, section, key, value')
-    .eq('page', 'leadership');
+  const { data, error } = await supabase.from("content").select("page, section, key, value").eq("page", "leadership")
 
   if (error) {
-    console.error('Failed to fetch leadership content on the server:', error);
-    return {};
+    console.error("Failed to fetch leadership content on the server:", error)
+    return {}
   }
 
-  const contentMap: Record<string, any> = {};
-  data.forEach(item => {
+  const contentMap: Record<string, any> = {}
+  data.forEach((item) => {
     if (!contentMap[item.section]) {
-      contentMap[item.section] = {};
+      contentMap[item.section] = {}
     }
-    contentMap[item.section][item.key] = item.value;
-  });
+    contentMap[item.section][item.key] = item.value
+  })
 
-  return contentMap;
+  return contentMap
 }
 
 export default async function LeadershipPage() {
-  const content = await fetchLeadershipContent();
+  const content = await fetchLeadershipContent()
 
-  // Supabase에서 가져온 데이터를 기반으로 리더 정보 구성
-  // 각 리더는 contentMap의 별도 섹션으로 관리됩니다.
   const leaders = [
     {
-      sectionKey: "leader_michael", // Supabase section key
+      sectionKey: "leader_michael",
       nameKey: "name",
       roleKey: "role",
       imageKey: "image",
       bioKey: "bio",
-      specialtiesKey: "specialties", // 쉼표로 구분된 문자열
+      specialtiesKey: "specialties",
       emailKey: "email",
       phoneKey: "phone",
     },
@@ -83,26 +73,26 @@ export default async function LeadershipPage() {
       emailKey: "email",
       phoneKey: "phone",
     },
-  ];
+  ]
 
   return (
     <>
       <Header />
       <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
         {/* Header Space */}
-        <div className="h-20"></div>
+        <div className="h-16 md:h-20"></div>
 
         {/* Hero Section */}
-        <section className="py-16 px-4 pt-32">
+        <section className="py-8 md:py-12 lg:py-16 px-4 pt-20 md:pt-24 lg:pt-32">
           <div className="container mx-auto text-center">
-            <h1 className="text-5xl font-bold text-gray-900 mb-6">
+            <h1 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-gray-900 mb-4 md:mb-6">
               <EditableText
                 page="leadership"
                 section="hero"
                 contentKey="title_part1"
                 initialValue={content?.hero?.title_part1}
                 tag="span"
-                className="text-5xl font-bold text-gray-900"
+                className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-gray-900"
               />
               <span className="text-blue-600">
                 <EditableText
@@ -115,15 +105,14 @@ export default async function LeadershipPage() {
                 />
               </span>
             </h1>
-            {/* p 태그를 div 태그로 변경 */}
-            <div className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
+            <div className="text-base md:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto mb-6 md:mb-8">
               <EditableText
                 page="leadership"
                 section="hero"
                 contentKey="description"
                 initialValue={content?.hero?.description}
                 tag="span"
-                className="text-xl text-gray-600 max-w-3xl mx-auto mb-8"
+                className="text-base md:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto"
                 isTextArea={true}
               />
             </div>
@@ -136,33 +125,32 @@ export default async function LeadershipPage() {
         </section>
 
         {/* Leadership Team */}
-        <section className="py-16 px-4">
+        <section className="py-8 md:py-12 lg:py-16 px-4">
           <div className="container mx-auto">
-            <div className="grid md:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
               {leaders.map((leader, index) => (
                 <Card key={index} className="hover:shadow-lg transition-shadow duration-300 overflow-hidden">
                   <CardContent className="p-0">
-                    <div className="relative h-64 bg-gradient-to-br from-blue-100 to-yellow-100">
+                    <div className="relative h-48 md:h-64 bg-gradient-to-br from-blue-100 to-yellow-100">
                       <Image
                         src={content?.[leader.sectionKey]?.[leader.imageKey] || "/placeholder.svg"}
                         alt={content?.[leader.sectionKey]?.[leader.nameKey] || "Leader Image"}
                         fill
                         className="object-cover"
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" // Image 컴포넌트 경고 방지
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                       />
-                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
-                        <h3 className="text-xl font-bold text-white">
+                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3 md:p-4">
+                        <h3 className="text-lg md:text-xl font-bold text-white">
                           <EditableText
                             page="leadership"
                             section={leader.sectionKey}
                             contentKey={leader.nameKey}
                             initialValue={content?.[leader.sectionKey]?.[leader.nameKey]}
                             tag="span"
-                            className="text-xl font-bold text-white"
+                            className="text-lg md:text-xl font-bold text-white"
                           />
                         </h3>
-                        {/* 수정: p 태그를 div 태그로 변경 */}
-                        <div className="text-blue-200">
+                        <div className="text-blue-200 text-sm md:text-base">
                           <EditableText
                             page="leadership"
                             section={leader.sectionKey}
@@ -175,33 +163,38 @@ export default async function LeadershipPage() {
                       </div>
                     </div>
 
-                    <div className="p-6">
-                      {/* p 태그를 div 태그로 변경 */}
-                      <div className="text-gray-600 mb-4 leading-relaxed">
+                    <div className="p-4 md:p-6">
+                      <div className="text-sm md:text-base text-gray-600 mb-3 md:mb-4 leading-relaxed">
                         <EditableText
                           page="leadership"
                           section={leader.sectionKey}
                           contentKey={leader.bioKey}
                           initialValue={content?.[leader.sectionKey]?.[leader.bioKey]}
                           tag="span"
-                          className="text-gray-600 mb-4 leading-relaxed"
+                          className="text-sm md:text-base text-gray-600 leading-relaxed"
                           isTextArea={true}
                         />
                       </div>
 
-                      <div className="mb-4">
-                        <h4 className="font-semibold text-gray-900 mb-2">Specialties:</h4>
+                      <div className="mb-3 md:mb-4">
+                        <h4 className="font-semibold text-gray-900 mb-2 text-sm md:text-base">Specialties:</h4>
                         <div className="flex flex-wrap gap-2">
-                          {/* specialties는 쉼표로 구분된 문자열을 배열로 분리하여 렌더링 */}
-                          {(content?.[leader.sectionKey]?.[leader.specialtiesKey]?.split(',').map((s: string) => s.trim()) || []).map((specialty: string, idx: number) => (
-                            <span key={idx} className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                          {(
+                            content?.[leader.sectionKey]?.[leader.specialtiesKey]
+                              ?.split(",")
+                              .map((s: string) => s.trim()) || []
+                          ).map((specialty: string, idx: number) => (
+                            <span
+                              key={idx}
+                              className="px-2 py-1 md:px-3 md:py-1 bg-blue-100 text-blue-800 rounded-full text-xs md:text-sm"
+                            >
                               <EditableText
                                 page="leadership"
                                 section={leader.sectionKey}
-                                contentKey={`${leader.specialtiesKey}_${idx}`} // 각 전문 분야별로 고유한 키 부여 (편집 시 필요)
+                                contentKey={`${leader.specialtiesKey}_${idx}`}
                                 initialValue={specialty}
                                 tag="span"
-                                className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
+                                className="text-xs md:text-sm"
                               />
                             </span>
                           ))}
@@ -209,9 +202,12 @@ export default async function LeadershipPage() {
                       </div>
 
                       <div className="space-y-2">
-                        <div className="flex items-center text-gray-600">
-                          <Mail className="h-4 w-4 mr-2" />
-                          <a href={`mailto:${content?.[leader.sectionKey]?.[leader.emailKey]}`} className="hover:text-blue-600 transition-colors">
+                        <div className="flex items-center text-gray-600 text-sm md:text-base">
+                          <Mail className="h-3 w-3 md:h-4 md:w-4 mr-2" />
+                          <a
+                            href={`mailto:${content?.[leader.sectionKey]?.[leader.emailKey]}`}
+                            className="hover:text-blue-600 transition-colors"
+                          >
                             <EditableText
                               page="leadership"
                               section={leader.sectionKey}
@@ -222,9 +218,12 @@ export default async function LeadershipPage() {
                             />
                           </a>
                         </div>
-                        <div className="flex items-center text-gray-600">
-                          <Phone className="h-4 w-4 mr-2" />
-                          <a href={`tel:${content?.[leader.sectionKey]?.[leader.phoneKey]}`} className="hover:text-blue-600 transition-colors">
+                        <div className="flex items-center text-gray-600 text-sm md:text-base">
+                          <Phone className="h-3 w-3 md:h-4 md:w-4 mr-2" />
+                          <a
+                            href={`tel:${content?.[leader.sectionKey]?.[leader.phoneKey]}`}
+                            className="hover:text-blue-600 transition-colors"
+                          >
                             <EditableText
                               page="leadership"
                               section={leader.sectionKey}
@@ -245,33 +244,32 @@ export default async function LeadershipPage() {
         </section>
 
         {/* Leadership Values */}
-        <section className="py-16 px-4 bg-blue-600 text-white">
+        <section className="py-8 md:py-12 lg:py-16 px-4 bg-blue-600 text-white">
           <div className="container mx-auto">
-            <h2 className="text-3xl font-bold text-center mb-12">
+            <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-center mb-8 md:mb-12">
               <EditableText
                 page="leadership"
                 section="leadership_values"
                 contentKey="title"
                 initialValue={content?.leadership_values?.title}
                 tag="span"
-                className="text-3xl font-bold text-center mb-12"
+                className="text-xl md:text-2xl lg:text-3xl font-bold text-center"
               />
             </h2>
-            <div className="grid md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
               <div className="text-center">
-                <Heart className="h-12 w-12 mx-auto mb-4 text-yellow-400" />
-                <h3 className="text-xl font-bold mb-2">
+                <Heart className="h-8 w-8 md:h-12 md:w-12 mx-auto mb-3 md:mb-4 text-yellow-400" />
+                <h3 className="text-lg md:text-xl font-bold mb-2">
                   <EditableText
                     page="leadership"
                     section="leadership_values"
                     contentKey="value1_title"
                     initialValue={content?.leadership_values?.value1_title}
                     tag="span"
-                    className="text-xl font-bold mb-2"
+                    className="text-lg md:text-xl font-bold"
                   />
                 </h3>
-                {/* p 태그를 div 태그로 변경 */}
-                <div className="opacity-90">
+                <div className="opacity-90 text-sm md:text-base">
                   <EditableText
                     page="leadership"
                     section="leadership_values"
@@ -283,19 +281,18 @@ export default async function LeadershipPage() {
                 </div>
               </div>
               <div className="text-center">
-                <BookOpen className="h-12 w-12 mx-auto mb-4 text-yellow-400" />
-                <h3 className="text-xl font-bold mb-2">
+                <BookOpen className="h-8 w-8 md:h-12 md:w-12 mx-auto mb-3 md:mb-4 text-yellow-400" />
+                <h3 className="text-lg md:text-xl font-bold mb-2">
                   <EditableText
                     page="leadership"
                     section="leadership_values"
                     contentKey="value2_title"
                     initialValue={content?.leadership_values?.value2_title}
                     tag="span"
-                    className="text-xl font-bold mb-2"
+                    className="text-lg md:text-xl font-bold"
                   />
                 </h3>
-                {/* p 태그를 div 태그로 변경 */}
-                <div className="opacity-90">
+                <div className="opacity-90 text-sm md:text-base">
                   <EditableText
                     page="leadership"
                     section="leadership_values"
@@ -307,19 +304,18 @@ export default async function LeadershipPage() {
                 </div>
               </div>
               <div className="text-center">
-                <Globe className="h-12 w-12 mx-auto mb-4 text-yellow-400" />
-                <h3 className="text-xl font-bold mb-2">
+                <Globe className="h-8 w-8 md:h-12 md:w-12 mx-auto mb-3 md:mb-4 text-yellow-400" />
+                <h3 className="text-lg md:text-xl font-bold mb-2">
                   <EditableText
                     page="leadership"
                     section="leadership_values"
                     contentKey="value3_title"
                     initialValue={content?.leadership_values?.value3_title}
                     tag="span"
-                    className="text-xl font-bold mb-2"
+                    className="text-lg md:text-xl font-bold"
                   />
                 </h3>
-                {/* p 태그를 div 태그로 변경 */}
-                <div className="opacity-90">
+                <div className="opacity-90 text-sm md:text-base">
                   <EditableText
                     page="leadership"
                     section="leadership_values"
@@ -335,32 +331,31 @@ export default async function LeadershipPage() {
         </section>
 
         {/* Contact Leadership */}
-        <section className="py-16 px-4 text-center">
+        <section className="py-8 md:py-12 lg:py-16 px-4 text-center">
           <div className="container mx-auto">
-            <h2 className="text-3xl font-bold text-gray-900 mb-6">
+            <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 mb-4 md:mb-6">
               <EditableText
                 page="leadership"
                 section="contact_leadership"
                 contentKey="title"
                 initialValue={content?.contact_leadership?.title}
                 tag="span"
-                className="text-3xl font-bold text-gray-900 mb-6"
+                className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900"
               />
             </h2>
-            {/* p 태그를 div 태그로 변경 */}
-            <div className="text-xl text-gray-600 mb-8">
+            <div className="text-base md:text-lg lg:text-xl text-gray-600 mb-6 md:mb-8">
               <EditableText
                 page="leadership"
                 section="contact_leadership"
                 contentKey="description"
                 initialValue={content?.contact_leadership?.description}
                 tag="span"
-                className="text-xl text-gray-600 mb-8"
+                className="text-base md:text-lg lg:text-xl text-gray-600"
                 isTextArea={true}
               />
             </div>
-            <div className="space-x-4">
-              <Button asChild size="lg" className="bg-blue-600 hover:bg-blue-700">
+            <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center items-center">
+              <Button asChild size="lg" className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto">
                 <Link href="/join">
                   <EditableText
                     page="leadership"
@@ -368,11 +363,11 @@ export default async function LeadershipPage() {
                     contentKey="button1_text"
                     initialValue={content?.contact_leadership?.button1_text}
                     tag="span"
-                    className="inline" // Link 내부에 EditableText가 있으므로 inline으로 유지
+                    className="inline"
                   />
                 </Link>
               </Button>
-              <Button asChild variant="outline" size="lg">
+              <Button asChild variant="outline" size="lg" className="w-full sm:w-auto bg-transparent">
                 <Link href="/">
                   <EditableText
                     page="leadership"
@@ -380,7 +375,7 @@ export default async function LeadershipPage() {
                     contentKey="button2_text"
                     initialValue={content?.contact_leadership?.button2_text}
                     tag="span"
-                    className="inline" // Link 내부에 EditableText가 있으므로 inline으로 유지
+                    className="inline"
                   />
                 </Link>
               </Button>
@@ -390,5 +385,5 @@ export default async function LeadershipPage() {
       </div>
       <Footer />
     </>
-  );
+  )
 }

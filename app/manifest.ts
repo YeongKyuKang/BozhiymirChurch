@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: 'Bozhiymir Church',
     short_name: 'Bozhiymir Church',
-    description: 'A loving community in Portland where Ukrainian children find hope and healing',
+    description: 'A loving community in Poland where Ukrainian children find hope and healing',
     start_url: '/',
     display: 'standalone',
     background_color: '#ffffff',
