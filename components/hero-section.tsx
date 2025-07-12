@@ -34,7 +34,7 @@
    }, [backgroundImages.length]);
 
    return (
-     <section className="relative h-screen flex items-center justify-center overflow-hidden pt-16 md:pt-20 lg:pt-24"> {/* ✅ 수정: 높이를 h-screen으로 변경 */}
+     <section className="relative h-[70vh] flex items-center justify-center overflow-hidden pt-16 md:pt-20 lg:pt-24">
        <div className="absolute inset-0">
          {backgroundImages.map((image, index) => (
            <div
@@ -42,15 +42,17 @@
              className={`absolute inset-0 transition-opacity duration-1000 ${
                index === currentImageIndex ? "opacity-100" : "opacity-0"
              } flex items-center justify-center`}
+             // 이 div에 고정된 비율을 주는 것이 더 좋을 수 있습니다.
+             // 예: style={{ aspectRatio: '16/9' }} 또는 특정 높이
            >
              <Image
                src={image || "/placeholder.svg"}
                alt={`Bozhiymir Church community photo ${index + 1}`}
-               fill 
-               sizes="100vw" 
-               style={{ objectFit: "contain" }} 
+               fill // 부모 요소를 채우도록 변경
+               sizes="100vw" // 이미지 최적화를 위한 sizes prop 추가
+               style={{ objectFit: "contain" }} // 컨테이너에 맞춰지되 비율 유지
                priority={index === 0}
-               unoptimized={true} 
+               unoptimized={true} // 최적화를 끄는 옵션. 필요 없다면 제거 가능
              />
            </div>
          ))}
@@ -77,7 +79,7 @@
          <div className="absolute bottom-60 right-32 w-3 h-3 bg-yellow-300 rounded-full animate-pulse delay-700"></div>
        </div>
        <div className="relative z-10 text-center text-white px-4 max-w-5xl mx-auto">
-         <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 leading-tight">
+         <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
            <EditableText
              page="home"
              section="hero"
@@ -93,8 +95,8 @@
            <span className="text-blue-300">Bozhiymir Church</span>
          </h1>
 
-         <div className="mb-6">
-           <div className="text-base md:text-lg font-medium mb-2">
+         <div className="mb-8">
+           <div className="text-lg md:text-xl font-medium mb-2">
              <EditableText
                page="home"
                section="hero"
@@ -107,7 +109,7 @@
                onContentChange={onContentChange}
              />
            </div>
-           <div className="text-lg md:text-xl font-bold tracking-wide">
+           <div className="text-xl md:text-2xl font-bold tracking-wide">
              <EditableText
                page="home"
                section="hero"
