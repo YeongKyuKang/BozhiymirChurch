@@ -1,7 +1,12 @@
+// components/ui/chart.tsx
 "use client"
 
 import * as React from "react"
 import * as RechartsPrimitive from "recharts"
+// Recharts에서 ValueType, NameType을 직접 가져오는 대신, 내부적으로 `any` 타입으로 정의합니다.
+// 이는 컴파일 오류를 방지하기 위한 가장 견고한 방법입니다.
+type ValueType = any;
+type NameType = any;
 
 import { cn } from "@/lib/utils"
 
@@ -102,15 +107,35 @@ ${colorConfig
 
 const ChartTooltip = RechartsPrimitive.Tooltip
 
+// Recharts Tooltip의 payload 항목에 대한 보다 구체적인 타입을 정의합니다.
+type RechartsTooltipPayloadItem = {
+  dataKey?: string;
+  name?: NameType;
+  value?: ValueType;
+  color?: string;
+  fill?: string;
+  stroke?: string; 
+  payload?: any; // 원본 데이터 객체
+};
+
+type RechartsTooltipPayload = RechartsTooltipPayloadItem[];
+
+
 const ChartTooltipContent = React.forwardRef<
   HTMLDivElement,
-  React.ComponentProps<typeof RechartsPrimitive.Tooltip> &
-    React.ComponentProps<"div"> & {
-      hideLabel?: boolean
-      hideIndicator?: boolean
-      indicator?: "line" | "dot" | "dashed"
-      nameKey?: string
-      labelKey?: string
+  React.ComponentProps<"div"> & {
+      active?: boolean;
+      payload?: RechartsTooltipPayload;
+      label?: ValueType; 
+      labelFormatter?: (value: ValueType, payload: RechartsTooltipPayload) => React.ReactNode;
+      labelClassName?: string;
+      formatter?: (value: ValueType, name: NameType, item: RechartsTooltipPayloadItem, index: number, payload: any) => React.ReactNode;
+      color?: string; 
+      nameKey?: string;
+      labelKey?: string;
+      hideLabel?: boolean;
+      hideIndicator?: boolean; // 여기에 정의되어 있습니다.
+      indicator?: "line" | "dot" | "dashed";
     }
 >(
   (
@@ -120,8 +145,8 @@ const ChartTooltipContent = React.forwardRef<
       className,
       indicator = "dot",
       hideLabel = false,
-      hideIndicator = false,
-      label,
+      hideIndicator = false, // 이 부분을 추가하여 props에서 `hideIndicator`를 구조 분해합니다.
+      label, 
       labelFormatter,
       labelClassName,
       formatter,
@@ -188,11 +213,12 @@ const ChartTooltipContent = React.forwardRef<
           {payload.map((item, index) => {
             const key = `${nameKey || item.name || item.dataKey || "value"}`
             const itemConfig = getPayloadConfigFromPayload(config, item, key)
-            const indicatorColor = color || item.payload.fill || item.color
+            // `item.payload`가 존재하지 않을 경우를 대비하여 방어적 코드를 추가합니다.
+            const indicatorColor = color || (item.payload ? item.payload.fill : undefined) || item.color || item.stroke;
 
             return (
               <div
-                key={item.dataKey}
+                key={item.dataKey || item.name || index} // 고유한 `key`를 보장하기 위해 `index`를 폴백으로 추가합니다.
                 className={cn(
                   "flex w-full flex-wrap items-stretch gap-2 [&>svg]:h-2.5 [&>svg]:w-2.5 [&>svg]:text-muted-foreground",
                   indicator === "dot" && "items-center"
@@ -205,7 +231,7 @@ const ChartTooltipContent = React.forwardRef<
                     {itemConfig?.icon ? (
                       <itemConfig.icon />
                     ) : (
-                      !hideIndicator && (
+                      !hideIndicator && ( // `hideIndicator`가 이제 정의되어 있습니다.
                         <div
                           className={cn(
                             "shrink-0 rounded-[2px] border-[--color-border] bg-[--color-bg]",
@@ -238,9 +264,10 @@ const ChartTooltipContent = React.forwardRef<
                           {itemConfig?.label || item.name}
                         </span>
                       </div>
-                      {item.value && (
+                      {/* `item.value`가 null 또는 undefined인 경우를 방지합니다. */}
+                      {item.value !== undefined && item.value !== null && ( 
                         <span className="font-mono font-medium tabular-nums text-foreground">
-                          {item.value.toLocaleString()}
+                          {typeof item.value === 'number' ? item.value.toLocaleString() : String(item.value)}
                         </span>
                       )}
                     </div>
@@ -261,15 +288,14 @@ const ChartLegend = RechartsPrimitive.Legend
 const ChartLegendContent = React.forwardRef<
   HTMLDivElement,
   React.ComponentProps<"div"> &
-    Pick<RechartsPrimitive.LegendProps, "payload" | "verticalAlign"> & {
+    {
+      payload?: RechartsTooltipPayload; 
+      verticalAlign?: 'top' | 'middle' | 'bottom'; 
       hideIcon?: boolean
       nameKey?: string
     }
 >(
-  (
-    { className, hideIcon = false, payload, verticalAlign = "bottom", nameKey },
-    ref
-  ) => {
+  ({ className, hideIcon = false, payload, verticalAlign = "bottom", nameKey }, ref) => {
     const { config } = useChart()
 
     if (!payload?.length) {
@@ -285,13 +311,13 @@ const ChartLegendContent = React.forwardRef<
           className
         )}
       >
-        {payload.map((item) => {
+        {payload.map((item, index) => { 
           const key = `${nameKey || item.dataKey || "value"}`
           const itemConfig = getPayloadConfigFromPayload(config, item, key)
 
           return (
             <div
-              key={item.value}
+              key={item.value || item.dataKey || index} 
               className={cn(
                 "flex items-center gap-1.5 [&>svg]:h-3 [&>svg]:w-3 [&>svg]:text-muted-foreground"
               )}
@@ -306,7 +332,7 @@ const ChartLegendContent = React.forwardRef<
                   }}
                 />
               )}
-              {itemConfig?.label}
+              {itemConfig?.label || item.name}
             </div>
           )
         })}
@@ -316,7 +342,7 @@ const ChartLegendContent = React.forwardRef<
 )
 ChartLegendContent.displayName = "ChartLegend"
 
-// Helper to extract item config from a payload.
+// 페이로드에서 항목 구성을 추출하는 헬퍼 함수입니다.
 function getPayloadConfigFromPayload(
   config: ChartConfig,
   payload: unknown,
@@ -326,20 +352,23 @@ function getPayloadConfigFromPayload(
     return undefined
   }
 
+  // `payload`를 보다 유연한 타입으로 캐스팅하여 중첩된 `payload` 및 키별 속성에 접근할 수 있도록 합니다.
+  const typedPayload = payload as Record<string, any>;
+
   const payloadPayload =
-    "payload" in payload &&
-    typeof payload.payload === "object" &&
-    payload.payload !== null
-      ? payload.payload
+    "payload" in typedPayload &&
+    typeof typedPayload.payload === "object" &&
+    typedPayload.payload !== null
+      ? typedPayload.payload
       : undefined
 
   let configLabelKey: string = key
 
   if (
-    key in payload &&
-    typeof payload[key as keyof typeof payload] === "string"
+    key in typedPayload &&
+    typeof typedPayload[key] === "string"
   ) {
-    configLabelKey = payload[key as keyof typeof payload] as string
+    configLabelKey = typedPayload[key] as string
   } else if (
     payloadPayload &&
     key in payloadPayload &&
