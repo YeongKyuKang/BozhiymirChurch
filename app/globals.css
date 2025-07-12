@@ -55,12 +55,326 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.5;
+    letter-spacing: -0.01em;
   }
 }
 
-/* Custom scrollbar */
+/* 모바일 우선 폰트 크기 설정 */
+html {
+  font-size: 13px; /* 모바일 기본 크기 */
+  scroll-behavior: smooth;
+}
+
+/* 모바일 헤딩 크기 */
+h1 {
+  font-size: 1.5rem; /* 24px */
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+h2 {
+  font-size: 1.25rem; /* 20px */
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+
+h3 {
+  font-size: 1.1rem; /* 18px */
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+h4 {
+  font-size: 1rem; /* 16px */
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+h5 {
+  font-size: 0.9rem; /* 14px */
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+h6 {
+  font-size: 0.8rem; /* 13px */
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+/* 모바일 본문 텍스트 */
+p {
+  font-size: 0.8rem; /* 13px */
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+
+/* 모바일 작은 텍스트 */
+small {
+  font-size: 0.7rem; /* 11px */
+  line-height: 1.4;
+}
+
+/* 모바일 버튼 텍스트 */
+button {
+  font-size: 0.8rem; /* 13px */
+  font-weight: 500;
+}
+
+/* 모바일 링크 텍스트 */
+a {
+  font-size: 0.8rem; /* 13px */
+  text-decoration: none;
+}
+
+/* 모바일 입력 필드 텍스트 */
+input,
+textarea,
+select {
+  font-size: 0.8rem; /* 13px */
+}
+
+/* 모바일 라벨 텍스트 */
+label {
+  font-size: 0.8rem; /* 13px */
+  font-weight: 500;
+}
+
+/* 모바일 테이블 텍스트 */
+table {
+  font-size: 0.75rem; /* 12px */
+}
+
+th {
+  font-size: 0.75rem; /* 12px */
+  font-weight: 600;
+}
+
+td {
+  font-size: 0.75rem; /* 12px */
+}
+
+/* 모바일 리스트 텍스트 */
+ul,
+ol {
+  font-size: 0.8rem; /* 13px */
+  line-height: 1.6;
+}
+
+/* 모바일 카드 컴포넌트 */
+.card-title {
+  font-size: 1rem; /* 16px */
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.card-description {
+  font-size: 0.75rem; /* 12px */
+  line-height: 1.5;
+  color: hsl(var(--muted-foreground));
+}
+
+/* 모바일 네비게이션 텍스트 */
+nav a {
+  font-size: 0.75rem; /* 12px */
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+/* 모바일 푸터 텍스트 */
+footer {
+  font-size: 0.75rem; /* 12px */
+}
+
+footer h4 {
+  font-size: 0.9rem; /* 14px */
+  font-weight: 600;
+}
+
+/* 모바일 컨테이너 패딩 */
+.container {
+  padding-left: 0.75rem; /* 12px */
+  padding-right: 0.75rem; /* 12px */
+}
+
+/* 모바일 섹션 간격 */
+.section-spacing {
+  padding: 2rem 0;
+}
+
+/* 모바일 버튼 스타일 */
+.btn-compact {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+/* 모바일 카드 스타일 */
+.card-compact {
+  padding: 0.75rem;
+}
+
+.card-compact .card-title {
+  font-size: 0.9rem;
+  margin-bottom: 0.4rem;
+}
+
+.card-compact .card-description {
+  font-size: 0.7rem;
+  line-height: 1.4;
+}
+
+/* 태블릿 크기 (768px 이상) */
+@media (min-width: 768px) {
+  html {
+    font-size: 13.5px;
+  }
+
+  h1 {
+    font-size: 1.7rem; /* 27px */
+  }
+
+  h2 {
+    font-size: 1.4rem; /* 22px */
+  }
+
+  h3 {
+    font-size: 1.2rem; /* 19px */
+  }
+
+  p {
+    font-size: 0.85rem; /* 14px */
+  }
+
+  nav a {
+    font-size: 0.8rem; /* 13px */
+  }
+
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .section-spacing {
+    padding: 2.5rem 0;
+  }
+}
+
+/* 데스크톱 크기 (1024px 이상) */
+@media (min-width: 1024px) {
+  html {
+    font-size: 14px;
+  }
+
+  h1 {
+    font-size: 1.8rem; /* 28px */
+  }
+
+  h2 {
+    font-size: 1.5rem; /* 24px */
+  }
+
+  h3 {
+    font-size: 1.25rem; /* 20px */
+  }
+
+  p {
+    font-size: 0.875rem; /* 14px */
+  }
+
+  nav a {
+    font-size: 0.8rem; /* 13px */
+  }
+
+  .section-spacing {
+    padding: 3rem 0;
+  }
+}
+
+/* 큰 데스크톱 (1440px 이상) */
+@media (min-width: 1440px) {
+  html {
+    font-size: 14px; /* 최대 크기 제한 */
+  }
+
+  h1 {
+    font-size: 1.9rem; /* 30px */
+  }
+
+  h2 {
+    font-size: 1.6rem; /* 25px */
+  }
+}
+
+/* 모바일 터치 친화적 요소들 */
+@media (max-width: 767px) {
+  /* 터치 타겟 크기 최소 44px */
+  button,
+  a,
+  input[type="button"],
+  input[type="submit"] {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 0.6rem 1rem;
+  }
+
+  /* 모바일 드롭다운 메뉴 */
+  .dropdown-menu {
+    font-size: 0.8rem;
+    padding: 0.5rem 0;
+  }
+
+  .dropdown-menu a {
+    padding: 0.6rem 1rem;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+
+  /* 모바일 폼 요소 */
+  input,
+  textarea,
+  select {
+    min-height: 44px;
+    padding: 0.6rem 0.8rem;
+    font-size: 0.85rem;
+  }
+
+  /* 모바일 카드 간격 */
+  .card {
+    margin-bottom: 1rem;
+  }
+
+  /* 모바일 텍스트 간격 */
+  .text-spacing {
+    margin-bottom: 0.75rem;
+  }
+
+  /* 모바일 히어로 섹션 조정 */
+  .hero-title {
+    font-size: 1.8rem !important;
+    line-height: 1.1;
+    margin-bottom: 1rem;
+  }
+
+  .hero-subtitle {
+    font-size: 0.9rem !important;
+    margin-bottom: 0.75rem;
+  }
+
+  .hero-description {
+    font-size: 0.8rem !important;
+    line-height: 1.5;
+  }
+}
+
+/* 커스텀 스크롤바 (모바일 친화적) */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 4px; /* 모바일에서 더 얇게 */
 }
 
 ::-webkit-scrollbar-track {
@@ -68,23 +382,28 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 4px;
+  background: #c1c1c1;
+  border-radius: 2px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #555;
+  background: #a8a8a8;
 }
 
-/* Smooth scrolling */
-html {
-  scroll-behavior: smooth;
+/* 모바일 스크롤 성능 최적화 */
+* {
+  -webkit-overflow-scrolling: touch;
 }
 
-/* Mobile optimizations */
-@media (max-width: 768px) {
-  .container {
-    padding-left: 1rem;
-    padding-right: 1rem;
-  }
+/* 모바일 텍스트 선택 방지 (필요한 경우) */
+.no-select {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* 모바일 탭 하이라이트 제거 */
+* {
+  -webkit-tap-highlight-color: transparent;
 }
