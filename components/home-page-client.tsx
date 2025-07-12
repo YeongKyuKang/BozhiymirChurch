@@ -10,7 +10,6 @@ import HeroSection from "@/components/hero-section"; // 기존 HeroSection 컴�
 import CommunitySection from "@/components/community-section"; // 기존 CommunitySection 컴포넌트 import
 import MinistriesShowcase from "@/components/ministries-showcase";
 import { useRouter } from "next/navigation"; // useRouter import for router.refresh()
-import { Database } from "@/lib/supabase"; // Database 타입 임포트
 
 interface HomePageClientProps {
   initialContent: Record<string, any>;
