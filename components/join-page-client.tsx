@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -96,328 +95,341 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-yellow-50">
       {/* Hero Section */}
-      <section className="py-8 md:py-12 lg:py-16 px-4 pt-20 md:pt-24 lg:pt-32">
-        <div className="container mx-auto text-center">
-          <div className="text-4xl md:text-6xl mb-4 md:mb-6">🏠</div>
-          <h1 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-gray-900 mb-4 md:mb-6">
+      <div className="bg-gradient-to-r from-blue-700 to-blue-800 text-white py-20 md:py-24">
+        <div className="container mx-auto px-4 text-center">
+          <div className="text-5xl mb-6">🏠</div>
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-8">
             <EditableText
               page="join"
               section="hero"
               contentKey="title"
-              initialValue={content?.hero?.title}
+              initialValue={content?.hero?.title || "Join Our Family"}
               tag="span"
-              className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-gray-900"
+              className="text-4xl md:text-5xl lg:text-6xl font-bold"
             />
           </h1>
-          <div className="text-base md:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto mb-6 md:mb-8">
+          <p className="text-xl md:text-2xl text-blue-200 max-w-4xl mx-auto leading-relaxed">
             <EditableText
               page="join"
               section="hero"
               contentKey="subtitle"
-              initialValue={content?.hero?.subtitle}
+              initialValue={
+                content?.hero?.subtitle ||
+                "Become part of our loving church community where faith, hope, and love come together."
+              }
               tag="span"
-              className="text-base md:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto"
+              className="text-xl md:text-2xl text-blue-200"
               isTextArea={true}
             />
-          </div>
-          <div className="flex items-center justify-center space-x-2 text-blue-600">
-            <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
-            <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
-            <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
-          </div>
+          </p>
         </div>
-      </section>
+      </div>
 
       {/* Why Join Us */}
-      <section className="py-8 md:py-12 lg:py-16 px-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white">
-        <div className="container mx-auto">
-          <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-center mb-8 md:mb-12">
+      <section className="py-20 bg-gradient-to-r from-yellow-500 to-yellow-600 text-blue-900">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-16">
             <EditableText
               page="join"
               section="why_join"
               contentKey="title"
-              initialValue={content?.why_join?.title}
+              initialValue={content?.why_join?.title || "Why Join Our Community?"}
               tag="span"
-              className="text-xl md:text-2xl lg:text-3xl font-bold text-center"
+              className="text-3xl md:text-4xl font-bold text-center text-blue-900"
             />
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
-            <div className="text-center">
-              <Heart className="h-8 w-8 md:h-12 md:w-12 mx-auto mb-3 md:mb-4 text-yellow-400" />
-              <h3 className="text-lg md:text-xl font-bold mb-2">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+            <div className="text-center bg-white p-8 rounded-2xl shadow-xl border border-blue-100 transform hover:scale-105 transition-transform duration-300">
+              <Heart className="h-12 w-12 mx-auto mb-6 text-blue-700" />
+              <h3 className="text-xl md:text-2xl font-bold mb-4">
                 <EditableText
                   page="join"
                   section="why_join"
                   contentKey="reason1_title"
-                  initialValue={content?.why_join?.reason1_title}
+                  initialValue={content?.why_join?.reason1_title || "Spiritual Growth"}
                   tag="span"
-                  className="text-lg md:text-xl font-bold"
+                  className="text-xl md:text-2xl font-bold"
                 />
               </h3>
-              <div className="text-sm md:text-base opacity-90">
+              <p className="text-gray-700 leading-relaxed">
                 <EditableText
                   page="join"
                   section="why_join"
                   contentKey="reason1_description"
-                  initialValue={content?.why_join?.reason1_description}
+                  initialValue={
+                    content?.why_join?.reason1_description ||
+                    "Grow in your faith through worship, Bible study, and fellowship with other believers."
+                  }
                   tag="span"
-                  className="text-sm md:text-base opacity-90"
+                  className="text-gray-700"
                   isTextArea={true}
                 />
-              </div>
+              </p>
             </div>
-            <div className="text-center">
-              <Users className="h-8 w-8 md:h-12 md:w-12 mx-auto mb-3 md:mb-4 text-yellow-400" />
-              <h3 className="text-lg md:text-xl font-bold mb-2">
+            <div className="text-center bg-white p-8 rounded-2xl shadow-xl border border-yellow-100 transform hover:scale-105 transition-transform duration-300">
+              <Users className="h-12 w-12 mx-auto mb-6 text-yellow-700" />
+              <h3 className="text-xl md:text-2xl font-bold mb-4">
                 <EditableText
                   page="join"
                   section="why_join"
                   contentKey="reason2_title"
-                  initialValue={content?.why_join?.reason2_title}
+                  initialValue={content?.why_join?.reason2_title || "Community"}
                   tag="span"
-                  className="text-lg md:text-xl font-bold"
+                  className="text-xl md:text-2xl font-bold"
                 />
               </h3>
-              <div className="text-sm md:text-base opacity-90">
+              <p className="text-gray-700 leading-relaxed">
                 <EditableText
                   page="join"
                   section="why_join"
                   contentKey="reason2_description"
-                  initialValue={content?.why_join?.reason2_description}
+                  initialValue={
+                    content?.why_join?.reason2_description ||
+                    "Build meaningful relationships and find support in our caring church family."
+                  }
                   tag="span"
-                  className="text-sm md:text-base opacity-90"
+                  className="text-gray-700"
                   isTextArea={true}
                 />
-              </div>
+              </p>
             </div>
-            <div className="text-center">
-              <Calendar className="h-8 w-8 md:h-12 md:w-12 mx-auto mb-3 md:mb-4 text-yellow-400" />
-              <h3 className="text-lg md:text-xl font-bold mb-2">
+            <div className="text-center bg-white p-8 rounded-2xl shadow-xl border border-blue-100 transform hover:scale-105 transition-transform duration-300">
+              <Calendar className="h-12 w-12 mx-auto mb-6 text-blue-700" />
+              <h3 className="text-xl md:text-2xl font-bold mb-4">
                 <EditableText
                   page="join"
                   section="why_join"
                   contentKey="reason3_title"
-                  initialValue={content?.why_join?.reason3_title}
+                  initialValue={content?.why_join?.reason3_title || "Purpose"}
                   tag="span"
-                  className="text-lg md:text-xl font-bold"
+                  className="text-xl md:text-2xl font-bold"
                 />
               </h3>
-              <div className="text-sm md:text-base opacity-90">
+              <p className="text-gray-700 leading-relaxed">
                 <EditableText
                   page="join"
                   section="why_join"
                   contentKey="reason3_description"
-                  initialValue={content?.why_join?.reason3_description}
+                  initialValue={
+                    content?.why_join?.reason3_description ||
+                    "Discover your calling and make a difference in your community and the world."
+                  }
                   tag="span"
-                  className="text-sm md:text-base opacity-90"
+                  className="text-gray-700"
                   isTextArea={true}
                 />
-              </div>
+              </p>
             </div>
           </div>
         </div>
       </section>
 
       {/* Join Form */}
-      <section className="py-8 md:py-12 lg:py-16 px-4">
-        <div className="container mx-auto max-w-4xl">
-          <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-center text-gray-900 mb-6 md:mb-8">
-            <EditableText
-              page="join"
-              section="form"
-              contentKey="title"
-              initialValue={content?.form?.title}
-              tag="span"
-              className="text-xl md:text-2xl lg:text-3xl font-bold text-center text-gray-900"
-            />
-          </h2>
-          <Card>
-            <CardContent className="p-6 md:p-8">
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+      <section className="py-20">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-3xl md:text-4xl font-bold text-center text-blue-900 mb-16">
+              <EditableText
+                page="join"
+                section="form"
+                contentKey="title"
+                initialValue={content?.form?.title || "Get Connected"}
+                tag="span"
+                className="text-3xl md:text-4xl font-bold text-center text-blue-900"
+              />
+            </h2>
+            <Card className="shadow-2xl border-0 bg-gradient-to-br from-white to-blue-50">
+              <CardContent className="p-12">
+                <form onSubmit={handleSubmit} className="space-y-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                      <Label htmlFor="name" className="text-blue-900 font-semibold text-lg">
+                        Full Name *
+                      </Label>
+                      <Input
+                        id="name"
+                        type="text"
+                        required
+                        value={formData.name}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        className="mt-3 h-14 border-blue-300 focus:border-blue-700 focus:ring-blue-700 text-lg"
+                        placeholder="Enter your full name"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="email" className="text-blue-900 font-semibold text-lg">
+                        Email Address *
+                      </Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        required
+                        value={formData.email}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        className="mt-3 h-14 border-blue-300 focus:border-blue-700 focus:ring-blue-700 text-lg"
+                        placeholder="Enter your email address"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                      <Label htmlFor="phone" className="text-blue-900 font-semibold text-lg">
+                        Phone Number
+                      </Label>
+                      <Input
+                        id="phone"
+                        type="tel"
+                        value={formData.phone}
+                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                        className="mt-3 h-14 border-blue-300 focus:border-blue-700 focus:ring-blue-700 text-lg"
+                        placeholder="Enter your phone number"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="age" className="text-blue-900 font-semibold text-lg">
+                        Age Group
+                      </Label>
+                      <Select value={formData.age} onValueChange={(value) => setFormData({ ...formData, age: value })}>
+                        <SelectTrigger className="mt-3 h-14 border-blue-300 focus:border-blue-700 focus:ring-blue-700 text-lg">
+                          <SelectValue placeholder="Select your age group" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="10s">10-19</SelectItem>
+                          <SelectItem value="20s">20-29</SelectItem>
+                          <SelectItem value="30s">30-39</SelectItem>
+                          <SelectItem value="40s">40-49</SelectItem>
+                          <SelectItem value="50s">50-59</SelectItem>
+                          <SelectItem value="60s">60+</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
                   <div>
-                    <Label htmlFor="name" className="text-sm md:text-base">
-                      이름 *
+                    <Label className="text-blue-900 font-semibold text-lg mb-6 block">
+                      Areas of Interest (Select all that apply)
                     </Label>
-                    <Input
-                      id="name"
-                      type="text"
-                      required
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="mt-1"
-                      placeholder="성함을 입력해주세요"
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                      {interests.map((interest) => (
+                        <div key={interest} className="flex items-center space-x-3">
+                          <Checkbox
+                            id={interest}
+                            checked={formData.interests.includes(interest)}
+                            onCheckedChange={(checked) => handleInterestChange(interest, checked as boolean)}
+                            className="border-blue-500 data-[state=checked]:bg-blue-700 data-[state=checked]:text-white"
+                          />
+                          <Label htmlFor={interest} className="text-base cursor-pointer text-gray-700">
+                            {interest}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="message" className="text-blue-900 font-semibold text-lg">
+                      Message
+                    </Label>
+                    <Textarea
+                      id="message"
+                      value={formData.message}
+                      onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                      className="mt-3 border-blue-300 focus:border-blue-700 focus:ring-blue-700 text-lg"
+                      rows={5}
+                      placeholder="Tell us about yourself or any questions you have"
                     />
                   </div>
-                  <div>
-                    <Label htmlFor="email" className="text-sm md:text-base">
-                      이메일 *
-                    </Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      required
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="mt-1"
-                      placeholder="이메일을 입력해주세요"
+
+                  <div className="flex items-center space-x-3">
+                    <Checkbox
+                      id="newsletter"
+                      checked={formData.newsletter}
+                      onCheckedChange={(checked) => setFormData({ ...formData, newsletter: checked as boolean })}
+                      className="border-blue-500 data-[state=checked]:bg-blue-700 data-[state=checked]:text-white"
                     />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                  <div>
-                    <Label htmlFor="phone" className="text-sm md:text-base">
-                      전화번호
+                    <Label htmlFor="newsletter" className="text-base cursor-pointer text-gray-700">
+                      I would like to receive church news and event updates
                     </Label>
-                    <Input
-                      id="phone"
-                      type="tel"
-                      value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      className="mt-1"
-                      placeholder="전화번호를 입력해주세요"
-                    />
                   </div>
-                  <div>
-                    <Label htmlFor="age" className="text-sm md:text-base">
-                      연령대
-                    </Label>
-                    <Select value={formData.age} onValueChange={(value) => setFormData({ ...formData, age: value })}>
-                      <SelectTrigger className="mt-1">
-                        <SelectValue placeholder="연령대를 선택해주세요" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="10s">10대</SelectItem>
-                        <SelectItem value="20s">20대</SelectItem>
-                        <SelectItem value="30s">30대</SelectItem>
-                        <SelectItem value="40s">40대</SelectItem>
-                        <SelectItem value="50s">50대</SelectItem>
-                        <SelectItem value="60s">60대 이상</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
 
-                <div>
-                  <Label className="text-sm md:text-base mb-3 block">관심 있는 활동 (복수 선택 가능)</Label>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    {interests.map((interest) => (
-                      <div key={interest} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={interest}
-                          checked={formData.interests.includes(interest)}
-                          onCheckedChange={(checked) => handleInterestChange(interest, checked as boolean)}
-                        />
-                        <Label htmlFor={interest} className="text-xs md:text-sm cursor-pointer">
-                          {interest}
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="message" className="text-sm md:text-base">
-                    메시지
-                  </Label>
-                  <Textarea
-                    id="message"
-                    value={formData.message}
-                    onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                    className="mt-1"
-                    rows={4}
-                    placeholder="교회에 대해 궁금한 점이나 하고 싶은 말씀을 자유롭게 적어주세요"
-                  />
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="newsletter"
-                    checked={formData.newsletter}
-                    onCheckedChange={(checked) => setFormData({ ...formData, newsletter: checked as boolean })}
-                  />
-                  <Label htmlFor="newsletter" className="text-xs md:text-sm cursor-pointer">
-                    교회 소식 및 이벤트 알림을 받겠습니다
-                  </Label>
-                </div>
-
-                <Button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-base md:text-lg py-3"
-                >
-                  {isSubmitting ? "제출 중..." : "가입 신청하기"}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
+                  <Button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="w-full h-14 bg-gradient-to-r from-blue-700 to-blue-800 hover:from-blue-800 hover:to-blue-900 text-white font-bold text-xl rounded-full shadow-xl transform hover:scale-105 transition-all duration-300"
+                  >
+                    {isSubmitting ? "Submitting..." : "Submit Application"}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </section>
 
       {/* Contact Info */}
-      <section className="py-8 md:py-12 lg:py-16 px-4 bg-gray-50">
-        <div className="container mx-auto">
-          <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-center text-gray-900 mb-8 md:mb-12">
+      <section className="py-20 bg-gradient-to-r from-blue-700 to-blue-800 text-white">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-16">
             <EditableText
               page="join"
               section="contact"
               contentKey="title"
-              initialValue={content?.contact?.title}
+              initialValue={content?.contact?.title || "Get In Touch"}
               tag="span"
-              className="text-xl md:text-2xl lg:text-3xl font-bold text-center text-gray-900"
+              className="text-3xl md:text-4xl font-bold text-center"
             />
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
-            <Card className="text-center hover:shadow-lg transition-shadow">
-              <CardContent className="p-6">
-                <MapPin className="h-8 w-8 md:h-12 md:w-12 mx-auto mb-3 md:mb-4 text-blue-600" />
-                <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-2">주소</h3>
-                <div className="text-sm md:text-base text-gray-600">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+            <Card className="text-center hover:shadow-2xl transition-all duration-500 transform hover:scale-105 border-0 shadow-xl bg-white/10 backdrop-blur-sm">
+              <CardContent className="p-8">
+                <MapPin className="h-12 w-12 mx-auto mb-6 text-yellow-500" />
+                <h3 className="text-xl md:text-2xl font-bold mb-4">Address</h3>
+                <p className="text-blue-200 leading-relaxed">
                   <EditableText
                     page="join"
                     section="contact"
                     contentKey="address"
-                    initialValue={content?.contact?.address}
+                    initialValue={content?.contact?.address || "123 Church Street\nYour City, State 12345"}
                     tag="span"
-                    className="text-sm md:text-base text-gray-600"
+                    className="text-blue-200"
                     isTextArea={true}
                   />
-                </div>
+                </p>
               </CardContent>
             </Card>
-            <Card className="text-center hover:shadow-lg transition-shadow">
-              <CardContent className="p-6">
-                <Phone className="h-8 w-8 md:h-12 md:w-12 mx-auto mb-3 md:mb-4 text-green-600" />
-                <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-2">전화</h3>
-                <div className="text-sm md:text-base text-gray-600">
+            <Card className="text-center hover:shadow-2xl transition-all duration-500 transform hover:scale-105 border-0 shadow-xl bg-white/10 backdrop-blur-sm">
+              <CardContent className="p-8">
+                <Phone className="h-12 w-12 mx-auto mb-6 text-yellow-500" />
+                <h3 className="text-xl md:text-2xl font-bold mb-4">Phone</h3>
+                <p className="text-blue-200">
                   <EditableText
                     page="join"
                     section="contact"
                     contentKey="phone"
-                    initialValue={content?.contact?.phone}
+                    initialValue={content?.contact?.phone || "(555) 123-4567"}
                     tag="span"
-                    className="text-sm md:text-base text-gray-600"
+                    className="text-blue-200"
                   />
-                </div>
+                </p>
               </CardContent>
             </Card>
-            <Card className="text-center hover:shadow-lg transition-shadow">
-              <CardContent className="p-6">
-                <Mail className="h-8 w-8 md:h-12 md:w-12 mx-auto mb-3 md:mb-4 text-purple-600" />
-                <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-2">이메일</h3>
-                <div className="text-sm md:text-base text-gray-600">
+            <Card className="text-center hover:shadow-2xl transition-all duration-500 transform hover:scale-105 border-0 shadow-xl bg-white/10 backdrop-blur-sm">
+              <CardContent className="p-8">
+                <Mail className="h-12 w-12 mx-auto mb-6 text-yellow-500" />
+                <h3 className="text-xl md:text-2xl font-bold mb-4">Email</h3>
+                <p className="text-blue-200">
                   <EditableText
                     page="join"
                     section="contact"
                     contentKey="email"
-                    initialValue={content?.contact?.email}
+                    initialValue={content?.contact?.email || "info@bozhiymirchurch.com"}
                     tag="span"
-                    className="text-sm md:text-base text-gray-600"
+                    className="text-blue-200"
                   />
-                </div>
+                </p>
               </CardContent>
             </Card>
           </div>

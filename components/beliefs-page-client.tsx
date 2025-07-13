@@ -15,37 +15,37 @@ export default function BeliefsPageClient({ initialContent }: BeliefsPageClientP
 
   const beliefs = [
     {
-      icon: <BookOpen className="h-6 w-6 md:h-8 md:w-8 text-blue-600" />,
+      icon: <BookOpen className="h-8 w-8 text-blue-700" />,
       titleKey: "belief1_title",
       descriptionKey: "belief1_description",
       verseKey: "belief1_verse",
     },
     {
-      icon: <Heart className="h-6 w-6 md:h-8 md:w-8 text-red-500" />,
+      icon: <Heart className="h-8 w-8 text-blue-700" />,
       titleKey: "belief2_title",
       descriptionKey: "belief2_description",
       verseKey: "belief2_verse",
     },
     {
-      icon: <Users className="h-6 w-6 md:h-8 md:w-8 text-green-600" />,
+      icon: <Users className="h-8 w-8 text-blue-700" />,
       titleKey: "belief3_title",
       descriptionKey: "belief3_description",
       verseKey: "belief3_verse",
     },
     {
-      icon: <Globe className="h-6 w-6 md:h-8 md:w-8 text-purple-600" />,
+      icon: <Globe className="h-8 w-8 text-blue-700" />,
       titleKey: "belief4_title",
       descriptionKey: "belief4_description",
       verseKey: "belief4_verse",
     },
     {
-      icon: <Star className="h-6 w-6 md:h-8 md:w-8 text-yellow-500" />,
+      icon: <Star className="h-8 w-8 text-blue-700" />,
       titleKey: "belief5_title",
       descriptionKey: "belief5_description",
       verseKey: "belief5_verse",
     },
     {
-      icon: <Shield className="h-6 w-6 md:h-8 md:w-8 text-indigo-600" />,
+      icon: <Shield className="h-8 w-8 text-blue-700" />,
       titleKey: "belief6_title",
       descriptionKey: "belief6_description",
       verseKey: "belief6_verse",
@@ -53,117 +53,122 @@ export default function BeliefsPageClient({ initialContent }: BeliefsPageClientP
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-yellow-50">
       {/* Hero Section */}
-      <section className="py-8 md:py-12 lg:py-16 px-4 pt-20 md:pt-24 lg:pt-32">
-        <div className="container mx-auto text-center">
-          <div className="text-4xl md:text-6xl mb-4 md:mb-6">📖</div>
-          <h1 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-gray-900 mb-4 md:mb-6">
+      <div className="bg-gradient-to-r from-blue-700 to-blue-800 text-white py-20 md:py-24">
+        <div className="container mx-auto px-4 text-center">
+          <div className="mb-6">
+            <span className="text-5xl">📖</span>
+          </div>
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-8">
             <EditableText
               page="beliefs"
               section="hero"
               contentKey="title"
-              initialValue={content?.hero?.title}
+              initialValue={content?.hero?.title || "What We Believe"}
               tag="span"
-              className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-gray-900"
+              className="text-4xl md:text-5xl lg:text-6xl font-bold"
             />
           </h1>
-          <div className="text-base md:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto mb-6 md:mb-8">
+          <p className="text-xl md:text-2xl text-blue-200 max-w-4xl mx-auto leading-relaxed">
             <EditableText
               page="beliefs"
               section="hero"
               contentKey="subtitle"
-              initialValue={content?.hero?.subtitle}
+              initialValue={
+                content?.hero?.subtitle || "Our faith is built on the solid foundation of God's Word, the Bible."
+              }
               tag="span"
-              className="text-base md:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto"
+              className="text-xl md:text-2xl text-blue-200"
               isTextArea={true}
             />
-          </div>
-          <div className="flex items-center justify-center space-x-2 text-blue-600">
-            <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
-            <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
-            <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
-          </div>
+          </p>
         </div>
-      </section>
+      </div>
 
       {/* Foundation Scripture */}
-      <section className="py-8 md:py-12 lg:py-16 px-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white">
-        <div className="container mx-auto text-center">
-          <blockquote className="text-lg md:text-xl lg:text-2xl italic mb-4 md:mb-6 max-w-4xl mx-auto">
+      <section className="py-20 bg-gradient-to-r from-yellow-500 to-yellow-600 text-blue-900">
+        <div className="container mx-auto px-4 text-center">
+          <blockquote className="text-2xl md:text-3xl italic mb-8 max-w-4xl mx-auto leading-relaxed">
             <EditableText
               page="beliefs"
               section="foundation"
               contentKey="scripture"
-              initialValue={content?.foundation?.scripture}
+              initialValue={
+                content?.foundation?.scripture ||
+                "All Scripture is God-breathed and is useful for teaching, rebuking, correcting and training in righteousness."
+              }
               tag="span"
-              className="text-lg md:text-xl lg:text-2xl italic"
+              className="text-2xl md:text-3xl italic text-blue-900"
               isTextArea={true}
             />
           </blockquote>
-          <p className="text-base md:text-lg lg:text-xl font-semibold opacity-90">
+          <p className="text-xl md:text-2xl font-semibold text-blue-800">
             <EditableText
               page="beliefs"
               section="foundation"
               contentKey="reference"
-              initialValue={content?.foundation?.reference}
+              initialValue={content?.foundation?.reference || "2 Timothy 3:16-17"}
               tag="span"
-              className="text-base md:text-lg lg:text-xl font-semibold opacity-90"
+              className="text-xl md:text-2xl font-semibold text-blue-800"
             />
           </p>
         </div>
       </section>
 
       {/* Core Beliefs */}
-      <section className="py-8 md:py-12 lg:py-16 px-4">
-        <div className="container mx-auto">
-          <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-center text-gray-900 mb-8 md:mb-12">
+      <section className="py-20">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-center text-blue-900 mb-16">
             <EditableText
               page="beliefs"
               section="core_beliefs"
               contentKey="title"
-              initialValue={content?.core_beliefs?.title}
+              initialValue={content?.core_beliefs?.title || "Our Core Beliefs"}
               tag="span"
-              className="text-xl md:text-2xl lg:text-3xl font-bold text-center text-gray-900"
+              className="text-3xl md:text-4xl font-bold text-center text-blue-900"
             />
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
             {beliefs.map((belief, index) => (
-              <Card key={index} className="hover:shadow-lg transition-shadow duration-300 h-full">
-                <CardContent className="p-4 md:p-6 h-full flex flex-col">
-                  <div className="flex items-center mb-3 md:mb-4">
-                    {belief.icon}
-                    <h3 className="text-lg md:text-xl font-bold text-gray-900 ml-3">
+              <Card
+                key={index}
+                className="hover:shadow-2xl transition-all duration-500 transform hover:scale-105 border-0 shadow-xl bg-gradient-to-br from-white to-blue-50"
+              >
+                <CardContent className="p-8 h-full flex flex-col">
+                  <div className="flex items-center mb-8">
+                    <div className="bg-yellow-500 rounded-full p-4 mr-6">{belief.icon}</div>
+                    <h3 className="text-xl md:text-2xl font-bold text-blue-900">
                       <EditableText
                         page="beliefs"
                         section="core_beliefs"
                         contentKey={belief.titleKey}
-                        initialValue={content?.core_beliefs?.[belief.titleKey]}
+                        initialValue={content?.core_beliefs?.[belief.titleKey] || `Belief ${index + 1}`}
                         tag="span"
-                        className="text-lg md:text-xl font-bold text-gray-900"
+                        className="text-xl md:text-2xl font-bold text-blue-900"
                       />
                     </h3>
                   </div>
-                  <div className="text-sm md:text-base text-gray-600 mb-4 leading-relaxed flex-grow">
+                  <div className="text-lg text-gray-700 mb-8 leading-relaxed flex-grow">
                     <EditableText
                       page="beliefs"
                       section="core_beliefs"
                       contentKey={belief.descriptionKey}
-                      initialValue={content?.core_beliefs?.[belief.descriptionKey]}
+                      initialValue={content?.core_beliefs?.[belief.descriptionKey] || "Description of this belief."}
                       tag="span"
-                      className="text-sm md:text-base text-gray-600 leading-relaxed"
+                      className="text-lg text-gray-700 leading-relaxed"
                       isTextArea={true}
                     />
                   </div>
-                  <div className="bg-blue-50 p-3 rounded-lg mt-auto">
-                    <p className="text-xs md:text-sm text-blue-800 italic font-medium">
+                  <div className="bg-blue-100 p-6 rounded-xl mt-auto border-l-4 border-blue-700">
+                    <p className="text-base text-blue-800 italic font-medium">
                       <EditableText
                         page="beliefs"
                         section="core_beliefs"
                         contentKey={belief.verseKey}
-                        initialValue={content?.core_beliefs?.[belief.verseKey]}
+                        initialValue={content?.core_beliefs?.[belief.verseKey] || "Bible verse here"}
                         tag="span"
-                        className="text-xs md:text-sm text-blue-800 italic font-medium"
+                        className="text-base text-blue-800 italic font-medium"
                       />
                     </p>
                   </div>
@@ -175,30 +180,33 @@ export default function BeliefsPageClient({ initialContent }: BeliefsPageClientP
       </section>
 
       {/* Statement of Faith */}
-      <section className="py-8 md:py-12 lg:py-16 px-4 bg-gray-50">
-        <div className="container mx-auto">
-          <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-center text-gray-900 mb-6 md:mb-8">
+      <section className="py-20 bg-gradient-to-r from-blue-700 to-blue-800 text-white">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-16">
             <EditableText
               page="beliefs"
               section="statement_of_faith"
               contentKey="title"
-              initialValue={content?.statement_of_faith?.title}
+              initialValue={content?.statement_of_faith?.title || "Our Statement of Faith"}
               tag="span"
-              className="text-xl md:text-2xl lg:text-3xl font-bold text-center text-gray-900"
+              className="text-3xl md:text-4xl font-bold text-center"
             />
           </h2>
-          <div className="max-w-4xl mx-auto">
-            <Card>
-              <CardContent className="p-6 md:p-8">
-                <div className="text-sm md:text-base lg:text-lg text-gray-700 leading-relaxed space-y-4">
+          <div className="max-w-5xl mx-auto">
+            <Card className="shadow-2xl border-0 bg-white/10 backdrop-blur-sm">
+              <CardContent className="p-12">
+                <div className="text-xl text-blue-200 leading-relaxed space-y-8">
                   <div>
                     <EditableText
                       page="beliefs"
                       section="statement_of_faith"
                       contentKey="statement1"
-                      initialValue={content?.statement_of_faith?.statement1}
+                      initialValue={
+                        content?.statement_of_faith?.statement1 ||
+                        "We believe in one God, eternally existing in three persons: Father, Son, and Holy Spirit."
+                      }
                       tag="p"
-                      className="text-sm md:text-base lg:text-lg text-gray-700 leading-relaxed mb-4"
+                      className="text-xl text-blue-200 leading-relaxed"
                       isTextArea={true}
                     />
                   </div>
@@ -207,9 +215,12 @@ export default function BeliefsPageClient({ initialContent }: BeliefsPageClientP
                       page="beliefs"
                       section="statement_of_faith"
                       contentKey="statement2"
-                      initialValue={content?.statement_of_faith?.statement2}
+                      initialValue={
+                        content?.statement_of_faith?.statement2 ||
+                        "We believe in the virgin birth, sinless life, substitutionary death, bodily resurrection, and ascension of Jesus Christ."
+                      }
                       tag="p"
-                      className="text-sm md:text-base lg:text-lg text-gray-700 leading-relaxed mb-4"
+                      className="text-xl text-blue-200 leading-relaxed"
                       isTextArea={true}
                     />
                   </div>
@@ -218,9 +229,12 @@ export default function BeliefsPageClient({ initialContent }: BeliefsPageClientP
                       page="beliefs"
                       section="statement_of_faith"
                       contentKey="statement3"
-                      initialValue={content?.statement_of_faith?.statement3}
+                      initialValue={
+                        content?.statement_of_faith?.statement3 ||
+                        "We believe in the necessity of personal faith in Jesus Christ for salvation."
+                      }
                       tag="p"
-                      className="text-sm md:text-base lg:text-lg text-gray-700 leading-relaxed"
+                      className="text-xl text-blue-200 leading-relaxed"
                       isTextArea={true}
                     />
                   </div>
@@ -232,34 +246,46 @@ export default function BeliefsPageClient({ initialContent }: BeliefsPageClientP
       </section>
 
       {/* Call to Action */}
-      <section className="py-8 md:py-12 lg:py-16 px-4 text-center">
-        <div className="container mx-auto">
-          <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 mb-4 md:mb-6">
+      <section className="py-20 bg-gradient-to-br from-blue-50 via-white to-yellow-50 text-center">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-blue-900 mb-8">
             <EditableText
               page="beliefs"
               section="cta"
               contentKey="title"
-              initialValue={content?.cta?.title}
+              initialValue={content?.cta?.title || "Join Our Faith Community"}
               tag="span"
-              className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900"
+              className="text-3xl md:text-4xl font-bold text-blue-900"
             />
           </h2>
-          <div className="text-base md:text-lg lg:text-xl text-gray-600 mb-6 md:mb-8 max-w-3xl mx-auto">
+          <p className="text-xl md:text-2xl text-gray-700 mb-10 max-w-4xl mx-auto leading-relaxed">
             <EditableText
               page="beliefs"
               section="cta"
               contentKey="description"
-              initialValue={content?.cta?.description}
+              initialValue={
+                content?.cta?.description ||
+                "If these beliefs resonate with your heart, we invite you to join our church family."
+              }
               tag="span"
-              className="text-base md:text-lg lg:text-xl text-gray-600"
+              className="text-xl md:text-2xl text-gray-700"
               isTextArea={true}
             />
-          </div>
-          <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center items-center">
-            <Button asChild size="lg" className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto">
+          </p>
+          <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
+            <Button
+              asChild
+              size="lg"
+              className="bg-gradient-to-r from-blue-700 to-blue-800 hover:from-blue-800 hover:to-blue-900 text-white font-bold px-10 py-4 text-xl rounded-full shadow-xl transform hover:scale-105 transition-all duration-300"
+            >
               <Link href="/join">Join Our Community</Link>
             </Button>
-            <Button asChild variant="outline" size="lg" className="w-full sm:w-auto bg-transparent">
+            <Button
+              asChild
+              variant="outline"
+              size="lg"
+              className="border-2 border-yellow-500 text-yellow-600 hover:bg-yellow-500 hover:text-white font-bold px-10 py-4 text-xl rounded-full bg-transparent shadow-lg transform hover:scale-105 transition-all duration-300"
+            >
               <Link href="/leadership">Meet Our Leaders</Link>
             </Button>
           </div>

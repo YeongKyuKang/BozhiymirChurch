@@ -62,27 +62,27 @@ export default function Header() {
               </div>
             </Link>
 
-            {/* Desktop Navigation - 폰트 크기 줄임 */}
-            <nav className="hidden lg:flex items-center space-x-6">
+            {/* Desktop Navigation */}
+            <nav className="hidden lg:flex items-center space-x-8">
               {/* About Dropdown */}
               <div
                 className="relative group"
                 onMouseEnter={() => setIsAboutOpen(true)}
                 onMouseLeave={() => setIsAboutOpen(false)}
               >
-                <button className="flex items-center text-white text-xs font-medium hover:text-blue-300 transition-colors tracking-wide">
+                <button className="flex items-center text-white text-sm font-medium hover:text-yellow-300 transition-colors tracking-wide">
                   ABOUT
-                  <ChevronDown className="ml-1 h-3 w-3" />
+                  <ChevronDown className="ml-1 h-4 w-4" />
                 </button>
                 <div
                   className={`absolute top-full left-0 mt-2 transition-all duration-200 ${isAboutOpen ? "opacity-100 visible" : "opacity-0 invisible"}`}
                 >
-                  <div className="w-56 bg-white rounded-lg shadow-xl border border-gray-200 py-1 z-50">
+                  <div className="w-64 bg-white rounded-xl shadow-2xl border border-gray-200 py-2 z-50">
                     {aboutItems.map((item) => (
                       <Link
                         key={item.name}
                         href={item.href}
-                        className="block px-3 py-2 text-xs font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                        className="block px-4 py-3 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
                         onClick={() => setIsAboutOpen(false)}
                       >
                         {item.name}
@@ -95,7 +95,7 @@ export default function Header() {
               {/* Events Link */}
               <Link
                 href="/events"
-                className="text-white text-xs font-medium hover:text-blue-300 transition-colors tracking-wide"
+                className="text-white text-sm font-medium hover:text-yellow-300 transition-colors tracking-wide"
               >
                 EVENTS
               </Link>
@@ -110,35 +110,35 @@ export default function Header() {
                   <Tooltip delayDuration={300}>
                     <TooltipTrigger asChild>
                       <button
-                        className="flex items-center text-xs font-medium transition-colors tracking-wide text-gray-400 cursor-not-allowed"
+                        className="flex items-center text-sm font-medium transition-colors tracking-wide text-gray-400 cursor-not-allowed"
                         disabled={true}
                       >
                         FAITH
-                        <ChevronDown className="ml-1 h-3 w-3" />
+                        <ChevronDown className="ml-1 h-4 w-4" />
                       </button>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p className="text-xs">로그인 유저만 사용가능</p>
+                      <p className="text-sm">로그인 유저만 사용가능</p>
                     </TooltipContent>
                   </Tooltip>
                 ) : (
                   <>
                     <button
-                      className="flex items-center text-xs font-medium transition-colors tracking-wide text-white hover:text-blue-300"
+                      className="flex items-center text-sm font-medium transition-colors tracking-wide text-white hover:text-yellow-300"
                       disabled={false}
                     >
                       FAITH
-                      <ChevronDown className="ml-1 h-3 w-3" />
+                      <ChevronDown className="ml-1 h-4 w-4" />
                     </button>
                     <div
                       className={`absolute top-full left-0 mt-2 transition-all duration-200 ${isFaithOpen ? "opacity-100 visible" : "opacity-0 invisible"}`}
                     >
-                      <div className="w-56 bg-white rounded-lg shadow-xl border border-gray-200 py-1 z-50">
+                      <div className="w-64 bg-white rounded-xl shadow-2xl border border-gray-200 py-2 z-50">
                         {faithItems.map((item) => (
                           <Link
                             key={item.name}
                             href={item.href}
-                            className="block px-3 py-2 text-xs font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                            className="block px-4 py-3 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
                             onClick={() => setIsFaithOpen(false)}
                           >
                             {item.name}
@@ -152,60 +152,64 @@ export default function Header() {
 
               <Link
                 href="/join"
-                className="text-white text-xs font-medium hover:text-blue-300 transition-colors tracking-wide"
+                className="text-white text-sm font-medium hover:text-yellow-300 transition-colors tracking-wide"
               >
                 JOIN
               </Link>
 
-              {/* Admin Settings Button - 크기 줄임 */}
+              {/* Admin Settings Button */}
               {userRole === "admin" && (
                 <Button variant="ghost" size="sm" asChild>
                   <Link href="/admin">
-                    <Settings className="h-4 w-4 text-white hover:text-blue-300 transition-colors" />
+                    <Settings className="h-5 w-5 text-white hover:text-yellow-300 transition-colors" />
                   </Link>
                 </Button>
               )}
 
-              {/* Authentication Section - 폰트 크기 줄임 */}
+              {/* Authentication Section */}
               {user ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="text-white hover:bg-white/10 text-xs px-2 py-1">
-                      <User className="h-3 w-3 mr-1" />
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-white hover:bg-blue-700/30 text-sm px-3 py-2 rounded-lg"
+                    >
+                      <User className="h-4 w-4 mr-2" />
                       {userProfile?.nickname || user.email}
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-44">
+                  <DropdownMenuContent align="end" className="w-48 bg-white rounded-xl shadow-xl">
                     <DropdownMenuItem asChild>
-                      <Link href="/profile" className="text-xs">
+                      <Link href="/profile" className="text-sm">
                         Profile
                       </Link>
                     </DropdownMenuItem>
                     {userRole === "admin" && (
                       <DropdownMenuItem asChild>
-                        <Link href="/admin" className="text-xs">
+                        <Link href="/admin" className="text-sm">
                           Admin Panel
                         </Link>
                       </DropdownMenuItem>
                     )}
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleSignOut} className="text-xs">
-                      <LogOut className="h-3 w-3 mr-1" />
+                    <DropdownMenuItem onClick={handleSignOut} className="text-sm">
+                      <LogOut className="h-4 w-4 mr-2" />
                       Sign Out
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-4">
                   <Link
                     href="/login"
-                    className="text-white text-xs font-medium hover:text-blue-300 transition-colors tracking-wide"
+                    className="text-white text-sm font-medium hover:text-yellow-300 transition-colors tracking-wide"
                   >
                     LOGIN
                   </Link>
                   <Link
                     href="/register"
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg text-xs font-medium transition-colors"
+                    className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-blue-900 px-4 py-2 rounded-lg text-sm font-bold transition-all duration-300 transform hover:scale-105"
                   >
                     REGISTER
                   </Link>
@@ -213,37 +217,37 @@ export default function Header() {
               )}
             </nav>
 
-            {/* Mobile Menu Button - 크기 줄임 */}
+            {/* Mobile Menu Button */}
             <Button
               variant="ghost"
               size="icon"
-              className="lg:hidden text-white hover:bg-white/10 h-8 w-8"
+              className="lg:hidden text-white hover:bg-blue-700/30 h-10 w-10 rounded-lg"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
             >
-              {isMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+              {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </Button>
           </div>
 
-          {/* Mobile Navigation - 폰트 크기 줄임 */}
+          {/* Mobile Navigation */}
           {isMenuOpen && (
-            <nav className="lg:hidden mt-3 pb-3">
-              <div className="flex flex-col space-y-2">
+            <nav className="lg:hidden mt-4 pb-4">
+              <div className="flex flex-col space-y-3">
                 {/* Mobile About Section */}
                 <div>
                   <button
                     onClick={() => setIsAboutOpen(!isAboutOpen)}
-                    className="flex items-center justify-between w-full text-white text-xs font-medium py-1"
+                    className="flex items-center justify-between w-full text-white text-sm font-medium py-2"
                   >
                     ABOUT
-                    <ChevronDown className={`h-3 w-3 transition-transform ${isAboutOpen ? "rotate-180" : ""}`} />
+                    <ChevronDown className={`h-4 w-4 transition-transform ${isAboutOpen ? "rotate-180" : ""}`} />
                   </button>
                   {isAboutOpen && (
-                    <div className="ml-3 mt-1 space-y-1">
+                    <div className="ml-4 mt-2 space-y-2">
                       {aboutItems.map((item) => (
                         <Link
                           key={item.name}
                           href={item.href}
-                          className="block text-white/80 text-xs py-1 hover:text-blue-300"
+                          className="block text-blue-200 text-sm py-1 hover:text-yellow-300"
                           onClick={() => {
                             setIsMenuOpen(false)
                             setIsAboutOpen(false)
@@ -259,7 +263,7 @@ export default function Header() {
                 {/* Mobile Events Link */}
                 <Link
                   href="/events"
-                  className="block text-white text-xs font-medium py-1 hover:text-blue-300"
+                  className="block text-white text-sm font-medium py-2 hover:text-yellow-300"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   EVENTS
@@ -271,34 +275,34 @@ export default function Header() {
                     <Tooltip delayDuration={300}>
                       <TooltipTrigger asChild>
                         <button
-                          className="flex items-center justify-between w-full text-xs font-medium py-1 text-gray-400 cursor-not-allowed"
+                          className="flex items-center justify-between w-full text-sm font-medium py-2 text-gray-400 cursor-not-allowed"
                           disabled={true}
                         >
                           FAITH
-                          <ChevronDown className="ml-1 h-3 w-3" />
+                          <ChevronDown className="ml-1 h-4 w-4" />
                         </button>
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p className="text-xs">로그인 유저만 사용가능</p>
+                        <p className="text-sm">로그인 유저만 사용가능</p>
                       </TooltipContent>
                     </Tooltip>
                   ) : (
                     <>
                       <button
                         onClick={() => setIsFaithOpen(!isFaithOpen)}
-                        className="flex items-center justify-between w-full text-xs font-medium py-1 text-white"
+                        className="flex items-center justify-between w-full text-sm font-medium py-2 text-white"
                         disabled={false}
                       >
                         FAITH
-                        <ChevronDown className={`h-3 w-3 transition-transform ${isFaithOpen ? "rotate-180" : ""}`} />
+                        <ChevronDown className={`h-4 w-4 transition-transform ${isFaithOpen ? "rotate-180" : ""}`} />
                       </button>
                       {isFaithOpen && (
-                        <div className="ml-3 mt-1 space-y-1">
+                        <div className="ml-4 mt-2 space-y-2">
                           {faithItems.map((item) => (
                             <Link
                               key={item.name}
                               href={item.href}
-                              className="block text-white/80 text-xs py-1 hover:text-blue-300"
+                              className="block text-blue-200 text-sm py-1 hover:text-yellow-300"
                               onClick={() => {
                                 setIsMenuOpen(false)
                                 setIsFaithOpen(false)
@@ -315,7 +319,7 @@ export default function Header() {
 
                 <Link
                   href="/join"
-                  className="text-white text-xs font-medium py-1 hover:text-blue-300"
+                  className="block text-white text-sm font-medium py-2 hover:text-yellow-300"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   JOIN
@@ -323,11 +327,11 @@ export default function Header() {
 
                 {/* Mobile Auth Section */}
                 {user ? (
-                  <div className="border-t border-white/20 pt-2 mt-2">
-                    <div className="text-white/80 text-xs mb-1">{userProfile?.nickname || user.email}</div>
+                  <div className="border-t border-blue-700/30 pt-3 mt-3">
+                    <div className="text-blue-200 text-sm mb-2">{userProfile?.nickname || user.email}</div>
                     <Link
                       href="/profile"
-                      className="block text-white text-xs font-medium py-1 hover:text-blue-300"
+                      className="block text-white text-sm font-medium py-2 hover:text-yellow-300"
                       onClick={() => setIsMenuOpen(false)}
                     >
                       Profile
@@ -335,7 +339,7 @@ export default function Header() {
                     {userRole === "admin" && (
                       <Link
                         href="/admin"
-                        className="block text-white text-xs font-medium py-1 hover:text-blue-300"
+                        className="block text-white text-sm font-medium py-2 hover:text-yellow-300"
                         onClick={() => setIsMenuOpen(false)}
                       >
                         Admin Panel
@@ -343,26 +347,26 @@ export default function Header() {
                     )}
                     <button
                       onClick={handleSignOut}
-                      className="block text-white text-xs font-medium py-1 hover:text-blue-300 w-full text-left"
+                      className="block text-white text-sm font-medium py-2 hover:text-yellow-300 w-full text-left"
                     >
                       <span className="flex items-center">
-                        <LogOut className="h-3 w-3 mr-1" />
+                        <LogOut className="h-4 w-4 mr-2" />
                         Sign Out
                       </span>
                     </button>
                   </div>
                 ) : (
-                  <div className="border-t border-white/20 pt-2 mt-2 space-y-1">
+                  <div className="border-t border-blue-700/30 pt-3 mt-3 space-y-2">
                     <Link
                       href="/login"
-                      className="block text-white text-xs font-medium py-1 hover:text-blue-300"
+                      className="block text-white text-sm font-medium py-2 hover:text-yellow-300"
                       onClick={() => setIsMenuOpen(false)}
                     >
                       LOGIN
                     </Link>
                     <Link
                       href="/register"
-                      className="block bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg text-xs font-medium transition-colors text-center"
+                      className="block bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-blue-900 px-4 py-2 rounded-lg text-sm font-bold transition-all duration-300 text-center"
                       onClick={() => setIsMenuOpen(false)}
                     >
                       REGISTER
