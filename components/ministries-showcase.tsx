@@ -1,55 +1,130 @@
-import { Button } from "@/components/ui/button"
-import { Church, Heart, Users, Globe } from "lucide-react"
-import Link from "next/link"
+// components/ministries-showcase.tsx
+"use client";
 
-export default function MinistriesShowcase() {
+import * as React from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Heart, Users, BookOpen } from "lucide-react";
+import EditableText from "@/components/editable-text";
+import { Database } from "@/lib/supabase"; // Database 타입 임포트
+
+interface MinistriesShowcaseProps {
+  initialContent: Record<string, any>; // initialContent prop 추가
+  isEditingPage: boolean;
+  onContentChange: (section: string, key: string, value: string) => void;
+}
+
+export default function MinistriesShowcase({ initialContent, isEditingPage, onContentChange }: MinistriesShowcaseProps) {
   return (
-    <section className="py-16 md:py-24 bg-gradient-to-br from-blue-600 to-blue-700 text-white">
-      <div className="container mx-auto px-4 text-center">
-        <h2 className="text-3xl md:text-4xl font-bold mb-6">Our Ministries</h2>
-        <p className="text-lg md:text-xl text-blue-100 max-w-3xl mx-auto mb-12 leading-relaxed">
-          Discover the various ways we serve God and our community, both locally and globally.
-        </p>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
-          <div className="bg-white/10 p-8 rounded-xl shadow-lg border border-blue-500/30 backdrop-blur-sm transform hover:scale-105 transition-transform duration-300">
-            <Church className="h-12 w-12 text-yellow-400 mx-auto mb-6" />
-            <h3 className="text-xl font-bold mb-4">Worship & Teaching</h3>
-            <p className="text-blue-100 leading-relaxed">
-              Engage in inspiring worship and deep biblical teaching every week.
-            </p>
-          </div>
-          <div className="bg-white/10 p-8 rounded-xl shadow-lg border border-blue-500/30 backdrop-blur-sm transform hover:scale-105 transition-transform duration-300">
-            <Heart className="h-12 w-12 text-yellow-400 mx-auto mb-6" />
-            <h3 className="text-xl font-bold mb-4">Community Outreach</h3>
-            <p className="text-blue-100 leading-relaxed">
-              Serve our local community through various outreach programs and events.
-            </p>
-          </div>
-          <div className="bg-white/10 p-8 rounded-xl shadow-lg border border-blue-500/30 backdrop-blur-sm transform hover:scale-105 transition-transform duration-300">
-            <Users className="h-12 w-12 text-yellow-400 mx-auto mb-6" />
-            <h3 className="text-xl font-bold mb-4">Family & Youth</h3>
-            <p className="text-blue-100 leading-relaxed">
-              Programs designed to nurture faith in children, youth, and families.
-            </p>
-          </div>
-          <div className="bg-white/10 p-8 rounded-xl shadow-lg border border-blue-500/30 backdrop-blur-sm transform hover:scale-105 transition-transform duration-300">
-            <Globe className="h-12 w-12 text-yellow-400 mx-auto mb-6" />
-            <h3 className="text-xl font-bold mb-4">Global Missions</h3>
-            <p className="text-blue-100 leading-relaxed">
-              Support our missionaries and global initiatives spreading the Gospel worldwide.
-            </p>
-          </div>
+    <section className="py-16 px-4">
+      <div className="container mx-auto max-w-6xl">
+        <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 text-center mb-12 leading-tight">
+          <EditableText
+            page="home"
+            section="ministries"
+            contentKey="title"
+            initialValue={initialContent?.ministries?.title || "Our Ministries"}
+            isEditingPage={isEditingPage}
+            onContentChange={onContentChange}
+            tag="span"
+            className="text-3xl md:text-4xl font-extrabold leading-tight"
+          />
+        </h2>
+        <div className="grid md:grid-cols-3 gap-8 text-center">
+          <Card className="hover:shadow-lg transition-shadow duration-300">
+            <CardContent className="p-6">
+              <Heart className="h-16 w-16 text-red-500 mx-auto mb-4" />
+              <h3 className="text-xl font-bold text-gray-900 mb-2">
+                <EditableText
+                  page="home"
+                  section="ministries"
+                  contentKey="ministry1_title"
+                  initialValue={initialContent?.ministries?.ministry1_title || "Children's Ministry"}
+                  isEditingPage={isEditingPage}
+                  onContentChange={onContentChange}
+                  tag="span"
+                  className="text-xl font-bold"
+                />
+              </h3>
+              {/* 여기에 <p> 대신 <div>를 사용 */}
+              <div className="text-gray-600">
+                <EditableText
+                  page="home"
+                  section="ministries"
+                  contentKey="ministry1_description"
+                  initialValue={initialContent?.ministries?.ministry1_description || "Dedicated programs for children to learn and grow in faith through fun activities and biblical teachings."}
+                  isEditingPage={isEditingPage}
+                  onContentChange={onContentChange}
+                  tag="span"
+                  className="text-gray-600"
+                  isTextArea={true}
+                />
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="hover:shadow-lg transition-shadow duration-300">
+            <CardContent className="p-6">
+              <Users className="h-16 w-16 text-blue-500 mx-auto mb-4" />
+              <h3 className="text-xl font-bold text-gray-900 mb-2">
+                <EditableText
+                  page="home"
+                  section="ministries"
+                  contentKey="ministry2_title"
+                  initialValue={initialContent?.ministries?.ministry2_title || "Youth & Young Adults"}
+                  isEditingPage={isEditingPage}
+                  onContentChange={onContentChange}
+                  tag="span"
+                  className="text-xl font-bold"
+                />
+              </h3>
+              {/* 여기에 <p> 대신 <div>를 사용 */}
+              <div className="text-gray-600">
+                <EditableText
+                  page="home"
+                  section="ministries"
+                  contentKey="ministry2_description"
+                  initialValue={initialContent?.ministries?.ministry2_description || "Engaging events and small groups designed to empower young people in their spiritual journey and build lasting friendships."}
+                  isEditingPage={isEditingPage}
+                  onContentChange={onContentChange}
+                  tag="span"
+                  className="text-gray-600"
+                  isTextArea={true}
+                />
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="hover:shadow-lg transition-shadow duration-300">
+            <CardContent className="p-6">
+              <BookOpen className="h-16 w-16 text-green-500 mx-auto mb-4" />
+              <h3 className="text-xl font-bold text-gray-900 mb-2">
+                <EditableText
+                  page="home"
+                  section="ministries"
+                  contentKey="ministry3_title"
+                  initialValue={initialContent?.ministries?.ministry3_title || "Bible Study & Discipleship"}
+                  isEditingPage={isEditingPage}
+                  onContentChange={onContentChange}
+                  tag="span"
+                  className="text-xl font-bold"
+                />
+              </h3>
+              {/* 여기에 <p> 대신 <div>를 사용 */}
+              <div className="text-gray-600">
+                <EditableText
+                  page="home"
+                  section="ministries"
+                  contentKey="ministry3_description"
+                  initialValue={initialContent?.ministries?.ministry3_description || "Deepen your understanding of God's Word through our weekly Bible studies and discipleship programs for all ages."}
+                  isEditingPage={isEditingPage}
+                  onContentChange={onContentChange}
+                  tag="span"
+                  className="text-gray-600"
+                  isTextArea={true}
+                />
+              </div>
+            </CardContent>
+          </Card>
         </div>
-
-        <Button
-          asChild
-          size="lg"
-          className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-blue-900 font-bold px-10 py-4 text-xl rounded-full shadow-xl transform hover:scale-105 transition-all duration-300"
-        >
-          <Link href="/ukrainian-ministry">Explore All Ministries</Link>
-        </Button>
       </div>
     </section>
-  )
+  );
 }
