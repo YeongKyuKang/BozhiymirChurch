@@ -694,7 +694,7 @@ INSERT INTO public.registration_codes (code, role) VALUES
 ('CHILD003', 'child')
 ON CONFLICT (code) DO NOTHING;
 
--- 모든 페이지의 기본 콘텐츠 삽입
+-- 모든 ��이지의 기본 콘텐츠 삽입
 INSERT INTO public.content (page, section, key, value) VALUES
 -- Home page content
 ('home', 'hero', 'title', 'Welcome to Bozhiymir Church'),
@@ -722,6 +722,44 @@ INSERT INTO public.content (page, section, key, value) VALUES
 ('home', 'community_highlights', 'highlight3_title', 'Caring Support'),
 ('home', 'community_highlights', 'highlight3_description', 'From practical needs to emotional support, our community rallies around each member with Christ''s love.'),
 
+-- Jesus page content (새로 추가)
+('jesus', 'main', 'title', 'Jesus Christ'),
+('jesus', 'main', 'subtitle', 'Our Lord and Savior'),
+('jesus', 'main', 'description', 'At the heart of our faith is Jesus Christ - the Son of God, our Savior, and the foundation of everything we believe and do as a church community.'),
+('jesus', 'main', 'scripture_quote', 'Jesus said to him, "I am the way, and the truth, and the life. No one comes to the Father except through me."'),
+('jesus', 'main', 'scripture_reference', 'John 14:6'),
+('jesus', 'who_is_jesus', 'title', 'Who is Jesus?'),
+('jesus', 'who_is_jesus', 'description', 'Jesus Christ is the eternal Son of God who became human to save us from our sins. He lived a perfect life, died on the cross for our redemption, and rose again, conquering death and offering eternal life to all who believe.'),
+('jesus', 'teachings', 'title', 'The Teachings of Jesus'),
+('jesus', 'teachings', 'teaching1_title', 'Love God and Others'),
+('jesus', 'teachings', 'teaching1_description', 'Jesus taught us to love God with all our heart, soul, mind, and strength, and to love our neighbors as ourselves.'),
+('jesus', 'teachings', 'teaching1_scripture', 'Matthew 22:37-39'),
+('jesus', 'teachings', 'teaching2_title', 'Forgiveness'),
+('jesus', 'teachings', 'teaching2_description', 'Through Jesus, we learn the power of forgiveness - both receiving God''s forgiveness and extending it to others.'),
+('jesus', 'teachings', 'teaching2_scripture', 'Matthew 6:14-15'),
+('jesus', 'teachings', 'teaching3_title', 'Compassion for the Vulnerable'),
+('jesus', 'teachings', 'teaching3_description', 'Jesus showed special care for children, the poor, and the marginalized - a calling we embrace in our Ukrainian ministry.'),
+('jesus', 'teachings', 'teaching3_scripture', 'Matthew 19:14'),
+('jesus', 'teachings', 'teaching4_title', 'Eternal Life'),
+('jesus', 'teachings', 'teaching4_description', 'Jesus offers the gift of eternal life to all who believe in Him as their Lord and Savior.'),
+('jesus', 'teachings', 'teaching4_scripture', 'John 3:16'),
+('jesus', 'teachings', 'teaching5_title', 'Peace and Hope'),
+('jesus', 'teachings', 'teaching5_description', 'In a troubled world, Jesus offers peace that surpasses understanding and hope that never fails.'),
+('jesus', 'teachings', 'teaching5_scripture', 'John 14:27'),
+('jesus', 'teachings', 'teaching6_title', 'Service to Others'),
+('jesus', 'teachings', 'teaching6_description', 'Jesus taught by example that true greatness comes through serving others with humility and love.'),
+('jesus', 'teachings', 'teaching6_scripture', 'Mark 10:43-44'),
+('jesus', 'salvation', 'title', 'Salvation Through Jesus'),
+('jesus', 'salvation', 'description', 'Salvation is a free gift from God, received through faith in Jesus Christ. It cannot be earned by good works, but is given by God''s grace to all who believe.'),
+('jesus', 'salvation', 'steps_title', 'How to Receive Salvation'),
+('jesus', 'salvation', 'step1', 'Acknowledge that you are a sinner in need of God''s forgiveness'),
+('jesus', 'salvation', 'step2', 'Believe that Jesus Christ died for your sins and rose again'),
+('jesus', 'salvation', 'step3', 'Confess Jesus as your Lord and Savior'),
+('jesus', 'salvation', 'step4', 'Commit to following Jesus in your daily life'),
+('jesus', 'ministry_connection', 'title', 'Jesus and Our Ukrainian Ministry'),
+('jesus', 'ministry_connection', 'description', 'Our care for Ukrainian orphan children reflects Jesus'' heart for the vulnerable. Just as He welcomed children and cared for those in need, we open our arms to these precious children, showing them the love of Christ.'),
+('jesus', 'cta', 'title', 'Want to Know Jesus?'),
+('jesus', 'cta', 'description', 'If you would like to learn more about Jesus or make a decision to follow Him, we would love to talk with you.'),
 
 -- Beliefs page content
 ('beliefs', 'main', 'title', 'Our Beliefs'),
@@ -749,6 +787,69 @@ INSERT INTO public.content (page, section, key, value) VALUES
 ('beliefs', 'ministry_connection', 'ministry_description', 'Our care for Ukrainian orphan children reflects our belief in God''s heart for the vulnerable and our call to love our neighbors.'),
 ('beliefs', 'cta', 'cta_title', 'Want to Learn More?'),
 ('beliefs', 'cta', 'cta_description', 'Join us for worship and discover how these beliefs come alive in our church community.'),
+
+-- Prayer page content (새로 추가)
+('prayer', 'main', 'title', 'Prayer Requests'),
+('prayer', 'main', 'description', 'Share your prayer requests with our church family. We believe in the power of prayer and want to lift up your needs before God together.'),
+('prayer', 'categories', 'title', 'Prayer Categories'),
+('prayer', 'categories', 'ukraine_title', 'Ukraine & Refugees'),
+('prayer', 'categories', 'ukraine_description', 'Prayers for Ukrainian families, children, and the ongoing crisis.'),
+('prayer', 'categories', 'church_title', 'Bozhiymir Church'),
+('prayer', 'categories', 'church_description', 'Prayers for our church, ministries, and leadership.'),
+('prayer', 'categories', 'members_title', 'Church Members'),
+('prayer', 'categories', 'members_description', 'Personal prayer requests from our church family.'),
+('prayer', 'categories', 'children_title', 'Children & Youth'),
+('prayer', 'categories', 'children_description', 'Special prayers for our young ones and their needs.'),
+('prayer', 'guidelines', 'title', 'Prayer Guidelines'),
+('prayer', 'guidelines', 'guideline1', 'Please be respectful and appropriate in your prayer requests'),
+('prayer', 'guidelines', 'guideline2', 'Avoid sharing personal details that should remain private'),
+('prayer', 'guidelines', 'guideline3', 'Our prayer team will pray for all requests regularly'),
+('prayer', 'guidelines', 'guideline4', 'Feel free to share updates or answered prayers'),
+('prayer', 'scripture', 'title', 'God Hears Our Prayers'),
+('prayer', 'scripture', 'quote', 'Do not be anxious about anything, but in every situation, by prayer and petition, with thanksgiving, present your requests to God.'),
+('prayer', 'scripture', 'reference', 'Philippians 4:6'),
+('prayer', 'cta', 'title', 'Submit a Prayer Request'),
+('prayer', 'cta', 'description', 'Share your prayer needs with our loving church community.'),
+
+-- Thanks page content (새로 추가)
+('thanks', 'main', 'title', 'Gratitude & Testimonies'),
+('thanks', 'main', 'description', 'Share your testimonies, gratitude, and praise reports with our church family. Let us celebrate God''s goodness together!'),
+('thanks', 'purpose', 'title', 'Why Share Gratitude?'),
+('thanks', 'purpose', 'description', 'Sharing our testimonies encourages others, builds faith, and gives glory to God for His faithfulness in our lives.'),
+('thanks', 'categories', 'title', 'What to Share'),
+('thanks', 'categories', 'category1', 'Answered prayers and God''s provision'),
+('thanks', 'categories', 'category2', 'Personal testimonies of God''s work in your life'),
+('thanks', 'categories', 'category3', 'Gratitude for church community and support'),
+('thanks', 'categories', 'category4', 'Praise for healing, breakthrough, or blessing'),
+('thanks', 'categories', 'category5', 'Thanksgiving for Ukrainian ministry impact'),
+('thanks', 'scripture', 'title', 'Give Thanks'),
+('thanks', 'scripture', 'quote', 'Give thanks to the Lord, for he is good; his love endures forever.'),
+('thanks', 'scripture', 'reference', 'Psalm 107:1'),
+('thanks', 'filters', 'title', 'Filter Posts'),
+('thanks', 'filters', 'all_posts', 'All Posts'),
+('thanks', 'filters', 'admin_posts', 'Leadership'),
+('thanks', 'filters', 'user_posts', 'Members'),
+('thanks', 'filters', 'child_posts', 'Children'),
+('thanks', 'cta', 'title', 'Share Your Testimony'),
+('thanks', 'cta', 'description', 'Tell us how God has been working in your life!'),
+
+-- Word page content (새로 추가)
+('word', 'main', 'title', 'Daily Word'),
+('word', 'main', 'description', 'Discover God''s Word for today. Each day brings a new scripture, reflection, and opportunity to grow in faith.'),
+('word', 'purpose', 'title', 'Why Daily Scripture?'),
+('word', 'purpose', 'description', 'Regular time in God''s Word strengthens our faith, provides guidance, and helps us grow closer to Jesus each day.'),
+('word', 'navigation', 'title', 'Scripture Calendar'),
+('word', 'navigation', 'description', 'Browse through recent daily scriptures or catch up on what you might have missed.'),
+('word', 'features', 'title', 'Features'),
+('word', 'features', 'feature1', 'Daily scripture verses with reflection'),
+('word', 'features', 'feature2', 'Beautiful background images'),
+('word', 'features', 'feature3', 'Community reactions and comments'),
+('word', 'features', 'feature4', 'Easy sharing with friends and family'),
+('word', 'scripture', 'title', 'The Power of God''s Word'),
+('word', 'scripture', 'quote', 'All Scripture is God-breathed and is useful for teaching, rebuking, correcting and training in righteousness.'),
+('word', 'scripture', 'reference', '2 Timothy 3:16'),
+('word', 'cta', 'title', 'Start Your Day with God'),
+('word', 'cta', 'description', 'Make daily scripture reading a part of your spiritual journey.'),
 
 -- Story page content (***수정되어 추가된 부분***)
 ('story', 'main', 'title', 'Our Story'),
@@ -784,7 +885,6 @@ INSERT INTO public.content (page, section, key, value) VALUES
 ('story', 'ministry_highlight', 'highlight_quote', '"Religion that God our Father accepts as pure and faultless is this: to look after orphans and widows in their distress." - James 1:27'),
 ('story', 'cta', 'cta_title', 'Want to Learn More?'),
 ('story', 'cta', 'cta_description', 'Join us for worship and discover how these beliefs come alive in our church community.'),
-
 
 -- Leadership page content
 -- 기존 leaders 배열의 내용을 content 테이블에 삽입
@@ -931,8 +1031,10 @@ INSERT INTO public.content (page, section, key, value) VALUES
 ('join', 'expect', 'expect_title_4', 'Kids Programs'),
 ('join', 'expect', 'expect_description_4', 'Safe and engaging environments for children of all ages.'),
 ('join', 'contact', 'visit_title', 'Plan Your Visit'),
-('join', 'contact', 'address', '123 Community Street\nPoland, OR 97201'),
-('join', 'contact', 'service_times', 'Sunday: 9:00 AM, 10:30 AM, 12:00 PM\nWednesday: 7:00 PM'),
+('join', 'contact', 'address', '123 Community Street
+Poland, OR 97201'),
+('join', 'contact', 'service_times', 'Sunday: 9:00 AM, 10:30 AM, 12:00 PM
+Wednesday: 7:00 PM'),
 ('join', 'contact', 'phone', '(503) 555-0123'),
 ('join', 'contact', 'email', 'info@bozhiymirchurch.com'),
 ('join', 'ministry_highlight', 'highlight_title', 'Our Special Calling'),

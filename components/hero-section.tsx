@@ -31,7 +31,7 @@ export default function HeroSection({ heroContent, isEditingPage, onContentChang
     if (intervalRef.current) clearInterval(intervalRef.current)
     intervalRef.current = setInterval(() => {
       setCurrentImageIndex((prevIndex) => (prevIndex + 1) % backgroundImages.length)
-    }, 5000)
+    }, 4000)
   }
 
   const stopAutoSlide = () => {
@@ -97,7 +97,11 @@ export default function HeroSection({ heroContent, isEditingPage, onContentChang
             />
           </div>
         ))}
-        <div className="absolute inset-0 bg-black/60"></div>
+        <div
+          className={`absolute inset-0 bg-black/60 transition-opacity duration-1000 ${
+            currentImageIndex === 4 || currentImageIndex === 5 ? "opacity-0" : "opacity-100"
+          }`}
+        ></div>
       </div>
 
       {/* 모바일 친화적 인디케이터 */}
@@ -116,12 +120,6 @@ export default function HeroSection({ heroContent, isEditingPage, onContentChang
           />
         ))}
       </div>
-
-      {/* 스와이프 힌트 (모바일에서만 표시) */}
-      <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2 text-white/70 text-xs md:hidden z-20">
-        ← 스와이프하여 이미지 변경 →
-      </div>
-
       {/* Floating Ukrainian Elements */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-20 left-10 w-2 h-2 md:w-3 md:h-3 bg-blue-400 rounded-full animate-pulse"></div>
@@ -130,7 +128,11 @@ export default function HeroSection({ heroContent, isEditingPage, onContentChang
         <div className="absolute bottom-60 right-32 w-2 h-2 md:w-3 md:h-3 bg-yellow-300 rounded-full animate-pulse delay-700"></div>
       </div>
 
-      <div className="relative z-10 text-center text-white px-4 max-w-4xl mx-auto">
+      <div
+        className={`relative z-10 text-center text-white px-4 max-w-4xl mx-auto transition-opacity duration-1000 ${
+          currentImageIndex === 4 || currentImageIndex === 5 ? "opacity-0" : "opacity-100"
+        }`}
+      >
         <h1 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold mb-3 md:mb-4 leading-tight">
           <EditableText
             page="home"
