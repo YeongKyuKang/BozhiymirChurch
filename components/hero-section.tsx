@@ -91,7 +91,10 @@ export default function HeroSection({ heroContent, isEditingPage, onContentChang
               alt={`Bozhiymir Church community photo ${index + 1}`}
               fill
               sizes="100vw"
-              style={{ objectFit: "cover", objectPosition: "center" }}
+              style={{
+                objectFit: index === 4 || index === 5 ? "contain" : "cover",
+                objectPosition: "center",
+              }}
               priority={index === 0}
               unoptimized={true}
             />
@@ -120,6 +123,7 @@ export default function HeroSection({ heroContent, isEditingPage, onContentChang
           />
         ))}
       </div>
+
       {/* Floating Ukrainian Elements */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-20 left-10 w-2 h-2 md:w-3 md:h-3 bg-blue-400 rounded-full animate-pulse"></div>
