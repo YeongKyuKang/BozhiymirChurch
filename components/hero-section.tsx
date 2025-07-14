@@ -1,3 +1,4 @@
+// components/hero-section.tsx
 "use client"
 import { useState, useEffect, useRef } from "react"
 import type React from "react"
@@ -22,9 +23,12 @@ export default function HeroSection({ heroContent, isEditingPage, onContentChang
     "/images/bozhiymir3.jpg",
     "/images/bozhiymir4.jpg",
     "/images/bozhiymir5.jpg",
-    "/images/bozhiymir6.jpg",
-    "/images/bozhiymir7.jpg",
+    "/images/bozhiymir6.jpg", // index 4
+    "/images/bozhiymir7.jpg", // index 5
   ]
+
+  // Define the fixed background image URL
+  const fixedBackgroundImageUrl = "/images/bozhiymir_fixed_background.jpg"; // You can change this path to your desired fixed image
 
   // 자동 슬라이드 기능
   const startAutoSlide = () => {
@@ -78,6 +82,20 @@ export default function HeroSection({ heroContent, isEditingPage, onContentChang
 
   return (
     <section className="relative h-[70vh] md:h-[80vh] lg:h-screen flex items-center justify-center overflow-hidden pt-16 md:pt-20 lg:pt-24">
+      {/* Fixed background image - always present at the lowest layer */}
+      <div className="absolute inset-0 z-0">
+        <Image
+          src={fixedBackgroundImageUrl}
+          alt="Fixed Background"
+          fill
+          sizes="100vw"
+          style={{ objectFit: "cover", objectPosition: "center" }}
+          priority // Prioritize loading of the fixed background
+          unoptimized={true}
+        />
+      </div>
+
+      {/* Dynamic images carousel */}
       <div className="absolute inset-0" onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}>
         {backgroundImages.map((image, index) => (
           <div
@@ -85,6 +103,9 @@ export default function HeroSection({ heroContent, isEditingPage, onContentChang
             className={`absolute inset-0 transition-opacity duration-1000 ${
               index === currentImageIndex ? "opacity-100" : "opacity-0"
             } flex items-center justify-center`}
+            // Adjust z-index for images that should overlap the fixed background.
+            // Other images will fade in/out over a dynamic black overlay.
+            style={{ zIndex: (index === 4 || index === 5) ? 20 : 10 }}
           >
             <Image
               src={image || "/placeholder.svg"}
@@ -95,20 +116,23 @@ export default function HeroSection({ heroContent, isEditingPage, onContentChang
                 objectFit: index === 4 || index === 5 ? "contain" : "cover",
                 objectPosition: "center",
               }}
-              priority={index === 0}
+              priority={index === 0} // Only prioritize the first carousel image
               unoptimized={true}
             />
           </div>
         ))}
+
+        {/* Black overlay: show only when currentImageIndex is NOT 4 or 5 */}
         <div
           className={`absolute inset-0 bg-black/60 transition-opacity duration-1000 ${
             currentImageIndex === 4 || currentImageIndex === 5 ? "opacity-0" : "opacity-100"
           }`}
+          style={{ zIndex: 15 }} // Z-index to be above fixed background but below special images (index 4, 5)
         ></div>
       </div>
 
-      {/* 모바일 친화적 인디케이터 */}
-      <div className="absolute bottom-4 md:bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-2 z-20">
+      {/* 모바일 친화적 인디케이터 (z-index adjusted to be on top) */}
+      <div className="absolute bottom-4 md:bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-2 z-30">
         {backgroundImages.map((_, index) => (
           <button
             key={index}
@@ -124,8 +148,8 @@ export default function HeroSection({ heroContent, isEditingPage, onContentChang
         ))}
       </div>
 
-      {/* Floating Ukrainian Elements */}
-      <div className="absolute inset-0 pointer-events-none">
+      {/* Floating Ukrainian Elements (z-index adjusted to be on top) */}
+      <div className="absolute inset-0 pointer-events-none z-30">
         <div className="absolute top-20 left-10 w-2 h-2 md:w-3 md:h-3 bg-blue-400 rounded-full animate-pulse"></div>
         <div className="absolute top-32 right-20 w-1.5 h-1.5 md:w-2 md:h-2 bg-yellow-400 rounded-full animate-pulse delay-1000"></div>
         <div className="absolute bottom-40 left-16 w-3 h-3 md:w-4 md:h-4 bg-blue-300 rounded-full animate-pulse delay-500"></div>
@@ -133,9 +157,7 @@ export default function HeroSection({ heroContent, isEditingPage, onContentChang
       </div>
 
       <div
-        className={`relative z-10 text-center text-white px-4 max-w-4xl mx-auto transition-opacity duration-1000 ${
-          currentImageIndex === 4 || currentImageIndex === 5 ? "opacity-0" : "opacity-100"
-        }`}
+        className={`relative z-30 text-center text-white px-4 max-w-4xl mx-auto transition-opacity duration-1000`}
       >
         <h1 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold mb-3 md:mb-4 leading-tight">
           <EditableText
