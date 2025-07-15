@@ -1,3 +1,4 @@
+// components/header.tsx
 "use client"
 
 import { useState } from "react"
@@ -43,7 +44,7 @@ export default function Header() {
 
   return (
     <TooltipProvider>
-      <header className="absolute top-0 left-0 right-0 z-50 bg-black/10 backdrop-blur-sm">
+      <header className="absolute top-0 left-0 right-0 z-50 bg-black/70 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             {/* Logo - 크기 줄임 */}

@@ -28,7 +28,7 @@ export default function HeroSection({ heroContent, isEditingPage, onContentChang
   ]
 
   // Define the fixed background image URL
-  const fixedBackgroundImageUrl = "/images/bozhiymir_fixed_background.jpg"; // You can change this path to your desired fixed image
+  // const fixedBackgroundImageUrl = "/images/bozhiymir_fixed_background.jpg"; // You can change this path to your desired fixed image
 
   // 자동 슬라이드 기능
   const startAutoSlide = () => {
@@ -82,18 +82,8 @@ export default function HeroSection({ heroContent, isEditingPage, onContentChang
 
   return (
     <section className="relative h-[70vh] md:h-[80vh] lg:h-screen flex items-center justify-center overflow-hidden pt-16 md:pt-20 lg:pt-24">
-      {/* Fixed background image - always present at the lowest layer */}
-      <div className="absolute inset-0 z-0">
-        <Image
-          src={fixedBackgroundImageUrl}
-          alt="Fixed Background"
-          fill
-          sizes="100vw"
-          style={{ objectFit: "cover", objectPosition: "center" }}
-          priority // Prioritize loading of the fixed background
-          unoptimized={true}
-        />
-      </div>
+      {/* Fixed background layer now a plain black color */}
+      <div className="absolute inset-0 z-0 bg-black"></div>
 
       {/* Dynamic images carousel */}
       <div className="absolute inset-0" onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}>
@@ -103,9 +93,8 @@ export default function HeroSection({ heroContent, isEditingPage, onContentChang
             className={`absolute inset-0 transition-opacity duration-1000 ${
               index === currentImageIndex ? "opacity-100" : "opacity-0"
             } flex items-center justify-center`}
-            // Adjust z-index for images that should overlap the fixed background.
-            // Other images will fade in/out over a dynamic black overlay.
-            style={{ zIndex: (index === 4 || index === 5) ? 20 : 10 }}
+            // 모든 동적 이미지의 z-index를 10으로 통일하여 오버레이 아래에 위치하도록 합니다.
+            style={{ zIndex: 10 }}
           >
             <Image
               src={image || "/placeholder.svg"}
@@ -113,7 +102,7 @@ export default function HeroSection({ heroContent, isEditingPage, onContentChang
               fill
               sizes="100vw"
               style={{
-                objectFit: index === 4 || index === 5 ? "contain" : "cover",
+                objectFit: index === 4 || index === 5 ? "contain" : "cover", // 5번째, 6번째 이미지는 contain 유지
                 objectPosition: "center",
               }}
               priority={index === 0} // Only prioritize the first carousel image
@@ -122,12 +111,10 @@ export default function HeroSection({ heroContent, isEditingPage, onContentChang
           </div>
         ))}
 
-        {/* Black overlay: show only when currentImageIndex is NOT 4 or 5 */}
+        {/* Black overlay: now bg-black/70 as originally requested, over dynamic images */}
         <div
-          className={`absolute inset-0 bg-black/60 transition-opacity duration-1000 ${
-            currentImageIndex === 4 || currentImageIndex === 5 ? "opacity-0" : "opacity-100"
-          }`}
-          style={{ zIndex: 15 }} // Z-index to be above fixed background but below special images (index 4, 5)
+          className={`absolute inset-0 bg-black/70 transition-opacity duration-1000`}
+          style={{ zIndex: 15 }} // Z-index to be above dynamic images (z-10)
         ></div>
       </div>
 
@@ -157,7 +144,9 @@ export default function HeroSection({ heroContent, isEditingPage, onContentChang
       </div>
 
       <div
-        className={`relative z-30 text-center text-white px-4 max-w-4xl mx-auto transition-opacity duration-1000`}
+        className={`relative z-30 text-center text-white px-4 max-w-4xl mx-auto transition-opacity duration-1000 ${
+          currentImageIndex === 4 || currentImageIndex === 5 ? "opacity-0" : "opacity-100" // 5번째, 6번째 이미지에서 투명하게
+        }`}
       >
         <h1 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold mb-3 md:mb-4 leading-tight">
           <EditableText
