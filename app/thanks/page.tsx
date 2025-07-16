@@ -1,11 +1,15 @@
 // app/thanks/page.tsx
-
 import Header from "@/components/header";
 import Footer from "@/components/footer";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import ThanksPageClient from "@/components/thanks-page-client";
+import { format } from "date-fns"; // format 함수 임포트
+import { toZonedTime, formatInTimeZone } from 'date-fns-tz'; // toZonedTime, formatInTimeZone 임포트
+
+// 폴란드 시간대 정의
+const POLAND_TIMEZONE = 'Europe/Warsaw';
 
 async function fetchThanksContentAndPosts(searchParams: Record<string, string | string[]>) {
   const cookieStore = await cookies();
@@ -39,12 +43,19 @@ async function fetchThanksContentAndPosts(searchParams: Record<string, string | 
     console.error("Error fetching Thanks page content:", contentError);
   }
 
-  const { time, role, date, sort, timezoneOffset } = searchParams;
+  const { role, date, sort, timezoneOffset } = searchParams;
 
-  const timeFilter = (Array.isArray(time) ? time[0] : time) || "latest";
+  // 기본값 설정: 역할은 'all', 정렬은 'created_at_desc' (최신순)
   const roleFilter = (Array.isArray(role) ? role[0] : role) || "all";
-  const dateFilter = Array.isArray(date) ? date[0] : date;
   const sortBy = (Array.isArray(sort) ? sort[0] : sort) || "created_at_desc";
+
+  // 날짜 필터 기본값 설정: searchParams에 없으면 오늘 폴란드 날짜로 설정
+  let dateFilter = Array.isArray(date) ? date[0] : date;
+  if (!dateFilter) {
+    const nowInPoland = toZonedTime(new Date(), POLAND_TIMEZONE);
+    dateFilter = format(nowInPoland, 'yyyy-MM-dd'); // 'YYYY-MM-DD' 형식으로 설정
+  }
+  
   const clientTimezoneOffset = timezoneOffset
     ? parseInt(Array.isArray(timezoneOffset) ? timezoneOffset[0] : timezoneOffset)
     : null;
@@ -75,6 +86,7 @@ async function fetchThanksContentAndPosts(searchParams: Record<string, string | 
       endOfLocalDay.setMinutes(endOfLocalDay.getMinutes() - clientTimezoneOffset);
       endOfDayUTC = endOfLocalDay.toISOString();
     } else {
+      // 클라이언트 타임존 오프셋이 없으면, 단순히 YYYY-MM-DD를 UTC 자정으로 간주
       const selectedDateUTC = new Date(Date.UTC(year, month, day));
       startOfDayUTC = selectedDateUTC.toISOString();
       selectedDateUTC.setUTCDate(selectedDateUTC.getUTCDate() + 1);

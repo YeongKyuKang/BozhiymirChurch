@@ -30,6 +30,12 @@ DROP POLICY IF EXISTS "Users can delete their own profile pictures" ON storage.o
 DROP POLICY IF EXISTS "Users can update their own profile pictures" ON storage.objects;
 DROP POLICY IF EXISTS "Users can upload their own profile pictures" ON storage.objects;
 DROP POLICY IF EXISTS "Anyone can view profile pictures" ON storage.objects;
+-- ✅ 추가: event-banners 스토리지 정책 삭제
+DROP POLICY IF EXISTS "Anyone can view event banners" ON storage.objects;
+DROP POLICY IF EXISTS "Admins can upload event banners" ON storage.objects;
+DROP POLICY IF EXISTS "Admins can update event banners" ON storage.objects;
+DROP POLICY IF EXISTS "Admins can delete event banners" ON storage.objects;
+-- 기존 정책 삭제 (계속)
 DROP POLICY IF EXISTS "Posts are public" ON public.posts;
 DROP POLICY IF EXISTS "Authenticated users can create posts" ON public.posts;
 DROP POLICY IF EXISTS "Post creators or admins can update" ON public.posts;
@@ -81,6 +87,7 @@ DROP POLICY IF EXISTS "Word reactions are public" ON public.word_reactions;
 DROP POLICY IF EXISTS "Authenticated users can add word reactions" ON public.word_reactions;
 DROP POLICY IF EXISTS "Users can remove their own word reactions" ON public.word_reactions;
 
+-- 기존 스토리지 정책 삭제 (중복 방지)
 DROP POLICY IF EXISTS "Anyone can view profile pictures" ON storage.objects;
 DROP POLICY IF EXISTS "Users can upload their own profile pictures" ON storage.objects;
 DROP POLICY IF EXISTS "Users can update their own profile pictures" ON storage.objects;
@@ -245,7 +252,8 @@ CREATE TABLE public.thanks_posts (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   author_profile_picture_url TEXT,
-  author_role TEXT
+  author_role TEXT,
+  category TEXT NOT NULL
 );
 
 -- thanks_comments 테이블 생성 (새로 추가: 감사 제목 댓글)
@@ -308,7 +316,11 @@ CREATE TABLE public.contact_forms (
   interests JSONB,
   message TEXT,
   is_read BOOLEAN DEFAULT FALSE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  age_group TEXT,
+  receive_updates BOOLEAN DEFAULT FALSE,
+  type TEXT,
+  subject TEXT
 );
 
 
@@ -676,6 +688,27 @@ CREATE POLICY "Admins can update word backgrounds" ON storage.objects
 CREATE POLICY "Admins can delete word backgrounds" ON storage.objects
   FOR DELETE USING (
     bucket_id = 'word-backgrounds' AND EXISTS (SELECT 1 FROM public.users WHERE users.id = auth.uid() AND users.role = 'admin')
+  );
+
+  -- ✅ 추가: event-banners 스토리지 버킷 생성
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('event-banners', 'event-banners', true)
+ON CONFLICT (id) DO NOTHING;
+
+-- ✅ 추가: event-banners에 대한 스토리지 정책 설정
+CREATE POLICY "Anyone can view event banners" ON storage.objects
+  FOR SELECT USING (bucket_id = 'event-banners');
+CREATE POLICY "Admins can upload event banners" ON storage.objects
+  FOR INSERT WITH CHECK (
+    bucket_id = 'event-banners' AND EXISTS (SELECT 1 FROM public.users WHERE users.id = auth.uid() AND users.role = 'admin')
+  );
+CREATE POLICY "Admins can update event banners" ON storage.objects
+  FOR UPDATE USING (
+    bucket_id = 'event-banners' AND EXISTS (SELECT 1 FROM public.users WHERE users.id = auth.uid() AND users.role = 'admin')
+  );
+CREATE POLICY "Admins can delete event banners" ON storage.objects
+  FOR DELETE USING (
+    bucket_id = 'event-banners' AND EXISTS (SELECT 1 FROM public.users WHERE users.id = auth.uid() AND users.role = 'admin')
   );
 
 
