@@ -304,7 +304,7 @@ export default function SpecificEventsPageClient({ initialEvents, initialContent
 
       {/* Events List */}
       <section className="py-8">
-        <div className="container mx-auto px-4">
+         <div className="container mx-auto px-4 max-w-4xl">
           {filteredEvents.length === 0 ? (
             <div className="text-center py-10">
               <div className="text-5xl mb-4">😔</div>
@@ -314,10 +314,10 @@ export default function SpecificEventsPageClient({ initialEvents, initialContent
           ) : (
             <div className="grid grid-cols-1 gap-6">
               {filteredEvents.map((event) => (
-                <Link key={event.id} href={`/events/${event.slug}`} passHref>
-                  <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 transform hover:scale-105 flex flex-col lg:flex-row cursor-pointer border border-gray-200 shadow-md bg-white max-w-4xl mx-auto"> {/* Added max-w-2xl and mx-auto */}
+                <Card key={event.id} className="overflow-hidden hover:shadow-lg transition-all duration-300 transform hover:scale-105 flex flex-col lg:flex-row cursor-pointer border border-gray-200 shadow-md bg-white w-full h-[220px]"> {/* 고정 높이 적용 */}
+                  <Link href={`/events/${event.slug}`} passHref className="flex flex-grow flex-col lg:flex-row w-full h-full">
                     {event.image_url && (
-                      <div className="relative w-full h-28 lg:h-full lg:w-[220px] flex-shrink-0"> {/* h-28, lg:w-[120px] */}
+                      <div className="relative w-full h-28 lg:h-full lg:w-[220px] flex-shrink-0">
                         <img
                           src={event.image_url || "/placeholder.svg"}
                           alt={event.title}
@@ -344,7 +344,9 @@ export default function SpecificEventsPageClient({ initialEvents, initialContent
                         <h3 className="text-lg font-bold text-blue-900 mb-0.5 line-clamp-2">
                           {event.title}
                         </h3>
-                        <p className="text-sm text-gray-700 mb-1 line-clamp-2 leading-relaxed">{event.description}</p>
+                        <p className="text-sm text-gray-700 mb-1 line-clamp-3 leading-relaxed overflow-hidden"> {/* line-clamp-3 및 overflow-hidden 적용 */}
+                          {event.description}
+                        </p>
                       </div>
 
                       <div className="space-y-0.5 text-gray-700 border-t border-blue-100 pt-1">
@@ -371,8 +373,8 @@ export default function SpecificEventsPageClient({ initialEvents, initialContent
                         )}
                       </div>
                     </CardContent>
-                  </Card>
-                </Link>
+                  </Link>
+                </Card>
               ))}
             </div>
           )}
