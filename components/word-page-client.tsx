@@ -444,10 +444,6 @@ export default function WordPageClient({ initialContent, initialWordPosts }: Wor
                         <Download className="h-3 w-3 text-gray-500" />
                         <span className="text-xs">다운로드</span>
                       </Button>
-                      <Button variant="ghost" size="sm" onClick={() => handleMarkAsRead(currentWordPost.id)} disabled={!user} className="flex items-center space-x-0.5 px-1 py-0.5">
-                        <BookOpen className="h-3 w-3 text-gray-500" />
-                        <span className="text-xs">읽음</span>
-                      </Button>
                     </div>
                   </div>
                 </Card>
