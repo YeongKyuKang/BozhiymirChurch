@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { MessageCircle, BookOpen, Calendar, Users, Settings } from "lucide-react"; // Calendar 아이콘 추가
+import { MessageCircle, BookOpen, Calendar, Users, Settings, ArrowLeft } from "lucide-react";
 
 export default function AdminDashboardPage() {
   const { user, userRole, loading: authLoading } = useAuth();
@@ -23,7 +23,7 @@ export default function AdminDashboardPage() {
   }
 
   if (!user || userRole !== 'admin') {
-    router.push('/'); // 관리자가 아니면 홈으로 리다이렉트
+    router.push('/');
     return (
       <div className="min-h-screen flex items-center justify-center text-xl text-gray-600">
         관리자 권한이 필요합니다.
@@ -34,6 +34,18 @@ export default function AdminDashboardPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white py-16 pt-24 px-4">
       <div className="container mx-auto max-w-5xl">
+        {/* 뒤로가기 버튼을 좌측 상단에 배치 */}
+        <div className="mb-8"> {/* 제목 위쪽에 여백 추가 */}
+          <Button
+            variant="outline"
+            className="bg-gray-700 hover:bg-gray-600 text-white border-gray-600"
+            onClick={() => router.back()}
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            뒤로가기
+          </Button>
+        </div>
+
         <h1 className="text-4xl md:text-5xl font-bold text-center mb-12">관리자 대시보드</h1>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -54,7 +66,7 @@ export default function AdminDashboardPage() {
           {/* 이벤트 관리 카드 */}
           <Card className="bg-gray-800 text-white shadow-lg border border-gray-700 hover:border-yellow-500 transition-all duration-300 transform hover:scale-105">
             <CardHeader className="text-center">
-              <Calendar className="h-16 w-16 mx-auto mb-4 text-yellow-400" /> {/* Calendar 아이콘 사용 */}
+              <Calendar className="h-16 w-16 mx-auto mb-4 text-yellow-400" />
               <CardTitle className="text-2xl font-bold">이벤트 관리</CardTitle>
             </CardHeader>
             <CardContent className="text-center">

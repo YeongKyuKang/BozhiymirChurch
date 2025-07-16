@@ -130,6 +130,10 @@ export type Database = {
           message: string | null
           is_read: boolean
           created_at: string
+          age_group: string | null // 추가
+          receive_updates: boolean // 추가
+          type: string | null // 추가
+          subject: string | null // 추가
         }
         Insert: {
           id?: string
@@ -141,6 +145,10 @@ export type Database = {
           message?: string | null
           is_read?: boolean
           created_at?: string
+          age_group?: string | null // 추가
+          receive_updates?: boolean // 추가
+          type?: string | null // 추가
+          subject?: string | null // 추가
         }
         Update: {
           id?: string
@@ -152,6 +160,10 @@ export type Database = {
           message?: string | null
           is_read?: boolean
           created_at?: string
+          age_group?: string | null // 추가
+          receive_updates?: boolean // 추가
+          type?: string | null // 추가
+          subject?: string | null // 추가
         }
       }
       word_posts: {
@@ -189,7 +201,7 @@ export type Database = {
           image_url?: string | null
         }
       }
-      word_reactions: { // ✅ 유지: word_reactions 테이블 정의는 유지 (좋아요 기능 유지)
+      word_reactions: {
         Row: {
           id: string
           user_id: string
@@ -212,32 +224,6 @@ export type Database = {
           created_at?: string
         }
       }
-      // word_comments: { // ✅ 제거
-      //   Row: {
-      //     id: string
-      //     post_id: string
-      //     author_id: string
-      //     comment: string
-      //     author_nickname: string
-      //     created_at: string
-      //   }
-      //   Insert: {
-      //     id?: string
-      //     post_id: string
-      //     author_id: string
-      //     comment: string
-      //     author_nickname: string
-      //     created_at?: string
-      //   }
-      //   Update: {
-      //     id?: string
-      //     post_id?: string
-      //     author_id?: string
-      //     comment?: string
-      //     author_nickname?: string
-      //     created_at?: string
-      //   }
-      // }
     }
     Views: {
       [_ in never]: never

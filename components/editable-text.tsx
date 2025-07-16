@@ -1,3 +1,4 @@
+// components/editable-text.tsx
 "use client"; // 이 파일은 클라이언트 컴포넌트임을 명시합니다.
 
 import * as React from "react";
@@ -123,7 +124,6 @@ const EditableText: React.FC<EditableTextProps> = ({
           />
         )
       ) : (
-        // 뷰 모드: Tag prop으로 지정된 요소를 렌더링
         <Tag
           className={cn(showIndividualEditIndicator ? "group-hover/edit:bg-yellow-100 transition-colors cursor-pointer p-1 rounded-md" : "")}
           onDoubleClick={showIndividualEditIndicator ? enterEditMode : undefined}

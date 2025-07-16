@@ -3,33 +3,31 @@
 
 import * as React from "react";
 import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "next/navigation"; // useRouter 임포트
 import { useAuth } from "@/contexts/auth-context";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Loader2, CheckCircle, XCircle, Trash2, MessageCircle } from "lucide-react";
+import { Loader2, CheckCircle, XCircle, Trash2, MessageCircle, ArrowLeft } from "lucide-react"; // ArrowLeft 아이콘 추가
 import { format } from "date-fns";
 
 interface ContactFormEntry {
   id: string;
-  full_name: string;
+  first_name: string; // full_name -> first_name
+  last_name: string; // 추가: last_name
   email: string;
-  phone_number: string | null;
-  age_group: string | null;
-  interests: string[] | null;
-  message: string;
-  receive_updates: boolean;
-  type: string | null; // 예: 'join_request', 'general_inquiry'
-  subject: string | null; // 문의 제목
+  phone: string | null; // phone_number -> phone
+  interests: string[] | Record<string, boolean> | null; // interests 타입 변경
+  message: string | null; // message 타입 변경
+  is_read: boolean; // is_read 추가
   created_at: string;
 }
 
 export default function AdminContactFormsPage() {
   const { user, userRole, loading: authLoading } = useAuth();
-  const router = useRouter();
+  const router = useRouter(); // useRouter 훅 사용
 
   const [formEntries, setFormEntries] = useState<ContactFormEntry[]>([]);
   const [loadingEntries, setLoadingEntries] = useState(true);
@@ -94,11 +92,21 @@ export default function AdminContactFormsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white py-16 pt-24 px-4"> {/* Admin Dashboard style */}
-      <div className="container mx-auto max-w-5xl">
-        <h1 className="text-4xl font-bold text-center mb-12">문의 양식 관리</h1>
-        
-        <Card className="shadow-lg bg-gray-800 border border-gray-700 text-white"> {/* Admin Dashboard card style */}
+    
+    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white py-16 pt-24 px-4">
+      <div className="container mx-auto max-w-3xl">
+              {/* 뒤로가기 버튼을 좌측 상단에 배치 */}
+              <div className="mb-8"> {/* 제목 위쪽에 여백 추가 */}
+                <Button
+                  variant="outline"
+                  className="bg-gray-700 hover:bg-gray-600 text-white border-gray-600"
+                  onClick={() => router.back()}
+                >
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  뒤로가기
+                </Button>
+              </div>
+        <Card className="shadow-lg bg-gray-800 border border-gray-700 text-white">
           <CardHeader>
             <CardTitle className="text-2xl font-bold text-white">제출된 문의</CardTitle>
             <CardDescription className="text-gray-400">사용자들이 제출한 모든 문의 양식을 확인합니다.</CardDescription>
@@ -119,14 +127,16 @@ export default function AdminContactFormsPage() {
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <Table className="min-w-full bg-gray-700 rounded-md overflow-hidden"> {/* Table style */}
+                <Table className="min-w-full bg-gray-700 rounded-md overflow-hidden">
                   <TableHeader className="bg-gray-600">
                     <TableRow>
-                      <TableHead className="text-gray-200">유형</TableHead>
-                      <TableHead className="text-gray-200">제목</TableHead>
+                      {/* ContactFormEntry 인터페이스에 맞춰 수정 */}
                       <TableHead className="text-gray-200">이름</TableHead>
                       <TableHead className="text-gray-200">이메일</TableHead>
+                      <TableHead className="text-gray-200">전화</TableHead>
+                      <TableHead className="text-gray-200">관심분야</TableHead>
                       <TableHead className="text-gray-200">메시지</TableHead>
+                      <TableHead className="text-gray-200">읽음</TableHead>
                       <TableHead className="text-gray-200">날짜</TableHead>
                       <TableHead className="text-gray-200 text-right">관리</TableHead>
                     </TableRow>
@@ -134,11 +144,21 @@ export default function AdminContactFormsPage() {
                   <TableBody>
                     {formEntries.map((entry) => (
                       <TableRow key={entry.id} className="border-b border-gray-600 last:border-b-0 hover:bg-gray-600">
-                        <TableCell className="py-3 px-4 text-gray-200">{entry.type || '일반'}</TableCell>
-                        <TableCell className="py-3 px-4 text-gray-200">{entry.subject || '-'}</TableCell>
-                        <TableCell className="py-3 px-4 text-gray-200">{entry.full_name}</TableCell>
+                        <TableCell className="py-3 px-4 text-gray-200">{entry.first_name} {entry.last_name}</TableCell>
                         <TableCell className="py-3 px-4 text-gray-200">{entry.email}</TableCell>
-                        <TableCell className="py-3 px-4 text-gray-200 max-w-[200px] truncate">{entry.message}</TableCell>
+                        <TableCell className="py-3 px-4 text-gray-200">{entry.phone || '-'}</TableCell>
+                        <TableCell className="py-3 px-4 text-gray-200">
+                          {Array.isArray(entry.interests)
+                            ? entry.interests.join(', ')
+                            : (entry.interests && typeof entry.interests === 'object'
+                              ? Object.keys(entry.interests).filter(key => entry.interests && (entry.interests as Record<string, boolean>)[key]).join(', ')
+                              : '-')
+                          }
+                        </TableCell>
+                        <TableCell className="py-3 px-4 text-gray-200 max-w-[200px] truncate">{entry.message || '-'}</TableCell>
+                        <TableCell className="py-3 px-4 text-gray-200">
+                          {entry.is_read ? <CheckCircle className="h-4 w-4 text-green-500" /> : <XCircle className="h-4 w-4 text-red-500" />}
+                        </TableCell>
                         <TableCell className="py-3 px-4 text-gray-200">{format(new Date(entry.created_at), 'yyyy-MM-dd HH:mm')}</TableCell>
                         <TableCell className="py-3 px-4 text-right">
                           <Button

@@ -2,7 +2,7 @@
 "use client"; 
 
 import * as React from "react";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback } from "react"; 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
 import { supabase } from "@/lib/supabase";
@@ -11,14 +11,14 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Calendar } from "@/components/ui/calendar";
+import { Calendar } from "@/components/ui/calendar"; 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { format, startOfDay, subDays, addDays } from "date-fns";
-import { toZonedTime, formatInTimeZone } from 'date-fns-tz'; // ✅ zonedTimeToUtc, utcToZonedTime 임포트 제거
+import { format, startOfDay, subDays, addDays } from "date-fns"; 
+import { toZonedTime, formatInTimeZone } from 'date-fns-tz'; 
 import {
   Settings, Save, X, MessageCircle, Heart, Download, BookOpen,
   Calendar as CalendarIcon, Frown, ImageIcon, Upload, Loader2,
-  CheckCircle, XCircle
+  CheckCircle, XCircle, ArrowLeft
 } from "lucide-react";
 import imageCompression from "browser-image-compression";
 
@@ -34,7 +34,7 @@ interface WordPost {
   image_url?: string | null;
 }
 
-// ✅ 폴란드 시간대 정의
+// 폴란드 시간대 정의 (이전과 동일)
 const POLAND_TIMEZONE = 'Europe/Warsaw';
 
 export default function AdminWordPostsPage() {
@@ -43,8 +43,12 @@ export default function AdminWordPostsPage() {
   const searchParams = useSearchParams();
   const postId = searchParams.get('id');
 
-  // ✅ wordDate 초기값을 폴란드 시간 기준의 오늘 날짜 자정으로 설정
-  const [wordDate, setWordDate] = useState<Date | undefined>(startOfDay(toZonedTime(new Date(), POLAND_TIMEZONE)));
+  // 변경: wordDate 초기값을 현재 날짜의 UTC 자정으로 설정
+  // 이렇게 하면 사용자의 로컬 시간대와 관계없이 날짜가 일관되게 유지됩니다.
+  const [wordDate, setWordDate] = useState<Date | undefined>(() => {
+    const now = new Date();
+    return new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
+  });
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -80,9 +84,10 @@ export default function AdminWordPostsPage() {
           if (data) {
             setTitle(data.title);
             setContent(data.content);
-            // ✅ 불러온 날짜를 폴란드 시간 기준으로 변환
-            const fetchedDate = startOfDay(toZonedTime(new Date(data.word_date), POLAND_TIMEZONE));
-            setWordDate(fetchedDate);
+            // 변경: 불러온 'YYYY-MM-DD' 문자열을 UTC Date 객체로 변환하여 설정
+            // month는 0-indexed이므로 1을 빼줍니다.
+            const [year, month, day] = data.word_date.split('-').map(Number);
+            setWordDate(new Date(Date.UTC(year, month - 1, day))); 
             setImageUrlPreview(data.image_url || null);
           }
         };
@@ -94,8 +99,9 @@ export default function AdminWordPostsPage() {
   useEffect(() => {
     if (wordDate) {
       const checkDateConflict = async () => {
-        // ✅ wordDate (이미 폴란드 시간)를 UTC로 포맷
-        const formattedDateForQuery = formatInTimeZone(wordDate, 'UTC', 'yyyy-MM-dd');
+        // 변경: UTC Date 객체에서 'YYYY-MM-DD' 문자열을 추출하여 쿼리에 사용
+        // toISOString().substring(0, 10)은 Date 객체의 UTC 날짜 부분을 'YYYY-MM-DD' 형식으로 반환합니다.
+        const formattedDateForQuery = wordDate.toISOString().substring(0, 10); 
         const { data, error } = await supabase
           .from('word_posts')
           .select('id')
@@ -203,8 +209,8 @@ export default function AdminWordPostsPage() {
     const postData = {
       title,
       content,
-      // ✅ wordDate (폴란드 시간)를 UTC로 포맷하여 저장
-      word_date: formatInTimeZone(wordDate, 'UTC', 'yyyy-MM-dd'),
+      // 변경: UTC Date 객체에서 'YYYY-MM-DD' 문자열을 추출하여 저장
+      word_date: wordDate.toISOString().substring(0, 10), 
       author_id: user.id,
       author_nickname: userProfile.nickname || user.email || '관리자',
       image_url: finalImageUrl,
@@ -239,8 +245,9 @@ export default function AdminWordPostsPage() {
     if (!postId) {
       setTitle("");
       setContent("");
-      // ✅ 새 게시물 작성 후 초기 날짜를 폴란드 시간 기준의 오늘 날짜 자정으로 설정
-      setWordDate(startOfDay(toZonedTime(new Date(), POLAND_TIMEZONE)));
+      // 변경: 새 게시물 작성 후 초기 날짜를 현재 날짜의 UTC 자정으로 설정
+      const now = new Date();
+      setWordDate(new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate())));
       setImageFile(null);
       setImageUrlPreview(null);
     }
@@ -248,21 +255,19 @@ export default function AdminWordPostsPage() {
     router.push('/word');
   };
 
+  // 변경: getDisabledDays 함수도 UTC Date 객체를 기준으로 작동하도록 수정
   const getDisabledDays = useCallback(() => { 
-    // ✅ 로컬 시간의 "오늘"을 폴란드 시간대로 변환하여 기준점 설정
-    const todayPoland = startOfDay(toZonedTime(new Date(), POLAND_TIMEZONE)); 
-    const fiveDaysAgoPoland = startOfDay(subDays(todayPoland, 5)); 
-    
-    // ✅ 미래 날짜 (내일 이후) 및 5일 이전 과거 날짜를 폴란드 시간 기준으로 비활성화
-    // Date 객체는 UTC 타임스탬프를 기반하므로, toZonedTime으로 원하는 시간대의 날짜를 만들고
-    // startOfDay를 적용하여 해당 시간대의 '자정'을 나타내는 Date 객체를 생성
+    const now = new Date();
+    const todayUtc = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
+    const fiveDaysAgoUtc = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate() - 5));
+
     const futureDates = { 
-      from: startOfDay(addDays(todayPoland, 1)), 
-      to: toZonedTime(new Date(2100, 0, 1), POLAND_TIMEZONE) 
+      from: new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate() + 1)), 
+      to: new Date(Date.UTC(2100, 0, 1)) 
     }; 
     const pastBeyondFiveDays = { 
-      from: toZonedTime(new Date(1900, 0, 1), POLAND_TIMEZONE), 
-      to: subDays(fiveDaysAgoPoland, 1) 
+      from: new Date(Date.UTC(1900, 0, 1)), 
+      to: new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate() - 6)) // 5일 전보다 하루 더 이전
     }; 
     
     return [
@@ -270,6 +275,16 @@ export default function AdminWordPostsPage() {
       pastBeyondFiveDays
     ];
   }, []);
+
+  // handleDateSelect 함수 정의 추가
+  const handleDateSelect = (date: Date | undefined) => {
+    if (date) {
+      // Calendar에서 선택된 로컬 Date 객체를 UTC 자정 Date 객체로 변환
+      setWordDate(new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())));
+    } else {
+      setWordDate(undefined);
+    }
+  };
 
   if (authLoading || (!user && !authLoading) || (user && userRole !== 'admin')) {
     return (
@@ -282,6 +297,18 @@ export default function AdminWordPostsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white py-16 pt-24 px-4">
       <div className="container mx-auto max-w-3xl">
+        {/* 뒤로가기 버튼을 좌측 상단에 배치 */}
+        <div className="mb-8"> {/* 제목 위쪽에 여백 추가 */}
+          <Button
+            variant="outline"
+            className="bg-gray-700 hover:bg-gray-600 text-white border-gray-600"
+            onClick={() => router.back()}
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            뒤로가기
+          </Button>
+        </div>
+
         <Card className="shadow-lg bg-gray-800 border border-gray-700 text-white">
           <CardHeader>
             <CardTitle className="text-3xl font-bold text-white">
@@ -307,14 +334,15 @@ export default function AdminWordPostsPage() {
                 <Calendar
                   mode="single"
                   selected={wordDate}
-                  // ✅ 날짜 선택 시 Calendar에서 반환된 로컬 Date 객체를 폴란드 시간대 기준으로 변환하여 저장
-                  onSelect={(date) => setWordDate(date ? toZonedTime(date, POLAND_TIMEZONE) : undefined)}
+                  // 변경: Calendar에서 반환된 로컬 Date 객체를 UTC 자정 Date 객체로 변환하여 저장
+                  onSelect={handleDateSelect} 
                   initialFocus
                   disabled={getDisabledDays()}
                   className="rounded-md border shadow bg-gray-700 text-white border-gray-600"
                 />
                 {wordDate && (
                   <p className="text-sm text-gray-400 mt-2">
+                    {/* 변경: wordDate는 이제 UTC Date 객체이므로, formatInTimeZone을 사용하여 사용자에게 친숙한 폴란드 시간대로 표시 */}
                     선택된 날짜: {formatInTimeZone(wordDate, POLAND_TIMEZONE, 'yyyy년 MM월 dd일 (EEE)')}
                   </p>
                 )}

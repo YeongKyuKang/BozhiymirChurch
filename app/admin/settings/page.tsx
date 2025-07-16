@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Loader2, CheckCircle, XCircle, KeyRound } from "lucide-react";
+import { Loader2, CheckCircle, XCircle, KeyRound, ArrowLeft } from "lucide-react";
 
 export default function AdminSettingsPage() {
   const { user, userRole, loading: authLoading } = useAuth();
@@ -48,15 +48,12 @@ export default function AdminSettingsPage() {
     }
 
     try {
-      // Supabase Edge Function 또는 Admin API를 통해 비밀번호 변경
-      // 클라이언트에서 직접 user.update()를 사용하면 보안 문제가 있을 수 있으므로
-      // 여기서는 Next.js API 라우트를 통해 서버에서 처리하도록 가정합니다.
       const response = await fetch('/api/admin/set-admin-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ password: adminPassword }),
+        body: JSON.stringify({ newPassword: adminPassword }),
       });
 
       if (!response.ok) {
@@ -84,11 +81,23 @@ export default function AdminSettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white py-16 pt-24 px-4"> {/* Admin Dashboard style */}
-      <div className="container mx-auto max-w-3xl"> {/* max-w-5xl -> max-w-3xl for forms */}
+    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white py-16 pt-24 px-4">
+      <div className="container mx-auto max-w-3xl">
+        {/* 뒤로가기 버튼을 좌측 상단에 배치 */}
+        <div className="mb-8"> {/* 제목 위쪽에 여백 추가 */}
+          <Button
+            variant="outline"
+            className="bg-gray-700 hover:bg-gray-600 text-white border-gray-600"
+            onClick={() => router.back()}
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            뒤로가기
+          </Button>
+        </div>
+
         <h1 className="text-4xl font-bold text-center mb-12">사이트 설정</h1>
         
-        <Card className="shadow-lg bg-gray-800 border border-gray-700 text-white"> {/* Admin Dashboard card style */}
+        <Card className="shadow-lg bg-gray-800 border border-gray-700 text-white">
           <CardHeader>
             <CardTitle className="text-2xl font-bold text-white">관리자 비밀번호 변경</CardTitle>
             <CardDescription className="text-gray-400">관리자 계정의 비밀번호를 변경합니다.</CardDescription>

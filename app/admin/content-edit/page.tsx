@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/button";
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { Database } from '@/lib/supabase'; // Database 타입 임포트
+import { Database } from '@/lib/supabase';
+import { ArrowLeft } from "lucide-react"; // ArrowLeft 아이콘 추가
 
-export const revalidate = 0; // 페이지 캐싱 비활성화
+export const revalidate = 0;
 
 async function checkAdminAccess() {
   const cookieStore = cookies();
@@ -29,10 +30,9 @@ async function checkAdminAccess() {
     }
   );
 
-  // 사용자 인증 및 관리자 역할 확인
   const { data: user } = await supabase.auth.getUser();
   if (!user.user) {
-    redirect('/login'); // 로그인하지 않았으면 로그인 페이지로 리다이렉트
+    redirect('/login');
   }
 
   const { data: userProfile, error: profileError } = await supabase
@@ -43,12 +43,12 @@ async function checkAdminAccess() {
 
   if (profileError || userProfile?.role !== 'admin') {
     console.error('Admin access denied:', profileError);
-    redirect('/'); // 관리자가 아니면 홈으로 리다이렉트
+    redirect('/');
   }
 }
 
 export default async function AdminContentEditPage() {
-  await checkAdminAccess(); // 관리자 권한 확인
+  await checkAdminAccess();
 
   return (
     <>
@@ -63,6 +63,15 @@ export default async function AdminContentEditPage() {
           <Button asChild>
             <Link href="/admin">관리자 대시보드로 돌아가기</Link>
           </Button>
+          {/* 뒤로가기 버튼 추가 - Link 컴포넌트를 사용합니다. */}
+          <div className="mt-8 text-center">
+            <Button asChild variant="outline" className="bg-gray-700 hover:bg-gray-600 text-white border-gray-600">
+              <Link href="/admin">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                뒤로가기
+              </Link>
+            </Button>
+          </div>
         </div>
       </div>
       <Footer />

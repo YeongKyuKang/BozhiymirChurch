@@ -3,21 +3,17 @@
 
 import type React from "react"
 import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card" // CardHeader, CardTitle 추가
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Heart, Users, Calendar, Mail, Phone, MapPin, Handshake, Church, Lightbulb } from "lucide-react" // 모든 아이콘 임포트
+import { Heart, Users, Calendar, Mail, Phone, MapPin, Handshake, Church, Lightbulb } from "lucide-react"
 import EditableText from "@/components/editable-text"
 import { useToast } from "@/components/ui/use-toast"
-import Link from "next/link" // Link 컴포넌트 임포트
-
-// Supabase 클라이언트는 서버 컴포넌트에서 초기화되므로,
-// 클라이언트 컴포넌트에서는 직접 임포트하지 않고 API 라우트를 통해 통신합니다.
-// import { supabase } from "@/lib/supabase" // 이 부분은 제거
+import Link from "next/link"
 
 interface JoinPageClientProps {
   initialContent: Record<string, any>
@@ -28,9 +24,10 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
+    firstName: "",
+    lastName: "",
+    email: "", // email 필드
+    phone: "", // phone 필드
     age: "",
     interests: [] as string[],
     message: "",
@@ -40,18 +37,30 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
+    console.log("Form submission started. isSubmitting set to true."); // 로그 1
 
-    // 필수 필드 유효성 검사
-    if (!formData.name || !formData.email || !formData.age || formData.interests.length === 0 || !formData.message) {
+    // 필수 필드 유효성 검사: phone 필드 추가, message 최소 길이 검사 추가
+    if (
+      !formData.firstName ||
+      !formData.lastName ||
+      !formData.email ||
+      !formData.phone || // 전화번호 필드 필수 추가
+      !formData.age ||
+      formData.interests.length === 0 ||
+      !formData.message ||
+      formData.message.length < 50 // 메시지 최소 길이 50자 검사 추가
+    ) {
+      console.log("Client-side validation failed."); // 로그 2
       toast({
         title: "필수 필드를 채워주세요.",
-        description: "이름, 이메일, 연령대, 관심 분야, 메시지는 필수 입력 사항입니다.",
+        description: "이름, 성, 이메일, 전화번호, 연령대, 관심 분야, 메시지(최소 50자)는 필수 입력 사항입니다.", // 설명 업데이트
         variant: "destructive",
       })
       setIsSubmitting(false)
       return
     }
 
+    console.log("Client-side validation passed. Attempting fetch."); // 로그 3
     try {
       const response = await fetch("/api/contact", {
         method: "POST",
@@ -59,25 +68,28 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          full_name: formData.name, // formData.name으로 변경
-          email: formData.email,
-          phone_number: formData.phone, // formData.phone으로 변경
-          age_group: formData.age, // formData.age로 변경
+          first_name: formData.firstName,
+          last_name: formData.lastName,
+          email: formData.email, // email 필드 전송
+          phone: formData.phone, // phone 필드 전송
+          age_group: formData.age,
           interests: formData.interests,
           message: formData.message,
-          receive_updates: formData.newsletter, // formData.newsletter로 변경
+          receive_updates: formData.newsletter,
           type: "join_request",
           subject: "새로운 교회 가입 신청",
         }),
       })
 
       if (response.ok) {
+        console.log("Form submission successful."); // 로그 4
         toast({
           title: "신청이 완료되었습니다!",
           description: "곧 연락드리겠습니다. 감사합니다.",
         })
         setFormData({
-          name: "",
+          firstName: "",
+          lastName: "",
           email: "",
           phone: "",
           age: "",
@@ -87,9 +99,11 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
         })
       } else {
         const errorData = await response.json()
+        console.error("Server responded with an error:", errorData); // 로그 5
         throw new Error(errorData.message || "Failed to submit")
       }
     } catch (error: any) {
+      console.error("Caught an error during fetch:", error); // 로그 6
       toast({
         title: "오류가 발생했습니다",
         description: error.message || "다시 시도해주세요.",
@@ -97,6 +111,7 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
       })
     } finally {
       setIsSubmitting(false)
+      console.log("Form submission ended. isSubmitting set to false."); // 로그 7
     }
   }
 
@@ -118,7 +133,7 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
     "기도 모임",
   ]
 
-  const whyJoinReasons = [ // reasons 배열 이름 변경하여 충돌 방지
+  const whyJoinReasons = [
     {
       icon: <Heart className="h-7 w-7 text-blue-900" />,
       titleKey: "reason1_title",
@@ -130,16 +145,16 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
       descriptionKey: "reason2_description",
     },
     {
-      icon: <Calendar className="h-7 w-7 text-blue-900" />, // Calendar 아이콘 사용
+      icon: <Calendar className="h-7 w-7 text-blue-900" />,
       titleKey: "reason3_title",
       descriptionKey: "reason3_description",
     },
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-yellow-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-yellow-50 pt-16">
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-blue-700 to-blue-800 text-white h-[40vh] flex items-center justify-center border-b-4 border-yellow-500"> {/* h-[50vh] -> h-[40vh] */}
+      <div className="bg-gradient-to-r from-blue-700 to-blue-800 text-white h-[25vh] flex items-center justify-center border-b-4 border-yellow-500">
         <div className="container mx-auto px-4 text-center">
           <div className="mb-4">
             <span className="text-4xl md:text-5xl">🤝</span>
@@ -172,7 +187,7 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
       </div>
 
       {/* Why Join Us */}
-      <section className="py-8 bg-gradient-to-r from-yellow-500 to-yellow-600 text-blue-900"> {/* py-10 -> py-8 */}
+      <section className="py-8 bg-gradient-to-r from-yellow-500 to-yellow-600 text-blue-900">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-8">
             <EditableText
@@ -185,12 +200,12 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
             />
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-            {whyJoinReasons.map((reason, index) => ( // whyJoinReasons 사용
-              <div key={index} className="text-center bg-white p-6 rounded-2xl shadow-xl border border-blue-100 transform hover:scale-105 transition-transform duration-300"> {/* p-8 -> p-6 */}
-                <div className="flex justify-center mb-4"> {/* mb-6 -> mb-4 */}
+            {whyJoinReasons.map((reason, index) => (
+              <div key={index} className="text-center bg-white p-6 rounded-2xl shadow-xl border border-blue-100 transform hover:scale-105 transition-transform duration-300">
+                <div className="flex justify-center mb-4">
                   {reason.icon}
                 </div>
-                <h3 className="text-lg md:text-xl font-bold mb-3"> {/* text-xl md:text-2xl -> text-lg md:text-xl, mb-4 -> mb-3 */}
+                <h3 className="text-lg md:text-xl font-bold mb-3">
                   <EditableText
                     page="join"
                     section="why_join"
@@ -221,7 +236,7 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
       </section>
 
       {/* Join Form */}
-      <section className="py-8"> {/* py-10 -> py-8 */}
+      <section className="py-8">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
             <h2 className="text-3xl md:text-4xl font-bold text-center text-blue-900 mb-8">
@@ -235,24 +250,40 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
               />
             </h2>
             <Card className="shadow-2xl border-0 bg-gradient-to-br from-white to-blue-50">
-              <CardContent className="p-8"> {/* p-12 -> p-8 */}
-                <form onSubmit={handleSubmit} className="space-y-6"> {/* space-y-8 -> space-y-6 */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6"> {/* gap-8 -> gap-6 */}
+              <CardContent className="p-8">
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <Label htmlFor="fullName" className="text-blue-900 font-semibold text-base"> {/* text-lg -> text-base */}
-                        Full Name *</Label>
+                      <Label htmlFor="firstName" className="text-blue-900 font-semibold text-base">
+                        First Name *</Label>
                       <Input
-                        id="fullName"
+                        id="firstName"
                         type="text"
                         required
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        value={formData.firstName}
+                        onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                         className="mt-3 h-12 border-blue-300 focus:border-blue-700 focus:ring-blue-700 text-base"
-                        placeholder="Enter your full name"
+                        placeholder="Enter your first name"
                       />
                     </div>
                     <div>
-                      <Label htmlFor="email" className="text-blue-900 font-semibold text-base"> {/* text-lg -> text-base */}
+                      <Label htmlFor="lastName" className="text-blue-900 font-semibold text-base">
+                        Last Name *</Label>
+                      <Input
+                        id="lastName"
+                        type="text"
+                        required
+                        value={formData.lastName}
+                        onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                        className="mt-3 h-12 border-blue-300 focus:border-blue-700 focus:ring-blue-700 text-base"
+                        placeholder="Enter your last name"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <Label htmlFor="email" className="text-blue-900 font-semibold text-base">
                         Email Address *</Label>
                       <Input
                         id="email"
@@ -264,42 +295,41 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
                         placeholder="Enter your email address"
                       />
                     </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6"> {/* gap-8 -> gap-6 */}
                     <div>
-                      <Label htmlFor="phone" className="text-blue-900 font-semibold text-base"> {/* text-lg -> text-base */}
-                        Phone Number</Label>
+                      <Label htmlFor="phone" className="text-blue-900 font-semibold text-base">
+                        Phone Number *</Label> {/* 전화번호 Label에 * 추가 */}
                       <Input
                         id="phone"
                         type="tel"
+                        required // required 속성 추가
                         value={formData.phone}
                         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                         className="mt-3 h-12 border-blue-300 focus:border-blue-700 focus:ring-blue-700 text-base"
                         placeholder="Enter your phone number"
                       />
                     </div>
-                    <div>
-                      <Label htmlFor="age" className="text-blue-900 font-semibold text-base"> {/* text-lg -> text-base */}
-                        Age Group</Label>
-                      <Select value={formData.age} onValueChange={(value) => setFormData({ ...formData, age: value })}>
-                        <SelectTrigger className="mt-3 h-12 border-blue-300 focus:border-blue-700 focus:ring-blue-700 text-base"> {/* h-14 -> h-12, text-lg -> text-base */}
-                          <SelectValue placeholder="Select your age group" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="10s">10-19</SelectItem>
-                          <SelectItem value="20s">20-29</SelectItem>
-                          <SelectItem value="30s">30-39</SelectItem>
-                          <SelectItem value="40s">40-49</SelectItem>
-                          <SelectItem value="50s">50-59</SelectItem>
-                          <SelectItem value="60s">60+</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
                   </div>
 
                   <div>
-                    <Label className="text-blue-900 font-semibold text-base mb-4 block"> {/* text-lg -> text-base, mb-6 -> mb-4 */}
+                    <Label htmlFor="age" className="text-blue-900 font-semibold text-base">
+                      Age Group</Label>
+                    <Select value={formData.age} onValueChange={(value) => setFormData({ ...formData, age: value })}>
+                      <SelectTrigger className="mt-3 h-12 border-blue-300 focus:border-blue-700 focus:ring-blue-700 text-base">
+                        <SelectValue placeholder="Select your age group" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="10s">10-19</SelectItem>
+                        <SelectItem value="20s">20-29</SelectItem>
+                        <SelectItem value="30s">30-39</SelectItem>
+                        <SelectItem value="40s">40-49</SelectItem>
+                        <SelectItem value="50s">50-59</SelectItem>
+                        <SelectItem value="60s">60+</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label className="text-blue-900 font-semibold text-base mb-4 block">
                       Areas of Interest (Select all that apply)
                     </Label>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
@@ -311,7 +341,7 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
                             onCheckedChange={(checked) => handleInterestChange(interest, checked as boolean)}
                             className="border-blue-500 data-[state=checked]:bg-blue-700 data-[state=checked]:text-white"
                           />
-                          <Label htmlFor={interest} className="text-sm cursor-pointer text-gray-700"> {/* text-base -> text-sm */}
+                          <Label htmlFor={interest} className="text-sm cursor-pointer text-gray-700">
                             {interest}
                           </Label>
                         </div>
@@ -320,31 +350,19 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
                   </div>
 
                   <div>
-                    <Label htmlFor="message" className="text-blue-900 font-semibold text-base"> {/* text-lg -> text-base */}
-                      Message
-                    </Label>
+                    <Label htmlFor="message" className="text-blue-900 font-semibold text-base">
+                      Message *</Label>
                     <Textarea
                       id="message"
                       value={formData.message}
                       onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                       className="mt-3 border-blue-300 focus:border-blue-700 focus:ring-blue-700 text-base"
                       rows={4}
-                      placeholder="Tell us about yourself or any questions you have"
+                      placeholder="Tell us about yourself or any questions you have (minimum 50 characters)" // placeholder 업데이트
+                      required
+                      minLength={50} // minLength 속성 추가
                     />
                   </div>
-
-                  <div className="flex items-center space-x-3">
-                    <Checkbox
-                      id="newsletter"
-                      checked={formData.newsletter}
-                      onCheckedChange={(checked) => setFormData({ ...formData, newsletter: checked as boolean })}
-                      className="border-blue-500 data-[state=checked]:bg-blue-700 data-[state=checked]:text-white"
-                    />
-                    <Label htmlFor="newsletter" className="text-sm cursor-pointer text-gray-700"> {/* text-base -> text-sm */}
-                      I would like to receive church news and event updates
-                    </Label>
-                  </div>
-
                   <Button
                     type="submit"
                     disabled={isSubmitting}
@@ -360,7 +378,7 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
       </section>
 
       {/* Contact Info */}
-      <section className="py-10 bg-gradient-to-r from-blue-700 to-blue-800 text-white"> {/* py-12 -> py-10 */}
+      <section className="py-10 bg-gradient-to-r from-blue-700 to-blue-800 text-white">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-8">
             <EditableText
@@ -374,9 +392,9 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
             <Card className="text-center hover:shadow-2xl transition-all duration-500 transform hover:scale-105 border-0 shadow-xl bg-white/10 backdrop-blur-sm">
-              <CardContent className="p-6"> {/* p-8 -> p-6 */}
-                <MapPin className="h-12 w-12 mx-auto mb-4 text-yellow-500" /> {/* mb-6 -> mb-4 */}
-                <h3 className="text-lg md:text-xl font-bold mb-3">Address</h3> {/* text-xl md:text-2xl -> text-lg md:text-xl, mb-4 -> mb-3 */}
+              <CardContent className="p-6">
+                <MapPin className="h-12 w-12 mx-auto mb-4 text-yellow-500" />
+                <h3 className="text-lg md:text-xl font-bold mb-3">Address</h3>
                 <p className="text-blue-200 leading-relaxed">
                   <EditableText
                     page="join"
@@ -391,9 +409,9 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
               </CardContent>
             </Card>
             <Card className="text-center hover:shadow-2xl transition-all duration-500 transform hover:scale-105 border-0 shadow-xl bg-white/10 backdrop-blur-sm">
-              <CardContent className="p-6"> {/* p-8 -> p-6 */}
-                <Phone className="h-12 w-12 mx-auto mb-4 text-yellow-500" /> {/* mb-6 -> mb-4 */}
-                <h3 className="text-lg md:text-xl font-bold mb-3">Phone</h3> {/* text-xl md:text-2xl -> text-lg md:text-xl, mb-4 -> mb-3 */}
+              <CardContent className="p-6">
+                <Phone className="h-12 w-12 mx-auto mb-4 text-yellow-500" />
+                <h3 className="text-lg md:text-xl font-bold mb-3">Phone</h3>
                 <p className="text-blue-200">
                   <EditableText
                     page="join"
@@ -407,9 +425,9 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
               </CardContent>
             </Card>
             <Card className="text-center hover:shadow-2xl transition-all duration-500 transform hover:scale-105 border-0 shadow-xl bg-white/10 backdrop-blur-sm">
-              <CardContent className="p-6"> {/* p-8 -> p-6 */}
-                <Mail className="h-12 w-12 mx-auto mb-4 text-yellow-500" /> {/* mb-6 -> mb-4 */}
-                <h3 className="text-lg md:text-xl font-bold mb-3">Email</h3> {/* text-xl md:text-2xl -> text-lg md:text-xl, mb-4 -> mb-3 */}
+              <CardContent className="p-6">
+                <Mail className="h-12 w-12 mx-auto mb-4 text-yellow-500" />
+                <h3 className="text-lg md:text-xl font-bold mb-3">Email</h3>
                 <p className="text-blue-200">
                   <EditableText
                     page="join"
@@ -422,53 +440,6 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
                 </p>
               </CardContent>
             </Card>
-          </div>
-        </div>
-      </section>
-
-      {/* Call to Action Section (기존 Call to Action 섹션 유지) */}
-      <section className="py-8 bg-gradient-to-br from-blue-50 via-white to-yellow-50 text-center"> {/* py-10 -> py-8 */}
-        <div className="container mx-auto px-4">
-          <h2 className="text-2xl md:text-2xl font-extrabold text-blue-900 mb-5">
-            <EditableText
-              page="join"
-              section="cta"
-              contentKey="title"
-              initialValue={content?.cta?.title || "Ready to Join?"}
-              tag="span"
-              className="text-blue-900"
-            />
-          </h2>
-          <p className="text-lg md:text-xl text-gray-700 mb-7 max-w-4xl mx-auto leading-relaxed">
-            <EditableText
-              page="join"
-              section="cta"
-              contentKey="description"
-              initialValue={
-                content?.cta?.description ||
-                "We're excited to welcome you into our church family. Let us know how we can help."
-              }
-              tag="span"
-              className="text-gray-700"
-              isTextArea={true}
-            />
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Button
-              asChild
-              size="lg"
-              className="bg-gradient-to-r from-blue-700 to-blue-800 hover:from-blue-800 hover:to-blue-900 text-white font-bold px-10 py-4 text-xl rounded-full shadow-xl transform hover:scale-105 transition-all duration-300"
-            >
-              <Link href="/contact">Contact Us</Link>
-            </Button>
-            <Button
-              asChild
-              variant="outline"
-              size="lg"
-              className="border-2 border-yellow-700 text-yellow-700 hover:bg-yellow-700 hover:text-white font-bold px-10 py-4 text-xl rounded-full bg-transparent shadow-lg transform hover:scale-105 transition-all duration-300"
-            >
-              <Link href="/events">View Events</Link>
-            </Button>
           </div>
         </div>
       </section>

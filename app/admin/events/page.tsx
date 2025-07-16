@@ -18,7 +18,7 @@ import { format, startOfDay } from "date-fns";
 import imageCompression from "browser-image-compression";
 import {
   Settings, Save, X, ImageIcon, Upload, Loader2,
-  CheckCircle, XCircle, Calendar as CalendarIcon // CalendarIcon 임포트 추가
+  CheckCircle, XCircle, Calendar as CalendarIcon, ArrowLeft
 } from "lucide-react";
 
 interface EventPost {
@@ -31,7 +31,7 @@ interface EventPost {
   location: string | null;
   category: string | null;
   image_url: string | null;
-  slug: string; // URL에 사용될 슬러그
+  slug: string;
   created_at: string;
   updated_at: string;
 }
@@ -40,7 +40,7 @@ export default function AdminEventsPage() {
   const { user, userRole, loading: authLoading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const eventId = searchParams.get('id'); // 편집 모드일 경우 이벤트 ID
+  const eventId = searchParams.get('id');
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -57,7 +57,15 @@ export default function AdminEventsPage() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // 관리자 권한 확인 및 기존 이벤트 데이터 불러오기
+  // 백업 이미지 목록 정의
+  const backupImages = [
+    "/backup_images/event-backup-1.jpg",
+    "/backup_images/event-backup-2.jpg",
+    "/backup_images/event-backup-3.jpg",
+    "/backup_images/event-backup-4.jpg",
+    "/backup_images/event-backup-5.jpg",
+  ];
+
   useEffect(() => {
     if (!authLoading) {
       if (!user || userRole !== 'admin') {
@@ -95,7 +103,6 @@ export default function AdminEventsPage() {
     }
   }, [authLoading, user, userRole, eventId, router]);
 
-  // 이미지 파일 변경 핸들러 (압축 및 미리보기)
   const handleImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -110,8 +117,8 @@ export default function AdminEventsPage() {
 
     try {
       const options = {
-        maxSizeMB: 1, // 최대 파일 크기 1MB
-        maxWidthOrHeight: 1920, // 최대 너비/높이 1920px
+        maxSizeMB: 1,
+        maxWidthOrHeight: 1920,
         useWebWorker: true,
       };
       const compressedFile = await imageCompression(file, options);
@@ -133,7 +140,6 @@ export default function AdminEventsPage() {
     }
   };
 
-  // 폼 제출 핸들러
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -152,14 +158,14 @@ export default function AdminEventsPage() {
 
     let finalImageUrl: string | null = imageUrlPreview; 
 
-    // 새로운 이미지 파일이 선택되었을 경우 업로드
+    // 이미지가 새로 업로드되었거나 기존 이미지가 있는 경우
     if (imageFile) {
       const fileExt = imageFile.name.split(".").pop();
       const fileName = `${user.id}-${Date.now()}.${fileExt}`;
-      const filePath = `event-banners/${fileName}`; // Supabase Storage 버킷 경로
+      const filePath = `event-banners/${fileName}`;
 
       const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('event-banners') // 'event-banners'라는 새 버킷을 사용한다고 가정
+        .from('event-banners')
         .upload(filePath, imageFile, {
           cacheControl: '3600',
           upsert: false,
@@ -172,9 +178,12 @@ export default function AdminEventsPage() {
         return;
       }
       finalImageUrl = supabase.storage.from('event-banners').getPublicUrl(filePath).data.publicUrl;
+    } else if (!imageUrlPreview) {
+      // 새로운 이미지가 없고, 기존 이미지도 없는 경우 백업 이미지 사용
+      const randomIndex = Math.floor(Math.random() * backupImages.length);
+      finalImageUrl = backupImages[randomIndex];
     }
 
-    // 슬러그 생성 (한글 포함 가능하도록 인코딩)
     const slug = encodeURIComponent(title.trim().toLowerCase().replace(/\s+/g, '-'));
 
     const eventData = {
@@ -190,7 +199,7 @@ export default function AdminEventsPage() {
     };
 
     const { error: dbError } = await supabase
-      .from('events') // 'events' 테이블에 저장
+      .from('events')
       .upsert(eventId ? { ...eventData, id: eventId } : eventData); 
 
     if (dbError) {
@@ -202,7 +211,6 @@ export default function AdminEventsPage() {
 
     setMessage({ type: 'success', text: "이벤트가 성공적으로 저장되었습니다!" });
     
-    // 페이지 재검증 (캐시 무효화)
     try {
       const revalidateResponse = await fetch(`/api/revalidate?secret=${process.env.NEXT_PUBLIC_MY_SECRET_TOKEN}&path=/events`);
       if (!revalidateResponse.ok) {
@@ -217,7 +225,6 @@ export default function AdminEventsPage() {
       setMessage(prev => prev ? { ...prev, text: prev.text + " (페이지 재검증 API 호출 실패)" } : null);
     }
 
-    // 새 이벤트 생성 후 폼 초기화
     if (!eventId) {
       setTitle("");
       setDescription("");
@@ -230,18 +237,14 @@ export default function AdminEventsPage() {
       setImageUrlPreview(null);
     }
     setIsSubmitting(false);
-    // 이벤트 목록 페이지로 리다이렉트
     router.push('/events'); 
   };
 
-  // 달력 비활성화 날짜 설정 (선택 사항)
   const getDisabledDays = useCallback(() => {
     const today = startOfDay(new Date());
-    // 예시: 오늘 이전 날짜는 선택 불가
     return { before: today }; 
   }, []);
 
-  // 관리자 권한이 없으면 접근 제한
   if (authLoading || (!user && !authLoading) || (user && userRole !== 'admin')) {
     return (
       <div className="min-h-screen flex items-center justify-center text-xl text-gray-600">
@@ -251,9 +254,21 @@ export default function AdminEventsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white py-16 pt-24 px-4"> {/* Admin Dashboard style */}
-      <div className="container mx-auto max-w-3xl"> {/* max-w-5xl -> max-w-3xl for forms */}
-        <Card className="shadow-lg bg-gray-800 border border-gray-700 text-white"> {/* Admin Dashboard card style */}
+    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white py-16 pt-24 px-4">
+      <div className="container mx-auto max-w-3xl">
+        {/* 뒤로가기 버튼을 좌측 상단에 배치 */}
+        <div className="mb-8"> {/* 제목 위쪽에 여백 추가 */}
+          <Button
+            variant="outline"
+            className="bg-gray-700 hover:bg-gray-600 text-white border-gray-600"
+            onClick={() => router.back()}
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            뒤로가기
+          </Button>
+        </div>
+
+        <Card className="shadow-lg bg-gray-800 border border-gray-700 text-white">
           <CardHeader>
             <CardTitle className="text-3xl font-bold text-white">
               {eventId ? "이벤트 편집" : "새 이벤트 작성"}

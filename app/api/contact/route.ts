@@ -4,7 +4,8 @@ import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
-  const { first_name, last_name, email, phone, interests, message } = await request.json();
+  // 변경: 클라이언트에서 보내는 필드명에 맞춰 구조 분해
+  const { first_name, last_name, email, phone, age_group, interests, message, receive_updates, type, subject } = await request.json();
 
   const cookieStore = cookies();
 
@@ -24,9 +25,9 @@ export async function POST(request: Request) {
     }
   );
 
-  // 서버 측 유효성 검사 (기본적인 필수 필드 확인)
-  if (!first_name || !last_name || !email) {
-    return NextResponse.json({ error: 'First name, Last name, and Email are required.' }, { status: 400 });
+  // 서버 측 유효성 검사 (필수 필드 확인)
+  if (!first_name || !last_name || !email || !age_group || !interests || interests.length === 0 || !message) {
+    return NextResponse.json({ error: 'First name, Last name, Email, Age Group, Interests, and Message are required.' }, { status: 400 });
   }
 
   try {
@@ -37,9 +38,13 @@ export async function POST(request: Request) {
           first_name,
           last_name,
           email,
-          phone,
-          interests: interests || [], // interests가 없을 경우 빈 배열로 저장
+          phone: phone || null, // phone이 없을 경우 null
+          age_group, // 추가
+          interests: interests || [],
           message,
+          receive_updates: receive_updates || false, // 추가
+          type: type || null, // 추가
+          subject: subject || null, // 추가
         },
       ]);
 

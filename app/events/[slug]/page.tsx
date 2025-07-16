@@ -53,9 +53,18 @@ async function fetchEventDetails(eventSlug: string): Promise<Event | null> {
 
   return event;
 }
+
 export default async function EventDetailPage({ params }: EventDetailPageProps) {
   const event = await fetchEventDetails(params.slug);
   
+  // 백업 이미지 목록 정의
+  const backupImages = [
+    "/backup_images/event-backup-1.jpg",
+    "/backup_images/event-backup-2.jpg",
+    "/backup_images/event-backup-3.jpg",
+    "/backup_images/event-backup-4.jpg",
+    "/backup_images/event-backup-5.jpg",
+  ];
 
   if (!event) {
     notFound();
@@ -66,7 +75,10 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
       ? `${event.start_time} - ${event.end_time}`
       : event.start_time || event.end_time || "시간 미정";
 
-  // ✅ 추가: Google Calendar 이벤트 추가 URL 생성 함수
+  // 이벤트 이미지가 없으면 백업 이미지 중 하나를 무작위로 선택
+  const imageUrlToDisplay = event.image_url || backupImages[Math.floor(Math.random() * backupImages.length)];
+
+  // Google Calendar 이벤트 추가 URL 생성 함수
   const createGoogleCalendarUrl = (event: Event) => {
     const formatDateTime = (date: string, time: string | null) => {
       // YYYY-MM-DDT HHMMSSZ 형식으로 변환 (Google Calendar 요구 사항)
@@ -108,13 +120,14 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
       <Header />
       <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white py-16 pt-24">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl">
-          <div className="relative w-full h-64 md:h-80 lg:h-96 rounded-lg overflow-hidden shadow-xl mb-8">
+          {/* 이미지 컨테이너 크기 고정 및 중앙 정렬 */}
+          <div className="relative w-[600px] h-[400px] rounded-lg overflow-hidden shadow-xl mb-8 mx-auto">
             <Image
-              src={event.image_url || "https://placehold.co/1200x600/CCCCCC/000000?text=Event+Image"}
+              src={imageUrlToDisplay}
               alt={event.title}
-              fill
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 60vw"
-              style={{ objectFit: "cover" }}
+              width={600} // 고정된 너비
+              height={400} // 고정된 높이
+              style={{ objectFit: "cover" }} // 이미지가 컨테이너를 채우도록 설정
               className="transition-transform duration-300 hover:scale-105"
               priority
             />
@@ -159,13 +172,13 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
           )}
 
           <div className="flex flex-col sm:flex-row gap-4">
-            {/* ✅ 수정: 구글 캘린더에 추가 버튼 */}
+            {/* 구글 캘린더에 추가 버튼 */}
             <Button asChild size="lg" className="bg-blue-600 hover:bg-blue-700">
               <a href={createGoogleCalendarUrl(event)} target="_blank" rel="noopener noreferrer">
                 구글 캘린더에 추가
               </a>
             </Button>
-            {/* ✅ 수정: 이벤트 등록/참여 버튼 */}
+            {/* 이벤트 등록/참여 버튼 */}
             <Button asChild size="lg" variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white">
               <Link href="/join">
                 이벤트 등록/참여
