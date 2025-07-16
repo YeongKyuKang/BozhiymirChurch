@@ -14,7 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Calendar } from "@/components/ui/calendar";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { format, startOfDay, subDays, addDays } from "date-fns";
-import { toZonedTime, formatInTimeZone, zonedTimeToUtc, utcToZonedTime } from 'date-fns-tz'; // ✅ zonedTimeToUtc, utcToZonedTime 임포트 추가
+import { toZonedTime, formatInTimeZone } from 'date-fns-tz'; // ✅ zonedTimeToUtc, utcToZonedTime 임포트 제거
 import {
   Settings, Save, X, MessageCircle, Heart, Download, BookOpen,
   Calendar as CalendarIcon, Frown, ImageIcon, Upload, Loader2,
@@ -44,7 +44,7 @@ export default function AdminWordPostsPage() {
   const postId = searchParams.get('id');
 
   // ✅ wordDate 초기값을 폴란드 시간 기준의 오늘 날짜 자정으로 설정
-  const [wordDate, setWordDate] = useState<Date | undefined>(startOfDay(utcToZonedTime(zonedTimeToUtc(new Date(), Intl.DateTimeFormat().resolvedOptions().timeZone), POLAND_TIMEZONE)));
+  const [wordDate, setWordDate] = useState<Date | undefined>(startOfDay(toZonedTime(new Date(), POLAND_TIMEZONE)));
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -308,7 +308,7 @@ export default function AdminWordPostsPage() {
                   mode="single"
                   selected={wordDate}
                   // ✅ 날짜 선택 시 Calendar에서 반환된 로컬 Date 객체를 폴란드 시간대 기준으로 변환하여 저장
-                  onSelect={(date) => setWordDate(date ? toZonedTime(new Date(date.getFullYear(), date.getMonth(), date.getDate()), POLAND_TIMEZONE) : undefined)}
+                  onSelect={(date) => setWordDate(date ? toZonedTime(date, POLAND_TIMEZONE) : undefined)}
                   initialFocus
                   disabled={getDisabledDays()}
                   className="rounded-md border shadow bg-gray-700 text-white border-gray-600"
