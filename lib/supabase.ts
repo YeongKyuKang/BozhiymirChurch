@@ -224,6 +224,96 @@ export type Database = {
           created_at?: string
         }
       }
+      // thanks_posts 테이블 정의 추가
+      thanks_posts: {
+        Row: {
+          id: string
+          title: string
+          content: string
+          category: string // category 컬럼 추가
+          author_id: string
+          author_nickname: string
+          created_at: string
+          updated_at: string
+          author_profile_picture_url: string | null
+          author_role: string | null
+        }
+        Insert: {
+          id?: string
+          title: string
+          content: string
+          category?: string // category 컬럼 추가
+          author_id: string
+          author_nickname: string
+          created_at?: string
+          updated_at?: string
+          author_profile_picture_url?: string | null
+          author_role?: string | null
+        }
+        Update: {
+          id?: string
+          title?: string
+          content?: string
+          category?: string // category 컬럼 추가
+          author_id?: string
+          author_nickname?: string
+          created_at?: string
+          updated_at?: string
+          author_profile_picture_url?: string | null
+          author_role?: string | null
+        }
+      }
+      // thanks_comments 테이블 정의 추가
+      thanks_comments: {
+        Row: {
+          id: string
+          post_id: string
+          author_id: string
+          author_nickname: string
+          comment: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          post_id: string
+          author_id: string
+          author_nickname: string
+          comment: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          post_id?: string
+          author_id?: string
+          author_nickname: string
+          comment?: string
+          created_at?: string
+        }
+      }
+      // thanks_reactions 테이블 정의 추가
+      thanks_reactions: {
+        Row: {
+          id: string
+          user_id: string
+          post_id: string
+          reaction_type: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          post_id: string
+          reaction_type: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          post_id?: string
+          reaction_type?: string
+          created_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never
@@ -275,6 +365,41 @@ export type Database = {
         };
       };
       'profile-pictures': {
+        Objects: {
+          Row: {
+            bucket_id: string;
+            created_at: string;
+            id: string;
+            last_accessed_at: string;
+            name: string;
+            owner: string | null;
+            path_tokens: string[];
+            updated_at: string;
+          };
+          Insert: {
+            bucket_id: string;
+            created_at?: string;
+            id?: string;
+            last_accessed_at?: string;
+            name: string;
+            owner?: string | null;
+            path_tokens?: string[];
+            updated_at?: string;
+          };
+          Update: {
+            bucket_id?: string;
+            created_at?: string;
+            id?: string;
+            last_accessed_at?: string;
+            name?: string;
+            owner?: string | null;
+            path_tokens?: string[];
+            updated_at?: string;
+          };
+        };
+      };
+      // event-banners 버킷 정의 추가
+      'event-banners': {
         Objects: {
           Row: {
             bucket_id: string;

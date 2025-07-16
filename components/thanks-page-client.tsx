@@ -24,36 +24,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
+import type { Database } from "@/lib/supabase";
 import { Trash2 } from "lucide-react";
 
-interface ThanksPost {
-  id: string;
-  title: string;
-  content: string;
-  author_id: string;
-  author_nickname: string;
-  created_at: string;
-  updated_at: string;
-  author_profile_picture_url: string | null;
-  author_role: string | null;
-}
+type ThanksPost = Database['public']['Tables']['thanks_posts']['Row'];
+type ThanksComment = Database['public']['Tables']['thanks_comments']['Row'];
+type ThanksReaction = Database['public']['Tables']['thanks_reactions']['Row'];
 
-interface ThanksComment {
-  id: string;
-  post_id: string;
-  author_id: string;
-  author_nickname: string;
-  comment: string;
-  created_at: string;
-}
-
-interface ThanksReaction {
-  id: string;
-  user_id: string;
-  post_id: string;
-  reaction_type: string;
-  created_at: string;
-}
 
 interface ThanksPageClientProps {
   initialContent: Record<string, any>;
@@ -98,14 +75,21 @@ export default function ThanksPageClient({ initialContent, initialThanksPosts }:
 
   const [visiblePostsCount, setVisiblePostsCount] = useState(POSTS_PER_LOAD);
 
-  // 감사 게시물용 새로운 카테고리 정의
+
   const thanksPostCategories = [
-    { key: "all", labelKey: "all_posts", defaultLabel: "모든 게시물" }, // '모든 게시물' 옵션 추가
+    { key: "all", labelKey: "all_posts", defaultLabel: "모든 게시물" },
     { key: "answered_prayer", labelKey: "category_answered_prayer", defaultLabel: "응답받은 기도" },
     { key: "personal_testimony", labelKey: "category_personal_testimony", defaultLabel: "개인 간증" },
     { key: "church_support", labelKey: "category_church_support", defaultLabel: "교회 공동체 지원" },
     { key: "blessing", labelKey: "category_blessing", defaultLabel: "일상의 축복" },
     { key: "ministry_impact", labelKey: "category_ministry_impact", defaultLabel: "사역의 열매" },
+  ];
+
+  const prayerCategories = [
+    { key: "ukraine", titleKey: "ukraine_title", descriptionKey: "ukraine_description", icon: "🇺🇦" },
+    { key: "bozhiymirchurch", titleKey: "church_title", descriptionKey: "church_description", icon: "⛪" },
+    { key: "members", titleKey: "members_title", descriptionKey: "members_description", icon: "👨‍👩‍👧‍👦" },
+    { key: "children", titleKey: "children_title", descriptionKey: "children_description", icon: "👧👦" },
   ];
 
   useEffect(() => {
@@ -296,7 +280,7 @@ export default function ThanksPageClient({ initialContent, initialThanksPosts }:
       } else {
         setMessage({ type: 'success', text: "감사 게시물이 성공적으로 작성되었습니다!" });
         handleFilterChange('sort', 'created_at_desc');
-        handleFilterChange('role', 'all');
+        handleFilterChange('role', newPostCategory);
         handleFilterChange('date', undefined);
         setIsWriteModalOpen(false);
         router.refresh();
@@ -444,8 +428,7 @@ export default function ThanksPageClient({ initialContent, initialThanksPosts }:
     setVisiblePostsCount(prevCount => prevCount + POSTS_PER_LOAD);
   };
 
-  // 감사 카테고리 필터 옵션으로 변경 (기존 filterOptions 대체)
-  const filterOptions = thanksPostCategories; // thanksPostCategories를 직접 사용합니다.
+  const filterOptions = thanksPostCategories;
 
   const sortOptions = [
     { value: "created_at_desc", labelKey: "latest_sort", defaultLabel: "최신순" },
@@ -538,7 +521,7 @@ export default function ThanksPageClient({ initialContent, initialThanksPosts }:
               </SelectTrigger>
               <SelectContent>
                 {filterOptions.map(option => (
-                  <SelectItem key={option.key} value={option.key}> {/* value={option.key}로 수정 */}
+                  <SelectItem key={option.key} value={option.key}>
                     <EditableText
                       page="thanks"
                       section="filters"
@@ -630,13 +613,12 @@ export default function ThanksPageClient({ initialContent, initialThanksPosts }:
                 )}
                 <div>
                   <Label htmlFor="newPostCategory" className="text-blue-900 font-semibold">카테고리</Label>
-                  {/* 감사 게시물용 카테고리로 변경 */}
                   <Select value={newPostCategory} onValueChange={(value: string) => setNewPostCategory(value)}>
                     <SelectTrigger className="mt-1 h-10 border-blue-300 focus:border-blue-700 focus:ring-blue-700 text-base">
                       <SelectValue placeholder="카테고리 선택" />
                     </SelectTrigger>
                     <SelectContent>
-                      {thanksPostCategories.slice(1).map(cat => ( // '모든 게시물' 옵션 제외
+                      {thanksPostCategories.slice(1).map(cat => (
                         <SelectItem key={cat.key} value={cat.key}>
                           <EditableText
                             page="thanks"
@@ -711,8 +693,13 @@ export default function ThanksPageClient({ initialContent, initialThanksPosts }:
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {thanksPosts.slice(0, visiblePostsCount).map((post) => (
-                <Card key={post.id} className="shadow-xl border-0 bg-gradient-to-br from-white to-blue-50 min-h-[280px]">
-                  <CardHeader className="pb-2">
+                <Card key={post.id} className="shadow-xl border-0 bg-gradient-to-br from-white to-blue-50 min-h-[280px] relative flex flex-col">
+                  <CardHeader className="pb-2 relative">
+                    {post.category && (
+                      <Badge variant="secondary" className="absolute top-2 left-2 bg-blue-600 text-white text-xs font-semibold px-2 py-0.5 rounded-full z-10">
+                        {thanksPostCategories.find(cat => cat.key === post.category)?.defaultLabel || post.category}
+                      </Badge>
+                    )}
                     <div className="flex items-center space-x-3 mb-2">
                       <Avatar className="h-9 w-9">
                         <AvatarImage src={post.author_profile_picture_url || `https://api.dicebear.com/7.x/initials/svg?seed=${post.author_nickname}`} alt={post.author_nickname} />
@@ -728,11 +715,12 @@ export default function ThanksPageClient({ initialContent, initialThanksPosts }:
                     </div>
                     <h3 className="text-base font-bold text-blue-900 mb-2 line-clamp-2">{post.title}</h3>
                   </CardHeader>
-                  <CardContent className="pt-0">
-                    <p className="text-sm text-gray-700 whitespace-pre-wrap mb-4 max-h-[60px] overflow-y-auto">{post.content}</p>
+                  <CardContent className="pt-0 flex flex-col flex-grow">
+                    <p className="text-sm text-gray-700 whitespace-pre-wrap mb-4 max-h-[60px] overflow-y-auto">
+                      {post.content}
+                    </p>
 
-                    {/* 반응 섹션 */}
-                    <div className="flex items-center space-x-0.5 border-t border-b border-blue-100 py-1.5 my-2">
+                    <div className="flex items-center space-x-0.5 border-t border-b border-blue-100 py-1.5 my-2 mt-auto">
                       {Object.entries(reactionEmojis).map(([type, emoji]) => (
                         <Button
                           key={type}
@@ -747,7 +735,6 @@ export default function ThanksPageClient({ initialContent, initialThanksPosts }:
                       ))}
                     </div>
 
-                    {/* 댓글 목록 */}
                     <div className="mt-3 space-y-2 max-h-[80px] overflow-y-auto">
                       <h4 className="text-sm font-semibold text-blue-800">댓글 ({comments[post.id]?.length || 0})</h4>
                       {comments[post.id]?.map(comment => (
@@ -767,7 +754,6 @@ export default function ThanksPageClient({ initialContent, initialThanksPosts }:
                       ))}
                     </div>
 
-                    {/* 댓글 작성 폼 */}
                     {user && userProfile?.can_comment && (
                       <div className="mt-3">
                         <Textarea
@@ -788,7 +774,6 @@ export default function ThanksPageClient({ initialContent, initialThanksPosts }:
                       </div>
                     )}
 
-                    {/* 관리자용 삭제 버튼 */}
                     {isAdmin && (
                       <Button
                         variant="destructive"
@@ -829,7 +814,9 @@ export default function ThanksPageClient({ initialContent, initialThanksPosts }:
               contentKey="title"
               initialValue={initialContent?.scripture?.title || "God Hears Our Prayers"}
               isEditingPage={isPageEditing}
-              onContentChange={handleContentChange}
+              onContentChange={(section: string, key: string, value: string) =>
+                handleContentChange("scripture", "title", value)
+              }
               tag="span"
               className="text-white"
             />
@@ -846,7 +833,9 @@ export default function ThanksPageClient({ initialContent, initialThanksPosts }:
                     "Do not be anxious about anything, but in every situation, by prayer and petition, with thanksgiving, present your requests to God."
                   }
                   isEditingPage={isPageEditing}
-                  onContentChange={handleContentChange}
+                  onContentChange={(section: string, key: string, value: string) =>
+                    handleContentChange("scripture", "quote", value)
+                  }
                   tag="span"
                   className="text-base italic text-yellow-300"
                   isTextArea={true}
@@ -859,7 +848,9 @@ export default function ThanksPageClient({ initialContent, initialThanksPosts }:
                   contentKey="reference"
                   initialValue={initialContent?.scripture?.reference || "Philippians 4:6"}
                   isEditingPage={isPageEditing}
-                  onContentChange={handleContentChange}
+                  onContentChange={(section: string, key: string, value: string) =>
+                    handleContentChange("scripture", "reference", value)
+                  }
                   tag="span"
                   className="text-sm font-semibold text-white"
                 />
