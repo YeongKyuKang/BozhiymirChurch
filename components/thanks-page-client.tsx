@@ -1,334 +1,559 @@
-"use client"
+// yeongkyukang/bozhiymirchurch/BozhiymirChurch-4d2cde288530ef711b8ef2d2cc649e1ca337c00c/components/thanks-page-client.tsx
+"use client";
 
-import Link from "next/link"
+import * as React from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useAuth } from "@/contexts/auth-context";
+import { supabase } from "@/lib/supabase";
+import { Button } from "@/components/ui/button";
+import { Settings, Save, X, PlusCircle, MessageCircle, ThumbsUp, Heart, Laugh, Smile, Frown, CalendarIcon } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import EditableText from "@/components/editable-text";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
-import { useState, useMemo } from "react"
-import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Calendar } from "@/components/ui/calendar"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { CalendarIcon, Filter, ThumbsUp, MessageCircle, User } from "lucide-react"
-import { format } from "date-fns"
-import { ko } from "date-fns/locale"
-import EditableText from "@/components/editable-text"
-
-interface ThanksPost {
-  id: string
-  title: string
-  content: string
-  author_id: string
-  author_nickname: string
-  created_at: string
-  author_role: string | null
-  thanks_reactions: any[]
-  thanks_comments: any[]
+interface ThankPost {
+  id: string;
+  title: string;
+  content: string;
+  author_id: string;
+  author_nickname: string;
+  author_profile_picture_url?: string;
+  author_role?: string | null;
+  created_at: string;
+  likes: { user_id: string; reaction_type: string }[];
+  comments: { id: string; content: string; author_nickname: string; created_at: string }[];
+  author?: { role: string | null } | null;
 }
 
 interface ThanksPageClientProps {
-  initialContent: Record<string, any>
-  initialThanksPosts: ThanksPost[]
+  initialContent: Record<string, any>;
+  initialThanksPosts: ThankPost[];
 }
 
+const POSTS_PER_LOAD = 4;
+
 export default function ThanksPageClient({ initialContent, initialThanksPosts }: ThanksPageClientProps) {
-  const content = initialContent
-  const [thanksPosts] = useState<ThanksPost[]>(initialThanksPosts)
-  const [selectedRole, setSelectedRole] = useState<string>("all")
-  const [selectedDate, setSelectedDate] = useState<Date>()
-  const [sortBy, setSortBy] = useState<string>("created_at_desc")
+  const { user, userProfile, userRole } = useAuth();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
-  const roles = [
-    { key: "all", label: "전체" },
-    { key: "admin", label: "관리자" },
-    { key: "member", label: "성도" },
-    { key: "visitor", label: "방문자" },
-  ]
+  const [isPageEditing, setIsPageEditing] = useState(false);
+  const [changedContent, setChangedContent] = useState<Record<string, Record<string, string>>>({});
+  const [thanksPosts, setThanksPosts] = useState<ThankPost[]>(initialThanksPosts);
+  const [newPostTitle, setNewPostTitle] = useState("");
+  const [newPostContent, setNewPostContent] = useState("");
+  const [showNewPostForm, setShowNewPostForm] = useState(false);
+  const [isSubmittingPost, setIsSubmittingPost] = useState(false);
+  const [isSavingAll, setIsSavingAll] = useState(false);
+  const [postsToShow, setPostsToShow] = useState(POSTS_PER_LOAD);
+  const [timezoneOffset, setTimezoneOffset] = useState<number | null>(null); // 사용자 시간대 오프셋 상태
 
-  const sortOptions = [
-    { key: "created_at_desc", label: "최신순" },
-    { key: "created_at_asc", label: "오래된순" },
-  ]
+  // 필터 및 정렬 상태
+  const [selectedTimeFilter, setSelectedTimeFilter] = useState(searchParams.get('time') || 'latest');
+  const [selectedRoleFilter, setSelectedRoleFilter] = useState(searchParams.get('role') || 'all');
+  const [selectedSortBy, setSelectedSortBy] = useState(searchParams.get('sort') || 'created_at_desc');
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(
+    searchParams.get('date') ? new Date(searchParams.get('date') as string) : undefined
+  );
 
-  const filteredAndSortedPosts = useMemo(() => {
-    let filtered = thanksPosts
+  // 사용자 시간대 오프셋 감지
+  useEffect(() => {
+    // 클라이언트 측에서만 실행되도록 확인
+    if (typeof window !== 'undefined') {
+      // getTimezoneOffset()은 로컬 시간과 UTC의 차이를 분 단위로 반환 (예: KST는 -540)
+      setTimezoneOffset(new Date().getTimezoneOffset());
+    }
+  }, []);
 
-    // Role filter
-    if (selectedRole !== "all") {
-      filtered = filtered.filter((post) => post.author_role === selectedRole)
+  // URL 쿼리 파라미터 변경 핸들러
+  const createQueryString = useCallback(
+    (name: string, value: string | number) => { // value 타입에 number 추가
+      const params = new URLSearchParams(searchParams.toString());
+      if (value !== null && value !== undefined && value !== '') { // null, undefined, 빈 문자열 체크
+        params.set(name, String(value)); // 숫자를 문자열로 변환하여 저장
+      } else {
+        params.delete(name);
+      }
+      return params.toString();
+    },
+    [searchParams]
+  );
+
+  useEffect(() => {
+    setThanksPosts(initialThanksPosts);
+    setPostsToShow(POSTS_PER_LOAD);
+  }, [initialThanksPosts]);
+
+  const handleTimeFilterChange = (value: string) => {
+    setSelectedTimeFilter(value);
+    router.push(pathname + '?' + createQueryString('time', value));
+  };
+
+  const handleRoleFilterChange = (value: string) => {
+    setSelectedRoleFilter(value);
+    router.push(pathname + '?' + createQueryString('role', value));
+  };
+
+  const handleSortByChange = (value: string) => {
+    setSelectedSortBy(value);
+    router.push(pathname + '?' + createQueryString('sort', value));
+  };
+
+  // 날짜 필터 변경 핸들러 (시간대 오프셋 포함)
+  const handleDateFilterChange = (date: Date | undefined) => {
+    setSelectedDate(date);
+    const dateString = date ? format(date, 'yyyy-MM-dd') : '';
+    
+    let newQueryString = createQueryString('date', dateString);
+    if (timezoneOffset !== null) {
+      newQueryString = createQueryString('timezoneOffset', timezoneOffset); // 시간대 오프셋 추가
+      router.push(pathname + '?' + newQueryString);
+    } else {
+      router.push(pathname + '?' + newQueryString);
+    }
+  };
+
+  const handleContentChange = (section: string, key: string, value: string) => {
+    setChangedContent(prev => ({
+      ...prev,
+      [section]: {
+        ...(prev[section] || {}),
+        [key]: value
+      }
+    }));
+  };
+
+  const handleSaveAll = async () => {
+    setIsSavingAll(true);
+    let updateCount = 0;
+    let revalidated = false;
+
+    for (const section in changedContent) {
+      for (const key in changedContent[section]) {
+        const value = changedContent[section][key];
+        const { error } = await supabase.from('content').upsert({
+          page: 'thanks',
+          section: section,
+          key: key,
+          value: value,
+          updated_at: new Date().toISOString()
+        });
+
+        if (error) {
+          console.error(`Error updating content for thanks.${section}.${key}:`, error);
+        } else {
+          updateCount++;
+        }
+      }
     }
 
-    // Date filter
-    if (selectedDate) {
-      const selectedDateStr = format(selectedDate, "yyyy-MM-dd")
-      filtered = filtered.filter((post) => {
-        const postDate = format(new Date(post.created_at), "yyyy-MM-dd")
-        return postDate === selectedDateStr
-      })
+    if (updateCount > 0) {
+      try {
+        const revalidateResponse = await fetch(`/api/revalidate?secret=${process.env.NEXT_PUBLIC_MY_SECRET_TOKEN}&path=/thanks`);
+        if (!revalidateResponse.ok) {
+          const errorData = await revalidateResponse.json();
+          console.error("Revalidation failed:", errorData.message);
+        } else {
+          revalidated = true;
+          console.log("Thanks page revalidated successfully!");
+        }
+      }
+      catch (err) {
+        console.error("Failed to call revalidate API:", err);
+      }
     }
 
-    // Sort
-    filtered.sort((a, b) => {
-      const dateA = new Date(a.created_at).getTime()
-      const dateB = new Date(b.created_at).getTime()
-      return sortBy === "created_at_desc" ? dateB - dateA : dateA - dateB
-    })
+    setIsSavingAll(false);
+    setIsPageEditing(false);
+    setChangedContent({});
 
-    return filtered
-  }, [thanksPosts, selectedRole, selectedDate, sortBy])
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return format(date, "yyyy년 MM월 dd일", { locale: ko })
-  }
-
-  const getRoleColor = (role: string | null) => {
-    switch (role) {
-      case "admin":
-        return "bg-red-100 text-red-800"
-      case "member":
-        return "bg-blue-100 text-blue-800"
-      case "visitor":
-        return "bg-yellow-100 text-yellow-800"
-      default:
-        return "bg-gray-100 text-gray-800"
+    if (updateCount > 0 && revalidated) {
+      alert("모든 변경 사항이 저장되고 감사 게시판 페이지가 업데이트되었습니다. 새로고침하면 반영됩니다.");
+    } else if (updateCount > 0 && !revalidated) {
+        alert("일부 변경 사항은 저장되었지만, 감사 게시판 페이지 재검증에 실패했습니다. 수동 새로고침이 필요할 수 있습니다.");
+    } else {
+        alert("변경된 내용이 없거나 저장에 실패했습니다.");
     }
-  }
+  };
 
-  const getRoleLabel = (role: string | null) => {
-    switch (role) {
-      case "admin":
-        return "관리자"
-      case "member":
-        return "성도"
-      case "visitor":
-        return "방문자"
-      default:
-        return "사용자"
+  const handleCancelAll = () => {
+    if (confirm("모든 변경 사항을 취소하시겠습니까?")) {
+      setChangedContent({});
+      setIsPageEditing(false);
     }
-  }
+  };
+
+  const handleAddPost = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !userProfile?.id || !newPostTitle || !newPostContent) {
+      alert("로그인해야 게시물을 작성할 수 있으며, 제목과 내용을 입력해야 합니다.");
+      return;
+    }
+
+    setIsSubmittingPost(true);
+    try {
+      const { data, error } = await supabase.from('thanks_posts').insert({
+        title: newPostTitle,
+        content: newPostContent,
+        author_id: user.id,
+        author_nickname: userProfile.nickname || user.email,
+        author_profile_picture_url: userProfile.profile_picture_url,
+        author_role: userProfile.role,
+      }).select();
+
+      if (error) {
+        throw error;
+      }
+
+      if (data && data.length > 0) {
+        setThanksPosts(prev => [
+          { ...data[0], likes: [], comments: [], author_role: userProfile.role || null },
+          ...prev,
+        ]);
+        setNewPostTitle("");
+        setNewPostContent("");
+        setShowNewPostForm(false);
+        alert("감사 제목이 성공적으로 작성되었습니다!");
+        router.refresh();
+      }
+    } catch (error: any) {
+      console.error("Error adding thank post:", error.message);
+      alert(`감사 제목 작성 중 오류가 발생했습니다: ${error.message}`);
+    } finally {
+      setIsSubmittingPost(false);
+    }
+  };
+
+  const handleReaction = async (postId: string, reactionType: string) => {
+    if (!user) {
+      alert("로그인해야 공감할 수 있습니다.");
+      return;
+    }
+
+    const { data: existingLike, error: fetchError } = await supabase
+      .from('thanks_reactions')
+      .select('*')
+      .eq('post_id', postId)
+      .eq('user_id', user.id)
+      .single();
+
+    if (fetchError && fetchError.code !== 'PGRST116') {
+      console.error("Error fetching existing like:", fetchError.message);
+      return;
+    }
+
+    if (existingLike) {
+      if (existingLike.reaction_type === reactionType) {
+        const { error } = await supabase
+          .from('thanks_reactions')
+          .delete()
+          .eq('id', existingLike.id);
+        if (error) {
+          console.error("Error unliking post:", error.message);
+          return;
+        }
+        setThanksPosts(prevPosts =>
+          prevPosts.map(post =>
+            post.id === postId
+              ? { ...post, likes: (post.likes || []).filter(l => l.user_id !== user.id) }
+              : post
+          )
+        );
+      } else {
+        const { error } = await supabase
+          .from('thanks_reactions')
+          .update({ reaction_type: reactionType, updated_at: new Date().toISOString() })
+          .eq('id', existingLike.id);
+        if (error) {
+          console.error("Error updating like type:", error.message);
+          return;
+        }
+        setThanksPosts(prevPosts =>
+          prevPosts.map(post =>
+            post.id === postId
+              ? { ...post, likes: (post.likes || []).map(l => l.user_id === user.id ? { ...l, reaction_type: reactionType } : l) }
+              : post
+          )
+        );
+      }
+    } else {
+      const { error } = await supabase.from('thanks_reactions').insert({
+        post_id: postId,
+        user_id: user.id,
+        reaction_type: reactionType,
+      });
+      if (error) {
+        console.error("Error liking post:", error.message);
+        return;
+      }
+      setThanksPosts(prevPosts =>
+        prevPosts.map(post =>
+          post.id === postId
+            ? { ...post, likes: [...(post.likes || []), { user_id: user.id, reaction_type: reactionType }] }
+            : post
+        )
+      );
+    }
+    router.refresh();
+  };
+
+  const renderReactionButtons = (post: ThankPost) => {
+    const currentLikes = post.likes || [];
+    const userReaction = currentLikes.find(l => l.user_id === user?.id);
+    const getReactionCount = (type: string) => currentLikes.filter(l => l.reaction_type === type).length;
+
+    const ReactionButton = ({ type, icon: Icon, label }: { type: string; icon: React.ElementType; label: string }) => (
+      <Button
+        variant="ghost"
+        size="sm"
+        className={`flex items-center space-x-1 ${userReaction?.reaction_type === type ? 'text-blue-600 font-bold' : 'text-gray-500 hover:text-blue-600'}`}
+        onClick={() => handleReaction(post.id, type)}
+        disabled={!user}
+      >
+        <Icon className="h-4 w-4" />
+        <span>{getReactionCount(type)}</span>
+      </Button>
+    );
+
+    return (
+      <div className="flex flex-wrap gap-x-2 gap-y-1 justify-start">
+        <ReactionButton type="heart" icon={Heart} label="Heart" />
+        <ReactionButton type="thumbs_up" icon={ThumbsUp} label="Thumbs Up" />
+        <ReactionButton type="laugh" icon={Laugh} label="Laugh" />
+        <ReactionButton type="smile" icon={Smile} label="Smile" />
+        <ReactionButton type="frown" icon={Frown} label="Frown" />
+      </div>
+    );
+  };
+
+  const handleLoadMore = () => {
+    setPostsToShow(prev => prev + POSTS_PER_LOAD);
+  };
+
+  const displayedPosts = thanksPosts.slice(0, postsToShow);
+  const hasMorePosts = thanksPosts.length > postsToShow;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-yellow-50">
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+      {/* 전역 편집 모드 버튼 */}
+      {userRole === 'admin' && (
+        <div className="fixed top-24 right-8 z-50 flex flex-col space-y-2">
+          {!isPageEditing ? (
+            <Button variant="outline" size="icon" onClick={() => setIsPageEditing(true)}>
+              <Settings className="h-5 w-5" />
+            </Button>
+          ) : (
+            <>
+              <Button variant="outline" size="icon" onClick={handleSaveAll} disabled={isSavingAll}>
+                {isSavingAll ? <span className="animate-spin text-blue-500">🔄</span> : <Save className="h-5 w-5 text-green-600" />}
+              </Button>
+              <Button variant="outline" size="icon" onClick={handleCancelAll} disabled={isSavingAll}>
+                <X className="h-5 w-5 text-red-600" />
+              </Button>
+            </>
+          )}
+        </div>
+      )}
+
       {/* Hero Section */}
-      <section className="py-20 md:py-24 px-4">
-        <div className="container mx-auto text-center">
-          <div className="text-5xl md:text-6xl mb-6">🙏</div>
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-blue-900 mb-8">
+      <section className="py-16 px-4 pt-32 text-center">
+        <div className="container mx-auto">
+          <h1 className="text-5xl font-bold text-gray-900 mb-6">
             <EditableText
               page="thanks"
-              section="hero"
+              section="main"
               contentKey="title"
-              initialValue={content?.hero?.title}
+              initialValue={initialContent?.main?.title || "Thanks Board"}
+              isEditingPage={isPageEditing}
+              onContentChange={handleContentChange}
               tag="span"
-              className="text-4xl md:text-5xl lg:text-6xl font-bold text-blue-900"
+              className="text-5xl font-bold text-gray-900"
             />
           </h1>
-          <div className="text-xl md:text-2xl text-gray-700 max-w-4xl mx-auto mb-10">
+          <div className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
             <EditableText
               page="thanks"
-              section="hero"
-              contentKey="subtitle"
-              initialValue={content?.hero?.subtitle}
+              section="main"
+              contentKey="description"
+              initialValue={initialContent?.main?.description || "Share your gratitude and blessings with our community."}
+              isEditingPage={isPageEditing}
+              onContentChange={handleContentChange}
               tag="span"
-              className="text-xl md:text-2xl text-gray-700 max-w-4xl mx-auto"
-              isTextArea={true}
+              className="text-xl text-gray-600"
             />
-          </div>
-          <div className="flex items-center justify-center space-x-3 text-yellow-600">
-            <div className="w-3 h-3 bg-yellow-600 rounded-full"></div>
-            <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
-            <div className="w-3 h-3 bg-yellow-600 rounded-full"></div>
           </div>
         </div>
       </section>
 
-      {/* Gratitude Scripture */}
-      <section className="py-20 px-4 bg-gradient-to-r from-yellow-500 to-yellow-600 text-blue-900">
-        <div className="container mx-auto text-center">
-          <blockquote className="text-2xl md:text-3xl italic mb-8 max-w-5xl mx-auto">
-            <EditableText
-              page="thanks"
-              section="scripture"
-              contentKey="verse"
-              initialValue={content?.scripture?.verse}
-              tag="span"
-              className="text-2xl md:text-3xl italic text-blue-900"
-              isTextArea={true}
-            />
-          </blockquote>
-          <p className="text-xl md:text-2xl font-semibold text-blue-800 opacity-90">
-            <EditableText
-              page="thanks"
-              section="scripture"
-              contentKey="reference"
-              initialValue={content?.scripture?.reference}
-              tag="span"
-              className="text-xl md:text-2xl font-semibold text-blue-800 opacity-90"
-            />
-          </p>
-        </div>
-      </section>
-
-      {/* Filter Section */}
-      <section className="py-12 px-4 bg-white border-b border-blue-100">
-        <div className="container mx-auto">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center">
-              <Filter className="h-5 w-5 md:h-6 md:w-6 mr-3 text-blue-700" />
-              <span className="text-base md:text-lg font-medium text-blue-900">필터:</span>
-            </div>
-            <span className="text-sm md:text-base text-gray-600">{filteredAndSortedPosts.length}개의 감사 인사</span>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-            <Select value={selectedRole} onValueChange={setSelectedRole}>
-              <SelectTrigger className="text-base md:text-lg h-12 border-blue-300 focus:border-blue-700 focus:ring-blue-700">
-                <SelectValue placeholder="역할 선택" />
+      {/* 필터 및 정렬 옵션 */}
+      <section className="py-4 px-4">
+        <div className="container mx-auto max-w-2xl flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0 sm:space-x-4">
+          {/* 정렬 기준 */}
+          <div className="flex items-center space-x-2 w-full sm:w-auto">
+            <label htmlFor="sort-by" className="text-gray-700 text-sm font-medium whitespace-nowrap">정렬:</label>
+            <Select value={selectedSortBy} onValueChange={handleSortByChange}>
+              <SelectTrigger id="sort-by" className="w-full sm:w-[180px]">
+                <SelectValue placeholder="정렬 기준" />
               </SelectTrigger>
               <SelectContent>
-                {roles.map((role) => (
-                  <SelectItem key={role.key} value={role.key} className="text-base md:text-lg">
-                    {role.label}
-                  </SelectItem>
-                ))}
+                <SelectItem value="created_at_desc">최신순</SelectItem>
+                <SelectItem value="created_at_asc">오래된순</SelectItem>
               </SelectContent>
             </Select>
+          </div>
 
+          {/* 작성자 역할별 필터 */}
+          <div className="flex items-center space-x-2 w-full sm:w-auto">
+            <label htmlFor="role-filter" className="text-gray-700 text-sm font-medium whitespace-nowrap">작성자:</label>
+            <Select value={selectedRoleFilter} onValueChange={handleRoleFilterChange}>
+              <SelectTrigger id="role-filter" className="w-full sm:w-[180px]">
+                <SelectValue placeholder="작성자 역할" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">전체</SelectItem>
+                <SelectItem value="admin">관리자</SelectItem>
+                <SelectItem value="user">멤버</SelectItem>
+                <SelectItem value="child">어린이</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* 날짜 필터 */}
+          <div className="flex items-center space-x-2 w-full sm:w-auto">
+            <label htmlFor="date-filter" className="text-gray-700 text-sm font-medium whitespace-nowrap">날짜:</label>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
-                  variant="outline"
-                  className="text-base md:text-lg justify-start bg-transparent h-12 border-blue-300 focus:border-blue-700 focus:ring-blue-700"
+                  variant={"outline"}
+                  className={cn(
+                    "w-full sm:w-[180px] justify-start text-left font-normal",
+                    !selectedDate && "text-muted-foreground"
+                  )}
                 >
-                  <CalendarIcon className="h-5 w-5 md:h-6 md:w-6 mr-3 text-blue-700" />
-                  {selectedDate ? format(selectedDate, "yyyy-MM-dd") : "날짜 선택"}
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {selectedDate ? format(selectedDate, "PPP") : <span>날짜 선택</span>}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
-                <Calendar mode="single" selected={selectedDate} onSelect={setSelectedDate} initialFocus />
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={handleDateFilterChange}
+                  initialFocus
+                />
               </PopoverContent>
             </Popover>
-
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="text-base md:text-lg h-12 border-blue-300 focus:border-blue-700 focus:ring-blue-700">
-                <SelectValue placeholder="정렬 방식" />
-              </SelectTrigger>
-              <SelectContent>
-                {sortOptions.map((option) => (
-                  <SelectItem key={option.key} value={option.key} className="text-base md:text-lg">
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Button
-              variant="outline"
-              onClick={() => {
-                setSelectedRole("all")
-                setSelectedDate(undefined)
-                setSortBy("created_at_desc")
-              }}
-              className="text-base md:text-lg h-12 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white"
-            >
-              필터 초기화
-            </Button>
+            {selectedDate && (
+              <Button variant="ghost" size="icon" onClick={() => handleDateFilterChange(undefined)}>
+                <X className="h-4 w-4" />
+              </Button>
+            )}
           </div>
         </div>
       </section>
 
-      {/* Thanks Posts */}
-      <section className="py-20 px-4">
-        <div className="container mx-auto">
-          {filteredAndSortedPosts.length === 0 ? (
-            <div className="text-center py-16">
-              <div className="text-6xl md:text-7xl mb-6">😔</div>
-              <h3 className="text-xl md:text-2xl font-semibold text-blue-900 mb-4">감사 인사가 없습니다</h3>
-              <p className="text-base md:text-lg text-gray-700">다른 필터를 선택해보세요.</p>
-            </div>
+      {/* New Post Form */}
+      {user && (userProfile?.can_comment || userRole === 'admin') && (
+        <section className="py-8 px-4">
+          <div className="container mx-auto max-w-2xl">
+            <Button onClick={() => setShowNewPostForm(!showNewPostForm)} className="mb-4 w-full">
+              {showNewPostForm ? "감사 제목 작성 취소" : <><PlusCircle className="mr-2 h-5 w-5" /> 감사 제목 작성</>}
+            </Button>
+            {showNewPostForm && (
+              <Card className="shadow-sm rounded-lg border bg-card text-card-foreground p-6 hover:shadow-lg transition-shadow duration-300">
+                <h2 className="text-2xl font-bold mb-4">새 감사 제목 작성</h2>
+                <form onSubmit={handleAddPost} className="space-y-4">
+                  <div>
+                    <label htmlFor="postTitle" className="block text-sm font-medium text-gray-700 mb-1">제목</label>
+                    <Input
+                      id="postTitle"
+                      type="text"
+                      value={newPostTitle}
+                      onChange={(e) => setNewPostTitle(e.target.value)}
+                      placeholder="감사 제목을 입력하세요"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="postContent" className="block text-sm font-medium text-gray-700 mb-1">내용</label>
+                    <Textarea
+                      id="postContent"
+                      value={newPostContent}
+                      onChange={(e) => setNewPostContent(e.target.value)}
+                      placeholder="감사 내용을 입력하세요"
+                      rows={5}
+                      required
+                    />
+                  </div>
+                  <Button type="submit" disabled={isSubmittingPost}>
+                    {isSubmittingPost ? "작성 중..." : "감사 제목 제출"}
+                  </Button>
+                </form>
+              </Card>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* Thanks Posts List */}
+      <section className="py-8 px-4">
+        <div className="container mx-auto max-w-2xl">
+          {displayedPosts.length === 0 && thanksPosts.length === 0 ? (
+            <p className="text-center text-gray-600">아직 작성된 감사 제목이 없습니다. 첫 감사 제목을 작성해보세요!</p>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 lg:gap-10">
-              {filteredAndSortedPosts.map((post) => (
-                <Card
-                  key={post.id}
-                  className="hover:shadow-2xl transition-all duration-500 transform hover:scale-105 bg-gradient-to-br from-white to-blue-50 border-0 shadow-xl"
-                >
-                  <CardContent className="p-6 md:p-8">
-                    <div className="flex items-center justify-between mb-4">
-                      <Badge className={`${getRoleColor(post.author_role)} text-sm px-3 py-1 rounded-full`}>
-                        <User className="h-4 w-4 mr-2" />
-                        {getRoleLabel(post.author_role)}
-                      </Badge>
-                      <span className="text-sm text-gray-600">{formatDate(post.created_at)}</span>
-                    </div>
-                    <h3 className="text-xl md:text-2xl font-bold text-blue-900 mb-3 line-clamp-2">{post.title}</h3>
-                    <p className="text-base md:text-lg text-gray-700 mb-6 line-clamp-4 leading-relaxed">
-                      {post.content}
-                    </p>
-                    <div className="flex items-center justify-between border-t border-blue-100 pt-4">
-                      <span className="text-sm md:text-base text-gray-600 font-medium">by {post.author_nickname}</span>
-                      <div className="flex items-center space-x-4">
-                        <div className="flex items-center text-red-600">
-                          <ThumbsUp className="h-4 w-4 md:h-5 md:w-5 mr-1" />
-                          <span className="text-sm md:text-base">{post.thanks_reactions?.length || 0}</span>
-                        </div>
-                        <div className="flex items-center text-blue-600">
-                          <MessageCircle className="h-4 w-4 md:h-5 md:w-5 mr-1" />
-                          <span className="text-sm md:text-base">{post.thanks_comments?.length || 0}</span>
-                        </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {displayedPosts.map(post => (
+                <Card key={post.id} className="shadow-sm rounded-lg border bg-card text-card-foreground relative hover:shadow-lg transition-shadow duration-300">
+                  <CardHeader>
+                    <div className="flex items-center space-x-3 mb-2">
+                      <Avatar>
+                        <AvatarImage src={post.author_profile_picture_url || "/placeholder.svg"} alt={post.author_nickname} />
+                        <AvatarFallback>{post.author_nickname?.charAt(0) || "U"}</AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <CardTitle className="text-lg font-semibold">{post.title}</CardTitle>
+                        <CardDescription className="text-sm text-gray-500">
+                          {post.author_nickname} ({post.author_role || '알 수 없음'}) • {new Date(post.created_at).toLocaleString()}
+                        </CardDescription>
                       </div>
                     </div>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{post.content}</p>
                   </CardContent>
+                  <CardFooter className="flex justify-between items-center border-t pt-4">
+                    {renderReactionButtons(post)}
+                    <div className="flex items-center space-x-4 text-gray-500">
+                      <div className="flex items-center space-x-1">
+                        <MessageCircle className="h-4 w-4" />
+                        <span>{(post.comments || []).length}</span>
+                      </div>
+                    </div>
+                  </CardFooter>
+                  {/* TODO: 댓글 목록 및 댓글 작성 폼 추가 (후순위) */}
                 </Card>
               ))}
             </div>
           )}
-        </div>
-      </section>
-
-      {/* Call to Action */}
-      <section className="py-20 px-4 bg-gradient-to-r from-yellow-500 to-yellow-600 text-blue-900">
-        <div className="container mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-8">
-            <EditableText
-              page="thanks"
-              section="cta"
-              contentKey="title"
-              initialValue={content?.cta?.title}
-              tag="span"
-              className="text-3xl md:text-4xl lg:text-5xl font-bold"
-            />
-          </h2>
-          <div className="text-xl md:text-2xl lg:text-3xl mb-10 opacity-95 max-w-4xl mx-auto">
-            <EditableText
-              page="thanks"
-              section="cta"
-              contentKey="description"
-              initialValue={content?.cta?.description}
-              tag="span"
-              className="text-xl md:text-2xl lg:text-3xl opacity-95"
-              isTextArea={true}
-            />
-          </div>
-          <div className="flex flex-col sm:flex-row gap-6 md:gap-8 justify-center items-center">
-            <Button
-              asChild
-              size="lg"
-              className="bg-blue-700 text-white hover:bg-blue-800 w-full sm:w-auto font-bold px-10 py-4 text-xl rounded-full shadow-xl transform hover:scale-105 transition-all duration-300"
-            >
-              <Link href="/join">교회 가입하기</Link>
-            </Button>
-            <Button
-              asChild
-              variant="outline"
-              size="lg"
-              className="border-2 border-blue-700 text-blue-700 hover:bg-blue-700 hover:text-white w-full sm:w-auto bg-transparent font-bold px-10 py-4 text-xl rounded-full shadow-lg transform hover:scale-105 transition-all duration-300"
-            >
-              <Link href="/prayer">기도 요청하기</Link>
-            </Button>
-          </div>
+          {/* 더보기 버튼 */}
+          {hasMorePosts && (
+            <div className="text-center mt-6">
+              <Button onClick={handleLoadMore} variant="outline">
+                더보기
+              </Button>
+            </div>
+          )}
         </div>
       </section>
     </div>
-  )
+  );
 }

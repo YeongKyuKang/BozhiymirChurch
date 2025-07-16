@@ -1,16 +1,16 @@
-// yeongkyukang/bozhiymirchurch/BBozhiymirChurch-3007c4235d54890bd3db6acc74558b701965297b/components/leadership-page-client.tsx
-"use client"; // 이 파일은 클라이언트 컴포넌트임을 명시합니다.
+// components/leadership-page-client.tsx
+"use client" // 이 파일은 클라이언트 컴포넌트임을 명시합니다.
 
-import * as React from "react";
-import { useState, useEffect } from "react";
-import { useAuth } from "@/contexts/auth-context";
-import { supabase } from "@/lib/supabase"; // 클라이언트 컴포넌트에서 DB 업데이트를 위해 필요
-import { Button } from "@/components/ui/button";
-import { Settings, Save, X } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import Link from "next/link";
-import EditableText from "@/components/editable-text"; // EditableText는 클라이언트 컴포넌트입니다.
-import { Book, Cross, Users, Globe, Heart, DotIcon as Dove } from "lucide-react"; // 아이콘들 추가
+import * as React from "react"
+import { useState, useEffect } from "react"
+import { useAuth } from "@/contexts/auth-context"
+import { supabase } from "@/lib/supabase" // 클라이언트 컴포넌트에서 DB 업데이트를 위해 필요
+import { Button } from "@/components/ui/button"
+import { Settings, Save, X, Mail, Phone, Heart, Globe, BookOpen } from "lucide-react"
+import { Card, CardContent } from "@/components/ui/card"
+import Link from "next/link"
+import Image from "next/image"
+import EditableText from "@/components/editable-text" // EditableText는 클라이언트 컴포넌트입니다.
 
 // Props 인터페이스 정의
 interface LeadershipPageClientProps {
@@ -94,42 +94,69 @@ export default function LeadershipPageClient({ initialContent }: LeadershipPageC
     }
   };
 
-  // 'beliefs' 관련 내용을 'leadership'에 맞게 수정 (예시)
-  const leadershipPrinciples = [ // 변수명 변경
+  const leaders = [
     {
-      icon: <Book className="h-8 w-8 text-blue-600" />,
-      titleKey: "vision_title",
-      descriptionKey: "vision_description",
+      sectionKey: "leader_michael",
+      nameKey: "name",
+      roleKey: "role",
+      imageKey: "image",
+      bioKey: "bio",
+      specialtiesKey: "specialties",
+      emailKey: "email",
+      phoneKey: "phone",
     },
     {
-      icon: <Cross className="h-8 w-8 text-red-600" />,
-      titleKey: "service_title",
-      descriptionKey: "service_description",
+      sectionKey: "leader_sarah",
+      nameKey: "name",
+      roleKey: "role",
+      imageKey: "image",
+      bioKey: "bio",
+      specialtiesKey: "specialties",
+      emailKey: "email",
+      phoneKey: "phone",
     },
     {
-      icon: <Dove className="h-8 w-8 text-green-600" />,
-      titleKey: "integrity_title",
-      descriptionKey: "integrity_description",
+      sectionKey: "leader_james",
+      nameKey: "name",
+      roleKey: "role",
+      imageKey: "image",
+      bioKey: "bio",
+      specialtiesKey: "specialties",
+      emailKey: "email",
+      phoneKey: "phone",
     },
     {
-      icon: <Heart className="h-8 w-8 text-pink-600" />,
-      titleKey: "compassion_title",
-      descriptionKey: "compassion_description",
+      sectionKey: "leader_maria",
+      nameKey: "name",
+      roleKey: "role",
+      imageKey: "image",
+      bioKey: "bio",
+      specialtiesKey: "specialties",
+      emailKey: "email",
+      phoneKey: "phone",
+    },
+  ]
+
+  const values = [
+    {
+      icon: <Heart className="h-6 w-6 text-blue-600" />, // h-8 w-8 -> h-6 w-6
+      titleKey: "value1_title",
+      descriptionKey: "value1_description",
     },
     {
-      icon: <Users className="h-8 w-8 text-purple-600" />,
-      titleKey: "teamwork_title",
-      descriptionKey: "teamwork_description",
+      icon: <BookOpen className="h-6 w-6 text-blue-600" />, // h-8 w-8 -> h-6 w-6
+      titleKey: "value2_title",
+      descriptionKey: "value2_description",
     },
     {
-      icon: <Globe className="h-8 w-8 text-orange-600" />,
-      titleKey: "outreach_title",
-      descriptionKey: "outreach_description",
+      icon: <Globe className="h-6 w-6 text-blue-600" />, // h-8 w-8 -> h-6 w-6
+      titleKey: "value3_title",
+      descriptionKey: "value3_description",
     },
-  ];
+  ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-yellow-50 pt-16"> {/* Added pt-24 */}
       {/* 전역 편집 모드 버튼 */}
       {userRole === 'admin' && (
         <div className="fixed top-24 right-8 z-50 flex flex-col space-y-2">
@@ -151,58 +178,165 @@ export default function LeadershipPageClient({ initialContent }: LeadershipPageC
       )}
 
       {/* Hero Section */}
-      <section className="py-16 px-4 pt-32">
-        <div className="container mx-auto text-center">
-          <h1 className="text-5xl font-bold text-gray-900 mb-6">
+      <div className="bg-gradient-to-r from-blue-700 to-blue-800 text-white h-[25vh] flex items-center justify-center border-b-4 border-yellow-500"> {/* h-[60vh] -> h-[25vh] */}
+        <div className="container mx-auto px-4 text-center">
+          <div className="mb-2"> {/* mb-4 -> mb-2 */}
+            <span className="text-3xl md:text-4xl">👥</span> {/* text-4xl md:text-5xl -> text-3xl md:text-4xl */}
+          </div>
+          <h1 className="text-2xl md:text-3xl lg:text-3xl font-extrabold mb-3"> {/* text-3xl md:text-4xl lg:text-4xl -> text-2xl md:text-3xl lg:text-3xl, mb-6 -> mb-3 */}
+            <EditableText
+              page="leadership"
+              section="hero"
+              contentKey="title_part1"
+              initialValue={initialContent?.hero?.title_part1 || "Meet Our "}
+              tag="span"
+              className="text-white"
+            />
+            <span className="text-yellow-500">
               <EditableText
-                  page="leadership" // 'beliefs'에서 'leadership'으로 변경
-                  section="main"
-                  contentKey="title"
-                  initialValue={initialContent?.main?.title}
-                  isEditingPage={isPageEditing}
-                  onContentChange={handleContentChange}
-                  tag="span"
-                  className="text-5xl font-bold text-gray-900"
+                page="leadership"
+                section="hero"
+                contentKey="title_part2"
+                initialValue={initialContent?.hero?.title_part2 || "Leadership Team"}
+                tag="span"
+                className="text-yellow-500"
               />
+            </span>
           </h1>
-          <div className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
-              <EditableText
-                  page="leadership" // 'beliefs'에서 'leadership'으로 변경
-                  section="main"
-                  contentKey="description"
-                  initialValue={initialContent?.main?.description}
-                  isEditingPage={isPageEditing}
-                  onContentChange={handleContentChange}
-                  tag="span"
-                  className="text-xl text-gray-600"
-              />
-          </div>
-          <div className="flex items-center justify-center space-x-2 text-blue-600">
-            <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
-            <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
-            <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
-          </div>
+          <p className="text-sm md:text-base text-blue-200 max-w-4xl mx-auto leading-relaxed"> {/* text-lg md:text-xl -> text-sm md:text-base */}
+            <EditableText
+              page="leadership"
+              section="hero"
+              contentKey="description"
+              initialValue={
+                initialContent?.hero?.description || "Dedicated servants called to lead with wisdom, compassion, and faith."
+              }
+              tag="span"
+              className="text-sm md:text-base text-blue-200"
+              isTextArea={true}
+            />
+          </p>
         </div>
-      </section>
+      </div>
 
-      {/* Leadership Principles Grid (이전 Beliefs Grid) */}
-      <section className="py-16 px-4">
-        <div className="container mx-auto">
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {leadershipPrinciples.map((principle, index) => ( // 변수명 변경
+      {/* Leadership Team */}
+      <section className="py-8 bg-white"> {/* py-12 -> py-8, implicit bg-white */}
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4"> {/* gap-8 -> gap-4 */}
+            {leaders.map((leader, index) => (
               <Card
                 key={index}
-                className="hover:shadow-lg transition-shadow duration-300 border-l-4 border-l-blue-600"
+                className="hover:shadow-lg transition-all duration-300 transform hover:scale-105 overflow-hidden border border-gray-200 shadow-md bg-white"
               >
-                <CardContent className="p-6">
-                  <div className="flex items-center mb-4">
-                    {principle.icon}
-                    <h3 className="text-xl font-bold text-gray-900 ml-3">
-                      <EditableText page="leadership" section="grid_items" contentKey={principle.titleKey} initialValue={initialContent?.grid_items?.[principle.titleKey]} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="ml-0" /> {/* 'beliefs'에서 'leadership'으로 변경 */}
-                    </h3>
+                <CardContent className="p-4"> {/* p-6 -> p-4 */}
+                  <div className="relative h-48 md:h-56 bg-gray-50"> {/* h-64 md:h-72 -> h-48 md:h-56 */}
+                    <Image
+                      src={initialContent?.[leader.sectionKey]?.[leader.imageKey] || "/placeholder.svg"}
+                      alt={initialContent?.[leader.sectionKey]?.[leader.nameKey] || "Leader Image"}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    />
+                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-blue-900/90 to-transparent p-4"> {/* p-6 -> p-4 */}
+                      <h3 className="text-xl md:text-2xl font-bold text-white mb-1"> {/* text-2xl md:text-3xl -> text-xl md:text-2xl, mb-2 -> mb-1 */}
+                        <EditableText
+                          page="leadership"
+                          section={leader.sectionKey}
+                          contentKey={leader.nameKey}
+                          initialValue={initialContent?.[leader.sectionKey]?.[leader.nameKey] || "Leader Name"}
+                          tag="span"
+                          className="text-xl md:text-2xl font-bold text-white"
+                        />
+                      </h3>
+                      <p className="text-base text-yellow-500 font-semibold"> {/* text-lg -> text-base */}
+                        <EditableText
+                          page="leadership"
+                          section={leader.sectionKey}
+                          contentKey={leader.roleKey}
+                          initialValue={initialContent?.[leader.sectionKey]?.[leader.roleKey] || "Role"}
+                          tag="span"
+                          className="text-yellow-500"
+                        />
+                      </p>
+                    </div>
                   </div>
-                  <div className="text-gray-600 leading-relaxed">
-                      <EditableText page="leadership" section="grid_items" contentKey={principle.descriptionKey} initialValue={initialContent?.grid_items?.[principle.descriptionKey]} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-gray-600 leading-relaxed" /> {/* 'beliefs'에서 'leadership'으로 변경 */}
+
+                  <div className="p-4"> {/* p-6 -> p-4 */}
+                    <p className="text-sm text-gray-700 mb-4 leading-relaxed"> {/* text-base -> text-sm, mb-6 -> mb-4 */}
+                      <EditableText
+                        page="leadership"
+                        section={leader.sectionKey}
+                        contentKey={leader.bioKey}
+                        initialValue={initialContent?.[leader.sectionKey]?.[leader.bioKey] || "Bio information"}
+                        tag="span"
+                        className="text-sm text-gray-700 leading-relaxed"
+                        isTextArea={true}
+                      />
+                    </p>
+
+                    <div className="mb-4"> {/* mb-6 -> mb-4 */}
+                      <h4 className="font-bold text-blue-900 mb-2 text-sm">Specialties:</h4> {/* text-base -> text-sm, mb-3 -> mb-2 */}
+                      <div className="flex flex-wrap gap-1"> {/* gap-2 -> gap-1 */}
+                        {(
+                          initialContent?.[leader.sectionKey]?.[leader.specialtiesKey]
+                            ?.split(",")
+                            .map((s: string) => s.trim()) || []
+                        ).map((specialty: string, idx: number) => (
+                          <span
+                            key={idx}
+                            className="px-2 py-0.5 bg-yellow-500 text-blue-900 rounded-full text-xs font-semibold shadow-md"
+                          > {/* px-3 py-1.5 -> px-2 py-0.5, text-sm -> text-xs */}
+                            <EditableText
+                              page="leadership"
+                              section={leader.sectionKey}
+                              contentKey={`${leader.specialtiesKey}_${idx}`}
+                              initialValue={initialContent?.[leader.sectionKey]?.[`${leader.specialtiesKey}_${idx}`] || specialty}
+                              tag="span"
+                              className="text-xs"
+                            />
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-1"> {/* space-y-2 -> space-y-1 */}
+                      <div className="flex items-center text-gray-700 text-sm"> {/* text-base -> text-sm */}
+                        <div className="bg-blue-700 rounded-full p-1 mr-2"> {/* p-1.5 mr-3 -> p-1 mr-2 */}
+                          <Mail className="h-4 w-4 text-white" />
+                        </div>
+                        <a
+                          href={`mailto:${initialContent?.[leader.sectionKey]?.[leader.emailKey]}`}
+                          className="hover:text-blue-700 transition-colors font-medium"
+                        >
+                          <EditableText
+                            page="leadership"
+                            section={leader.sectionKey}
+                            contentKey={leader.emailKey}
+                            initialValue={initialContent?.[leader.sectionKey]?.[leader.emailKey] || "email@example.com"}
+                            tag="span"
+                            className="hover:text-blue-700 transition-colors"
+                          />
+                        </a>
+                      </div>
+                      <div className="flex items-center text-gray-700 text-sm"> {/* text-base -> text-sm */}
+                        <div className="bg-yellow-500 rounded-full p-1 mr-2"> {/* p-1.5 mr-3 -> p-1 mr-2 */}
+                          <Phone className="h-4 w-4 text-white" />
+                        </div>
+                        <a
+                          href={`tel:${initialContent?.[leader.sectionKey]?.[leader.phoneKey]}`}
+                          className="hover:text-blue-700 transition-colors font-medium"
+                        >
+                          <EditableText
+                            page="leadership"
+                            section={leader.sectionKey}
+                            contentKey={leader.phoneKey}
+                            initialValue={initialContent?.[leader.sectionKey]?.[leader.phoneKey] || "(555) 123-4567"}
+                            tag="span"
+                            className="hover:text-blue-700 transition-colors"
+                          />
+                        </a>
+                      </div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -211,61 +345,118 @@ export default function LeadershipPageClient({ initialContent }: LeadershipPageC
         </div>
       </section>
 
-      {/* Core Values Section (이전 Scripture Section) */}
-      <section className="py-16 px-4 bg-blue-600 text-white">
-        <div className="container mx-auto text-center">
-          <h2 className="text-3xl font-bold mb-8">
-              <EditableText page="leadership" section="core_values" contentKey="values_title" initialValue={initialContent?.core_values?.values_title} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-white" /> {/* 'beliefs'에서 'leadership'으로 변경, contentKey 변경 */}
+      {/* Leadership Values */}
+      <section className="py-8 bg-gradient-to-br from-blue-600 to-blue-700 text-white border-y border-white/20"> {/* py-12 -> py-8 */}
+        <div className="container mx-auto px-4">
+          <h2 className="text-xl md:text-2xl font-extrabold text-center mb-6"> {/* text-2xl md:text-2xl -> text-xl md:text-2xl, mb-8 -> mb-6 */}
+            <EditableText
+              page="leadership"
+              section="leadership_values"
+              contentKey="title"
+              initialValue={initialContent?.leadership_values?.title || "Our Leadership Values"}
+              tag="span"
+              className="text-white"
+            />
           </h2>
-          <blockquote className="text-2xl italic mb-6 max-w-4xl mx-auto">
-              <EditableText page="leadership" section="core_values" contentKey="values_quote" initialValue={initialContent?.core_values?.values_quote} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-2xl italic" isTextArea={true} /> {/* 'beliefs'에서 'leadership'으로 변경, contentKey 변경 */}
-          </blockquote>
-          <div className="text-xl opacity-90">
-              <EditableText page="leadership" section="core_values" contentKey="values_summary" initialValue={initialContent?.core_values?.values_summary} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-xl opacity-90" /> {/* 'beliefs'에서 'leadership'으로 변경, contentKey 변경 */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4"> {/* gap-6 -> gap-4 */}
+            {values.map((value, index) => (
+              <div
+                key={index}
+                className="text-center bg-white/10 backdrop-blur-sm rounded-2xl p-4 shadow-lg hover:bg-white/20 transition-all duration-300 border border-gray-600"
+              >
+                <div className="flex justify-center mb-4"> {/* mb-6 -> mb-4 */}
+                  <div className="bg-yellow-400 rounded-full p-2">{value.icon}</div> {/* p-3 -> p-2 */}
+                </div>
+                <h3 className="text-base font-bold mb-3"> {/* text-lg -> text-base, mb-4 -> mb-3 */}
+                  <EditableText
+                    page="leadership"
+                    section="leadership_values"
+                    contentKey={value.titleKey}
+                    initialValue={initialContent?.leadership_values?.[value.titleKey] || `Value ${index + 1}`}
+                    tag="span"
+                    className="text-white"
+                  />
+                </h3>
+                <p className="text-sm text-blue-200 text-base leading-relaxed"> {/* text-base -> text-sm */}
+                  <EditableText
+                    page="leadership"
+                    section="leadership_values"
+                    contentKey={value.descriptionKey}
+                    initialValue={initialContent?.leadership_values?.[value.descriptionKey] || "Description of this value"}
+                    tag="span"
+                    className="text-blue-200"
+                  />
+                </p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Leadership Team Connection (이전 Ukrainian Ministry Connection) */}
-      <section className="py-16 px-4">
-        <div className="container mx-auto">
-          <Card className="bg-gradient-to-r from-blue-500 to-yellow-400 text-white">
-            <CardContent className="p-8 text-center">
-              <h2 className="text-3xl font-bold mb-4">
-                  <EditableText page="leadership" section="team_connection" contentKey="team_title" initialValue={initialContent?.team_connection?.team_title} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-3xl font-bold" /> {/* 'beliefs'에서 'leadership'으로 변경, contentKey 변경 */}
-              </h2>
-              <div className="text-xl mb-6 opacity-90">
-                  <EditableText page="leadership" section="team_connection" contentKey="team_description" initialValue={initialContent?.team_connection?.team_description} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-xl opacity-90" /> {/* 'beliefs'에서 'leadership'으로 변경, contentKey 변경 */}
-              </div>
-              <div className="flex justify-center space-x-4">
-                <span className="text-2xl">🤝</span>
-                <span className="text-2xl">🌟</span>
-                <span className="text-2xl">🌱</span>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </section>
-
-      {/* Call to Action */}
-      <section className="py-16 px-4 text-center">
-        <div className="container mx-auto">
-          <h2 className="text-3xl font-bold text-gray-900 mb-6">
-              <EditableText page="leadership" section="cta" contentKey="cta_title" initialValue={initialContent?.cta?.cta_title} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-3xl font-bold text-gray-900" /> {/* 'beliefs'에서 'leadership'으로 변경 */}
+      {/* Contact Leadership */}
+      <section className="py-8 bg-blue-50"> {/* py-12 -> py-8, bg-white (implicit) -> bg-blue-50 */}
+        <div className="container mx-auto px-4">
+          <h2 className="text-xl md:text-2xl font-extrabold text-blue-900 mb-3"> {/* mb-5 -> mb-3 */}
+            <EditableText
+              page="leadership"
+              section="contact_leadership"
+              contentKey="title"
+              initialValue={initialContent?.contact_leadership?.title || "Connect with Our Leaders"}
+              tag="span"
+              className="text-blue-900"
+            />
           </h2>
-          <div className="text-xl text-gray-600 mb-8">
-              <EditableText page="leadership" section="cta" contentKey="cta_description" initialValue={initialContent?.cta?.cta_description} isEditingPage={isPageEditing} onContentChange={handleContentChange} tag="span" className="text-xl text-gray-600" /> {/* 'beliefs'에서 'leadership'으로 변경 */}
-          </div>
-          <div className="space-x-4">
-            <Button asChild size="lg" className="bg-blue-600 hover:bg-blue-700">
-              <Link href="/join">Join Our Community</Link>
+          <p className="text-base md:text-lg text-gray-700 mb-4 max-w-4xl mx-auto leading-relaxed"> {/* text-lg md:text-xl -> text-base md:text-lg, mb-7 -> mb-4 */}
+            <EditableText
+              page="leadership"
+              section="contact_leadership"
+              contentKey="description"
+              initialValue={
+                initialContent?.contact_leadership?.description ||
+                "We're here to serve and support you on your spiritual journey."
+              }
+              tag="span"
+              className="text-base md:text-lg text-gray-700"
+              isTextArea={true}
+            />
+          </p>
+          <div className="flex flex-col sm:flex-row gap-2 justify-center items-center"> {/* gap-4 -> gap-2 */}
+            <Button
+              asChild
+              size="lg"
+              className="bg-gradient-to-r from-blue-700 to-blue-800 hover:from-blue-800 hover:to-blue-900 text-white font-bold px-6 py-2 text-base rounded-full shadow-xl transform hover:scale-105 transition-all duration-300"
+            >
+              <Link href="/join">
+                <EditableText
+                  page="leadership"
+                  section="contact_leadership"
+                  contentKey="button1_text"
+                  initialValue={initialContent?.contact_leadership?.button1_text || "Join Our Community"}
+                  tag="span"
+                  className="inline"
+                />
+              </Link>
             </Button>
-            <Button asChild variant="outline" size="lg">
-              <Link href="/">Back to Home</Link>
+            <Button
+              asChild
+              variant="outline"
+              size="lg"
+              className="border-2 border-yellow-700 text-yellow-700 hover:bg-yellow-700 hover:text-white font-bold px-6 py-2 text-base rounded-full bg-transparent shadow-lg transform hover:scale-105 transition-all duration-300"
+            >
+              <Link href="/">
+                <EditableText
+                  page="leadership"
+                  section="contact_leadership"
+                  contentKey="button2_text"
+                  initialValue={initialContent?.contact_leadership?.button2_text || "Back to Home"}
+                  tag="span"
+                  className="inline"
+                />
+              </Link>
             </Button>
           </div>
         </div>
       </section>
     </div>
-  );
+  )
 }

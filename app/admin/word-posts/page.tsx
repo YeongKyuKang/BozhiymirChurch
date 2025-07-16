@@ -13,9 +13,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { format, startOfDay, subDays, isFuture, isPast } from "date-fns";
-// ✅ 추가: date-fns-tz에서 필요한 함수 임포트
-import { toZonedTime, formatInTimeZone } from 'date-fns-tz'; 
+import { format, startOfDay, subDays, addDays } from "date-fns";
+import { toZonedTime, formatInTimeZone, zonedTimeToUtc, utcToZonedTime } from 'date-fns-tz'; // ✅ zonedTimeToUtc, utcToZonedTime 임포트 추가
 import {
   Settings, Save, X, MessageCircle, Heart, Download, BookOpen,
   Calendar as CalendarIcon, Frown, ImageIcon, Upload, Loader2,
@@ -35,16 +34,19 @@ interface WordPost {
   image_url?: string | null;
 }
 
+// ✅ 폴란드 시간대 정의
+const POLAND_TIMEZONE = 'Europe/Warsaw';
+
 export default function AdminWordPostsPage() {
   const { user, userProfile, userRole, loading: authLoading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const postId = searchParams.get('id');
 
+  // ✅ wordDate 초기값을 폴란드 시간 기준의 오늘 날짜 자정으로 설정
+  const [wordDate, setWordDate] = useState<Date | undefined>(startOfDay(utcToZonedTime(zonedTimeToUtc(new Date(), Intl.DateTimeFormat().resolvedOptions().timeZone), POLAND_TIMEZONE)));
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  // ✅ 수정: wordDate 초기값을 UTC 기준으로 설정
-  const [wordDate, setWordDate] = useState<Date | undefined>(startOfDay(toZonedTime(new Date(), 'UTC')));
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageUrlPreview, setImageUrlPreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -78,8 +80,8 @@ export default function AdminWordPostsPage() {
           if (data) {
             setTitle(data.title);
             setContent(data.content);
-            // ✅ 수정: 불러온 날짜도 UTC 기준으로 변환
-            const fetchedDate = startOfDay(toZonedTime(new Date(data.word_date), 'UTC'));
+            // ✅ 불러온 날짜를 폴란드 시간 기준으로 변환
+            const fetchedDate = startOfDay(toZonedTime(new Date(data.word_date), POLAND_TIMEZONE));
             setWordDate(fetchedDate);
             setImageUrlPreview(data.image_url || null);
           }
@@ -92,12 +94,12 @@ export default function AdminWordPostsPage() {
   useEffect(() => {
     if (wordDate) {
       const checkDateConflict = async () => {
-        // ✅ 수정: 쿼리 날짜를 명시적으로 UTC로 포맷
-        const formattedDate = formatInTimeZone(wordDate, 'UTC', 'yyyy-MM-dd');
+        // ✅ wordDate (이미 폴란드 시간)를 UTC로 포맷
+        const formattedDateForQuery = formatInTimeZone(wordDate, 'UTC', 'yyyy-MM-dd');
         const { data, error } = await supabase
           .from('word_posts')
           .select('id')
-          .eq('word_date', formattedDate);
+          .eq('word_date', formattedDateForQuery);
 
         if (error) {
           console.error("Error checking date conflict:", error);
@@ -108,7 +110,7 @@ export default function AdminWordPostsPage() {
         const isConflict = data.some(post => post.id !== postId);
         setIsDateConflicting(isConflict);
         if (isConflict) {
-          setMessage({ type: 'error', text: `선택하신 날짜 (${formattedDate})에 이미 말씀 게시물이 존재합니다. 다른 날짜를 선택하거나 기존 게시물을 편집해 주세요.` });
+          setMessage({ type: 'error', text: `선택하신 날짜 (${formattedDateForQuery})에 이미 말씀 게시물이 존재합니다. 다른 날짜를 선택하거나 기존 게시물을 편집해 주세요.` });
         } else {
           setMessage(null);
         }
@@ -201,7 +203,7 @@ export default function AdminWordPostsPage() {
     const postData = {
       title,
       content,
-      // ✅ 수정: word_date를 명시적으로 UTC로 포맷하여 저장
+      // ✅ wordDate (폴란드 시간)를 UTC로 포맷하여 저장
       word_date: formatInTimeZone(wordDate, 'UTC', 'yyyy-MM-dd'),
       author_id: user.id,
       author_nickname: userProfile.nickname || user.email || '관리자',
@@ -237,8 +239,8 @@ export default function AdminWordPostsPage() {
     if (!postId) {
       setTitle("");
       setContent("");
-      // ✅ 수정: 초기 날짜를 UTC 기준으로 설정
-      setWordDate(startOfDay(toZonedTime(new Date(), 'UTC')));
+      // ✅ 새 게시물 작성 후 초기 날짜를 폴란드 시간 기준의 오늘 날짜 자정으로 설정
+      setWordDate(startOfDay(toZonedTime(new Date(), POLAND_TIMEZONE)));
       setImageFile(null);
       setImageUrlPreview(null);
     }
@@ -247,25 +249,27 @@ export default function AdminWordPostsPage() {
   };
 
   const getDisabledDays = useCallback(() => { 
-    const today = new Date(); 
-    // ✅ 수정: 현재 시간을 UTC 기준으로 변환
-    const nowUtc = toZonedTime(today, 'UTC'); 
-    const startOfTodayUtc = startOfDay(nowUtc);
-
-    const fiveDaysAgoUtc = startOfDay(subDays(nowUtc, 5)); 
+    // ✅ 로컬 시간의 "오늘"을 폴란드 시간대로 변환하여 기준점 설정
+    const todayPoland = startOfDay(toZonedTime(new Date(), POLAND_TIMEZONE)); 
+    const fiveDaysAgoPoland = startOfDay(subDays(todayPoland, 5)); 
     
-    // ✅ 수정: 미래 날짜 및 5일 이전 과거 날짜를 UTC 기준으로 비교
-    const futureDates = { from: startOfDay(toZonedTime(new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1), 'UTC')), to: toZonedTime(new Date(2100, 0, 1), 'UTC') }; 
-    const pastBeyondFiveDays = { from: toZonedTime(new Date(1900, 0, 1), 'UTC'), to: startOfDay(subDays(nowUtc, 6)) }; // today - 6일의 시작이 5일 이전의 과거
-
+    // ✅ 미래 날짜 (내일 이후) 및 5일 이전 과거 날짜를 폴란드 시간 기준으로 비활성화
+    // Date 객체는 UTC 타임스탬프를 기반하므로, toZonedTime으로 원하는 시간대의 날짜를 만들고
+    // startOfDay를 적용하여 해당 시간대의 '자정'을 나타내는 Date 객체를 생성
+    const futureDates = { 
+      from: startOfDay(addDays(todayPoland, 1)), 
+      to: toZonedTime(new Date(2100, 0, 1), POLAND_TIMEZONE) 
+    }; 
+    const pastBeyondFiveDays = { 
+      from: toZonedTime(new Date(1900, 0, 1), POLAND_TIMEZONE), 
+      to: subDays(fiveDaysAgoPoland, 1) 
+    }; 
+    
     return [
       futureDates,
       pastBeyondFiveDays
     ];
   }, []);
-
-  const fiveDaysAgoClientSide = startOfDay(toZonedTime(subDays(new Date(), 5), 'UTC')); // ✅ 수정: UTC 기준으로 fiveDaysAgoClientSide 계산
-
 
   if (authLoading || (!user && !authLoading) || (user && userRole !== 'admin')) {
     return (
@@ -276,21 +280,21 @@ export default function AdminWordPostsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white py-16 pt-24 px-4">
+    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white py-16 pt-24 px-4">
       <div className="container mx-auto max-w-3xl">
-        <Card className="shadow-lg">
+        <Card className="shadow-lg bg-gray-800 border border-gray-700 text-white">
           <CardHeader>
-            <CardTitle className="text-3xl font-bold text-gray-900">
+            <CardTitle className="text-3xl font-bold text-white">
               {postId ? "말씀 게시물 편집" : "새 말씀 게시물 작성"}
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-gray-400">
               매일 말씀 게시물과 배경 이미지를 관리합니다.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
               {message && (
-                <Alert variant={message.type === 'error' ? 'destructive' : 'default'}>
+                <Alert variant={message.type === 'error' ? 'destructive' : 'default'} className={message.type === 'error' ? 'bg-red-900 text-white border-red-700' : 'bg-green-900 text-white border-green-700'}>
                   {message.type === 'error' ? <XCircle className="h-4 w-4" /> : <CheckCircle className="h-4 w-4" />}
                   <AlertTitle>{message.type === 'error' ? "오류!" : "성공!"}</AlertTitle>
                   <AlertDescription>{message.text}</AlertDescription>
@@ -299,26 +303,26 @@ export default function AdminWordPostsPage() {
 
               {/* 말씀 날짜 선택 */}
               <div>
-                <Label htmlFor="wordDate" className="mb-2 block">말씀 날짜</Label>
+                <Label htmlFor="wordDate" className="mb-2 block text-gray-300">말씀 날짜</Label>
                 <Calendar
                   mode="single"
                   selected={wordDate}
-                  // ✅ 수정: 날짜 선택 시 UTC 기준으로 설정
-                  onSelect={(date) => setWordDate(date ? startOfDay(toZonedTime(date, 'UTC')) : undefined)}
+                  // ✅ 날짜 선택 시 Calendar에서 반환된 로컬 Date 객체를 폴란드 시간대 기준으로 변환하여 저장
+                  onSelect={(date) => setWordDate(date ? toZonedTime(new Date(date.getFullYear(), date.getMonth(), date.getDate()), POLAND_TIMEZONE) : undefined)}
                   initialFocus
                   disabled={getDisabledDays()}
-                  className="rounded-md border shadow"
+                  className="rounded-md border shadow bg-gray-700 text-white border-gray-600"
                 />
                 {wordDate && (
-                  <p className="text-sm text-gray-600 mt-2">
-                    선택된 날짜: {format(wordDate, 'yyyy년 MM월 dd일 (EEE)')}
+                  <p className="text-sm text-gray-400 mt-2">
+                    선택된 날짜: {formatInTimeZone(wordDate, POLAND_TIMEZONE, 'yyyy년 MM월 dd일 (EEE)')}
                   </p>
                 )}
               </div>
 
               {/* 말씀 제목 */}
               <div>
-                <Label htmlFor="title" className="mb-2 block">말씀 제목</Label>
+                <Label htmlFor="title" className="mb-2 block text-gray-300">말씀 제목</Label>
                 <Input
                   id="title"
                   type="text"
@@ -326,12 +330,13 @@ export default function AdminWordPostsPage() {
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="예: 요한복음 3:16"
                   required
+                  className="bg-gray-700 text-white border-gray-600 placeholder-gray-400 focus:border-blue-500 focus:ring-blue-500"
                 />
               </div>
 
               {/* 말씀 내용 */}
               <div>
-                <Label htmlFor="content" className="mb-2 block">말씀 내용</Label>
+                <Label htmlFor="content" className="mb-2 block text-gray-300">말씀 내용</Label>
                 <Textarea
                   id="content"
                   value={content}
@@ -339,21 +344,22 @@ export default function AdminWordPostsPage() {
                   placeholder="말씀 내용을 입력하세요 (예: 하나님이 세상을 이처럼 사랑하사...)"
                   rows={6}
                   required
+                  className="bg-gray-700 text-white border-gray-600 placeholder-gray-400 focus:border-blue-500 focus:ring-blue-500"
                 />
               </div>
 
               {/* 배경 이미지 업로드 */}
               <div>
-                <Label htmlFor="image" className="mb-2 block">배경 이미지 (선택 사항)</Label>
+                <Label htmlFor="image" className="mb-2 block text-gray-300">배경 이미지 (선택 사항)</Label>
                 <div className="flex items-center space-x-4">
-                  <div className="relative w-32 h-32 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center overflow-hidden bg-gray-100">
+                  <div className="relative w-32 h-32 border-2 border-dashed border-gray-600 rounded-lg flex items-center justify-center overflow-hidden bg-gray-700">
                     {imageUrlPreview ? (
                       <img src={imageUrlPreview} alt="Image Preview" className="w-full h-full object-cover" />
                     ) : (
-                      <ImageIcon className="h-12 w-12 text-gray-400" />
+                      <ImageIcon className="h-12 w-12 text-gray-500" />
                     )}
                     {isCompressing && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/50 text-white">
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/70 text-white">
                         <Loader2 className="h-6 w-6 animate-spin" />
                       </div>
                     )}
@@ -372,6 +378,7 @@ export default function AdminWordPostsPage() {
                     onClick={() => fileInputRef.current?.click()}
                     disabled={isCompressing}
                     variant="outline"
+                    className="bg-gray-700 text-white border-gray-600 hover:bg-gray-600 hover:text-white"
                   >
                     <Upload className="h-4 w-4 mr-2" />
                     {isCompressing ? "압축 중..." : "이미지 선택"}
@@ -382,21 +389,22 @@ export default function AdminWordPostsPage() {
                       onClick={() => {
                         setImageFile(null);
                         setImageUrlPreview(null);
-                        if (fileInputRef.current) fileInputRef.current.value = ''; // 파일 입력 초기화
+                        if (fileInputRef.current) fileInputRef.current.value = '';
                       }}
                       variant="ghost"
+                      className="text-red-400 hover:bg-gray-700 hover:text-red-500"
                     >
                       <X className="h-4 w-4 mr-2" />
                       이미지 제거
                     </Button>
                   )}
                 </div>
-                <p className="text-xs text-gray-500 mt-2">
+                <p className="text-xs text-gray-400 mt-2">
                   최대 1MB, JPG/PNG 형식 권장. 자동으로 압축됩니다.
                 </p>
               </div>
 
-              <Button type="submit" className="w-full" disabled={isSubmitting || isCompressing || isDateConflicting}>
+              <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg" disabled={isSubmitting || isCompressing || isDateConflicting}>
                 {isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />

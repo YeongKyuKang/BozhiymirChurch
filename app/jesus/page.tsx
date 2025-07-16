@@ -1,3 +1,4 @@
+// app/jesus/page.tsx
 import Header from "@/components/header"
 import Footer from "@/components/footer"
 import { createClient } from "@supabase/supabase-js"

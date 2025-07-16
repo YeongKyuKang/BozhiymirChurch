@@ -15,33 +15,6 @@ export default function CommunitySection({ initialContent, isEditingPage, onCont
   return (
     <section className="py-16 md:py-24 bg-gradient-to-br from-blue-50 to-yellow-50">
       <div className="container mx-auto px-4 text-center">
-        <h2 className="text-3xl md:text-4xl font-bold text-blue-900 mb-6">
-          <EditableText
-            page="home"
-            section="community_about"
-            contentKey="main_title"
-            initialValue={initialContent?.community_about?.main_title}
-            tag="span"
-            className="text-3xl md:text-4xl font-bold text-blue-900 mb-6"
-            placeholder="커뮤니티 메인 타이틀"
-            isEditingPage={isEditingPage}
-            onContentChange={onContentChange}
-          />
-        </h2>
-        <p className="text-lg md:text-xl text-gray-700 max-w-3xl mx-auto mb-12 leading-relaxed">
-          <EditableText
-            page="home"
-            section="community_about"
-            contentKey="subtitle"
-            initialValue={initialContent?.community_about?.subtitle}
-            tag="span"
-            className="text-lg md:text-xl text-gray-700 max-w-3xl mx-auto mb-12 leading-relaxed"
-            placeholder="커뮤니티 부제목"
-            isEditingPage={isEditingPage}
-            onContentChange={onContentChange}
-          />
-        </p>
-
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
           {/* Image Container */}
           <div className="relative w-full max-w-lg aspect-[4/5] md:aspect-[5/6] lg:aspect-[4/5] rounded-2xl shadow-2xl overflow-hidden mx-auto border-4 border-yellow-400">

@@ -3,8 +3,11 @@ import Header from "@/components/header";
 import Footer from "@/components/footer";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
-import SpecificEventsPageClient from "@/components/events-page-client";
+import dynamic from 'next/dynamic';
 import { Database } from "@/lib/supabase";
+
+// 클라이언트 컴포넌트를 동적으로 임포트 (SSR 비활성화)
+const SpecificEventsPageClient = dynamic(() => import("@/components/events-page-client"), { ssr: false });
 
 type Event = Database['public']['Tables']['events']['Row'];
 
