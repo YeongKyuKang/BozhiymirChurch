@@ -1,134 +1,152 @@
-// yeongkyukang/bozhiymirchurch/BozhiymirChurch-4d2cde288530ef711b8ef2d2cc649e1ca337c00c/components/thanks-page-client.tsx
+// components/thanks-page-client.tsx
 "use client";
 
 import * as React from "react";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
-import { Settings, Save, X, PlusCircle, MessageCircle, ThumbsUp, Heart, Laugh, Smile, Frown, CalendarIcon } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import EditableText from "@/components/editable-text";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
+import { Label } from "@/components/ui/label";
+import {
+  Settings, Save, X, Heart, MessageCircle, Loader2, CheckCircle, XCircle,
+  ThumbsUp, Smile, Zap, Frown, PlusCircle, ChevronDown, Edit3
+} from "lucide-react";
 import { format } from "date-fns";
-import { cn } from "@/lib/utils";
+import EditableText from "@/components/editable-text";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Trash2 } from "lucide-react";
 
-interface ThankPost {
+// ThanksPost 및 ThanksComment 타입 정의 (lib/supabase.ts에서 가져올 수도 있음)
+interface ThanksPost {
   id: string;
   title: string;
   content: string;
   author_id: string;
   author_nickname: string;
-  author_profile_picture_url?: string;
-  author_role?: string | null;
   created_at: string;
-  likes: { user_id: string; reaction_type: string }[];
-  comments: { id: string; content: string; author_nickname: string; created_at: string }[];
-  author?: { role: string | null } | null;
+  updated_at: string;
+  author_profile_picture_url: string | null;
+  author_role: string | null;
+}
+
+interface ThanksComment {
+  id: string;
+  post_id: string;
+  author_id: string;
+  author_nickname: string;
+  comment: string;
+  created_at: string;
+}
+
+interface ThanksReaction {
+  id: string;
+  user_id: string;
+  post_id: string;
+  reaction_type: string;
+  created_at: string;
 }
 
 interface ThanksPageClientProps {
   initialContent: Record<string, any>;
-  initialThanksPosts: ThankPost[];
+  initialThanksPosts: ThanksPost[];
 }
 
-const POSTS_PER_LOAD = 4;
+const POSTS_PER_LOAD = 6; // 한 번에 로드할 게시물 수
 
 export default function ThanksPageClient({ initialContent, initialThanksPosts }: ThanksPageClientProps) {
-  const { user, userProfile, userRole } = useAuth();
+  const { user, userProfile, userRole, loading: authLoading } = useAuth();
   const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
 
   const [isPageEditing, setIsPageEditing] = useState(false);
   const [changedContent, setChangedContent] = useState<Record<string, Record<string, string>>>({});
-  const [thanksPosts, setThanksPosts] = useState<ThankPost[]>(initialThanksPosts);
+  const [isSavingAll, setIsSavingAll] = useState(false);
+
+  const [thanksPosts, setThanksPosts] = useState<ThanksPost[]>(initialThanksPosts);
   const [newPostTitle, setNewPostTitle] = useState("");
   const [newPostContent, setNewPostContent] = useState("");
-  const [showNewPostForm, setShowNewPostForm] = useState(false);
   const [isSubmittingPost, setIsSubmittingPost] = useState(false);
-  const [isSavingAll, setIsSavingAll] = useState(false);
-  const [postsToShow, setPostsToShow] = useState(POSTS_PER_LOAD);
-  const [timezoneOffset, setTimezoneOffset] = useState<number | null>(null); // 사용자 시간대 오프셋 상태
+  const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
-  // 필터 및 정렬 상태
-  const [selectedTimeFilter, setSelectedTimeFilter] = useState(searchParams.get('time') || 'latest');
-  const [selectedRoleFilter, setSelectedRoleFilter] = useState(searchParams.get('role') || 'all');
-  const [selectedSortBy, setSelectedSortBy] = useState(searchParams.get('sort') || 'created_at_desc');
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(
-    searchParams.get('date') ? new Date(searchParams.get('date') as string) : undefined
-  );
+  // 댓글 상태 관리 (각 게시물 ID에 대한 댓글 목록)
+  const [comments, setComments] = useState<Record<string, ThanksComment[]>>({});
+  const [newCommentContent, setNewCommentContent] = useState<Record<string, string>>({});
+  const [isSubmittingComment, setIsSubmittingComment] = useState<Record<string, boolean>>({});
 
-  // 사용자 시간대 오프셋 감지
+  // 반응 상태 관리 (각 게시물 ID에 대한 반응 목록)
+  const [reactions, setReactions] = useState<Record<string, ThanksReaction[]>>({});
+
+  // "더보기" 기능을 위한 상태
+  const [visiblePostsCount, setVisiblePostsCount] = useState(POSTS_PER_LOAD);
+
+  // 게시물 작성 모달 상태
+  const [isWriteModalOpen, setIsWriteModalOpen] = useState(false);
+
+  // 초기 로드 시 댓글 및 반응 가져오기
   useEffect(() => {
-    // 클라이언트 측에서만 실행되도록 확인
-    if (typeof window !== 'undefined') {
-      // getTimezoneOffset()은 로컬 시간과 UTC의 차이를 분 단위로 반환 (예: KST는 -540)
-      setTimezoneOffset(new Date().getTimezoneOffset());
+    setThanksPosts(initialThanksPosts);
+    // 모든 게시물에 대한 댓글 및 반응 초기화
+    const initialComments: Record<string, ThanksComment[]> = {};
+    const initialReactions: Record<string, ThanksReaction[]> = {};
+    initialThanksPosts.forEach(post => {
+      initialComments[post.id] = []; // 초기에는 빈 배열
+      initialReactions[post.id] = []; // 초기에는 빈 배열
+    });
+    setComments(initialComments);
+    setReactions(initialReactions);
+  }, [initialThanksPosts]);
+
+  const fetchCommentsAndReactions = useCallback(async (postId: string) => {
+    // 댓글 가져오기
+    const { data: commentsData, error: commentsError } = await supabase
+      .from('thanks_comments')
+      .select('*')
+      .eq('post_id', postId)
+      .order('created_at', { ascending: true });
+    if (commentsError) {
+      console.error("Error fetching comments:", commentsError);
+    } else {
+      setComments(prev => ({ ...prev, [postId]: commentsData || [] }));
+    }
+
+    // 반응 가져오기
+    const { data: reactionsData, error: reactionsError } = await supabase
+      .from('thanks_reactions')
+      .select('*')
+      .eq('post_id', postId);
+    if (reactionsError) {
+      console.error("Error fetching reactions:", reactionsError);
+    } else {
+      setReactions(prev => ({ ...prev, [postId]: reactionsData || [] }));
     }
   }, []);
 
-  // URL 쿼리 파라미터 변경 핸들러
-  const createQueryString = useCallback(
-    (name: string, value: string | number) => { // value 타입에 number 추가
-      const params = new URLSearchParams(searchParams.toString());
-      if (value !== null && value !== undefined && value !== '') { // null, undefined, 빈 문자열 체크
-        params.set(name, String(value)); // 숫자를 문자열로 변환하여 저장
-      } else {
-        params.delete(name);
-      }
-      return params.toString();
-    },
-    [searchParams]
-  );
-
+  // 모든 게시물에 대해 댓글 및 반응 로드
   useEffect(() => {
-    setThanksPosts(initialThanksPosts);
-    setPostsToShow(POSTS_PER_LOAD);
-  }, [initialThanksPosts]);
+    thanksPosts.forEach(post => {
+      fetchCommentsAndReactions(post.id);
+    });
+  }, [thanksPosts, fetchCommentsAndReactions]);
 
-  const handleTimeFilterChange = (value: string) => {
-    setSelectedTimeFilter(value);
-    router.push(pathname + '?' + createQueryString('time', value));
-  };
-
-  const handleRoleFilterChange = (value: string) => {
-    setSelectedRoleFilter(value);
-    router.push(pathname + '?' + createQueryString('role', value));
-  };
-
-  const handleSortByChange = (value: string) => {
-    setSelectedSortBy(value);
-    router.push(pathname + '?' + createQueryString('sort', value));
-  };
-
-  // 날짜 필터 변경 핸들러 (시간대 오프셋 포함)
-  const handleDateFilterChange = (date: Date | undefined) => {
-    setSelectedDate(date);
-    const dateString = date ? format(date, 'yyyy-MM-dd') : '';
-    
-    let newQueryString = createQueryString('date', dateString);
-    if (timezoneOffset !== null) {
-      newQueryString = createQueryString('timezoneOffset', timezoneOffset); // 시간대 오프셋 추가
-      router.push(pathname + '?' + newQueryString);
-    } else {
-      router.push(pathname + '?' + newQueryString);
+  // 관리자 권한 확인
+  useEffect(() => {
+    if (!authLoading && (!user || userRole !== 'admin')) {
+      // router.push('/'); // 관리자가 아니면 홈으로 리다이렉트 (필요시 활성화)
     }
-  };
+  }, [authLoading, user, userRole, router]);
 
   const handleContentChange = (section: string, key: string, value: string) => {
-    setChangedContent(prev => ({
+    setChangedContent((prev) => ({
       ...prev,
       [section]: {
         ...(prev[section] || {}),
-        [key]: value
-      }
+        [key]: value,
+      },
     }));
   };
 
@@ -140,12 +158,12 @@ export default function ThanksPageClient({ initialContent, initialThanksPosts }:
     for (const section in changedContent) {
       for (const key in changedContent[section]) {
         const value = changedContent[section][key];
-        const { error } = await supabase.from('content').upsert({
-          page: 'thanks',
+        const { error } = await supabase.from("content").upsert({
+          page: "thanks",
           section: section,
           key: key,
           value: value,
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         });
 
         if (error) {
@@ -158,30 +176,29 @@ export default function ThanksPageClient({ initialContent, initialThanksPosts }:
 
     if (updateCount > 0) {
       try {
-        const revalidateResponse = await fetch(`/api/revalidate?secret=${process.env.NEXT_PUBLIC_MY_SECRET_TOKEN}&path=/thanks`);
+        const revalidateResponse = await fetch(
+          `/api/revalidate?secret=${process.env.NEXT_PUBLIC_MY_SECRET_TOKEN}&path=/thanks`,
+        );
         if (!revalidateResponse.ok) {
           const errorData = await revalidateResponse.json();
-          console.error("Revalidation failed:", errorData.message);
-        } else {
-          revalidated = true;
-          console.log("Thanks page revalidated successfully!");
+          throw new Error(errorData.message || "재검증 실패");
         }
-      }
-      catch (err) {
-        console.error("Failed to call revalidate API:", err);
+        revalidated = true;
+      } catch (error) {
+        console.error("재검증 중 오류 발생:", error);
+        alert("콘텐츠 업데이트는 성공했지만 페이지 재검증에 실패했습니다. 수동으로 새로고침해야 할 수 있습니다.");
       }
     }
 
-    setIsSavingAll(false);
-    setIsPageEditing(false);
     setChangedContent({});
+    setIsPageEditing(false);
+    setIsSavingAll(false);
 
-    if (updateCount > 0 && revalidated) {
-      alert("모든 변경 사항이 저장되고 감사 게시판 페이지가 업데이트되었습니다. 새로고침하면 반영됩니다.");
-    } else if (updateCount > 0 && !revalidated) {
-        alert("일부 변경 사항은 저장되었지만, 감사 게시판 페이지 재검증에 실패했습니다. 수동 새로고침이 필요할 수 있습니다.");
+    if (updateCount > 0) {
+      alert(`콘텐츠가 성공적으로 업데이트되었습니다.${revalidated ? "" : " (재검증 실패)"}`);
+      router.refresh();
     } else {
-        alert("변경된 내용이 없거나 저장에 실패했습니다.");
+      alert("변경된 내용이 없거나 저장에 실패했습니다.");
     }
   };
 
@@ -192,160 +209,218 @@ export default function ThanksPageClient({ initialContent, initialThanksPosts }:
     }
   };
 
-  const handleAddPost = async (e: React.FormEvent) => {
+  const isAdmin = userRole === "admin";
+
+  // 감사 게시물 제출 핸들러
+  const handlePostSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !userProfile?.id || !newPostTitle || !newPostContent) {
-      alert("로그인해야 게시물을 작성할 수 있으며, 제목과 내용을 입력해야 합니다.");
+    setIsSubmittingPost(true);
+    setMessage(null);
+
+    if (!user || !userProfile) {
+      setMessage({ type: 'error', text: "로그인 후 게시물을 작성할 수 있습니다." });
+      setIsSubmittingPost(false);
+      return;
+    }
+    if (!newPostTitle.trim() || !newPostContent.trim()) {
+      setMessage({ type: 'error', text: "제목과 내용을 입력해주세요." });
+      setIsSubmittingPost(false);
       return;
     }
 
-    setIsSubmittingPost(true);
     try {
-      const { data, error } = await supabase.from('thanks_posts').insert({
-        title: newPostTitle,
-        content: newPostContent,
-        author_id: user.id,
-        author_nickname: userProfile.nickname || user.email,
-        author_profile_picture_url: userProfile.profile_picture_url,
-        author_role: userProfile.role,
-      }).select();
+      const { data, error } = await supabase
+        .from('thanks_posts')
+        .insert({
+          title: newPostTitle,
+          content: newPostContent,
+          author_id: user.id,
+          author_nickname: userProfile.nickname || user.email || '익명',
+          author_profile_picture_url: userProfile.profile_picture_url,
+          author_role: userProfile.role,
+        })
+        .select()
+        .single();
 
       if (error) {
-        throw error;
-      }
-
-      if (data && data.length > 0) {
-        setThanksPosts(prev => [
-          { ...data[0], likes: [], comments: [], author_role: userProfile.role || null },
-          ...prev,
-        ]);
+        console.error("Error submitting thanks post:", error);
+        setMessage({ type: 'error', text: `게시물 작성에 실패했습니다: ${error.message}` });
+      } else {
+        setMessage({ type: 'success', text: "감사 게시물이 성공적으로 작성되었습니다!" });
+        setThanksPosts(prev => [data, ...prev]); // 최신 게시물을 목록 맨 앞에 추가
         setNewPostTitle("");
         setNewPostContent("");
-        setShowNewPostForm(false);
-        alert("감사 제목이 성공적으로 작성되었습니다!");
-        router.refresh();
+        setIsWriteModalOpen(false); // 게시물 작성 후 모달 닫기
+        // 페이지 재검증
+        try {
+          await fetch(`/api/revalidate?secret=${process.env.NEXT_PUBLIC_MY_SECRET_TOKEN}&path=/thanks`);
+        } catch (revalidateError) {
+          console.error("Revalidation failed after post submit:", revalidateError);
+        }
       }
-    } catch (error: any) {
-      console.error("Error adding thank post:", error.message);
-      alert(`감사 제목 작성 중 오류가 발생했습니다: ${error.message}`);
+    } catch (err) {
+      console.error("Unexpected error during post submission:", err);
+      setMessage({ type: 'error', text: "게시물 작성 중 예상치 못한 오류가 발생했습니다." });
     } finally {
       setIsSubmittingPost(false);
     }
   };
 
+  // 감사 게시물 삭제 핸들러
+  const handleDeletePost = async (postId: string) => {
+    if (!confirm("정말로 이 감사 게시물을 삭제하시겠습니까?")) return;
+
+    try {
+      const { error } = await supabase
+        .from('thanks_posts')
+        .delete()
+        .eq('id', postId);
+
+      if (error) {
+        console.error("Error deleting thanks post:", error);
+        alert(`게시물 삭제에 실패했습니다: ${error.message}`);
+      } else {
+        alert("게시물이 성공적으로 삭제되었습니다!");
+        setThanksPosts(prev => prev.filter(post => post.id !== postId));
+        // 페이지 재검증
+        try {
+          await fetch(`/api/revalidate?secret=${process.env.NEXT_PUBLIC_MY_SECRET_TOKEN}&path=/thanks`);
+        } catch (revalidateError) {
+          console.error("Revalidation failed after post delete:", revalidateError);
+        }
+      }
+    } catch (err) {
+      console.error("Unexpected error during post deletion:", err);
+      alert("게시물 삭제 중 예상치 못한 오류가 발생했습니다.");
+    }
+  };
+
+  // 댓글 제출 핸들러
+  const handleCommentSubmit = async (postId: string) => {
+    setIsSubmittingComment(prev => ({ ...prev, [postId]: true }));
+    setMessage(null);
+
+    if (!user || !userProfile) {
+      setMessage({ type: 'error', text: "로그인 후 댓글을 작성할 수 있습니다." });
+      setIsSubmittingComment(prev => ({ ...prev, [postId]: false }));
+      return;
+    }
+    if (!newCommentContent[postId]?.trim()) {
+      setMessage({ type: 'error', text: "댓글 내용을 입력해주세요." });
+      setIsSubmittingComment(prev => ({ ...prev, [postId]: false }));
+      return;
+    }
+
+    // 사용자가 댓글을 달 수 있는 권한이 있는지 확인
+    if (!userProfile.can_comment && userRole !== 'admin') {
+      setMessage({ type: 'error', text: "댓글을 작성할 권한이 없습니다." });
+      setIsSubmittingComment(prev => ({ ...prev, [postId]: false }));
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('thanks_comments')
+        .insert({
+          post_id: postId,
+          author_id: user.id,
+          author_nickname: userProfile.nickname || user.email || '익명',
+          comment: newCommentContent[postId],
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error("Error submitting comment:", error);
+        setMessage({ type: 'error', text: `댓글 작성에 실패했습니다: ${error.message}` });
+      } else {
+        setMessage({ type: 'success', text: "댓글이 성공적으로 작성되었습니다!" });
+        setComments(prev => ({ ...prev, [postId]: [...(prev[postId] || []), data] }));
+        setNewCommentContent(prev => ({ ...prev, [postId]: "" }));
+      }
+    } catch (err) {
+      console.error("Unexpected error during comment submission:", err);
+      setMessage({ type: 'error', text: "댓글 작성 중 예상치 못한 오류가 발생했습니다." });
+    } finally {
+      setIsSubmittingComment(prev => ({ ...prev, [postId]: false }));
+    }
+  };
+
+  // 반응 추가/제거 핸들러
   const handleReaction = async (postId: string, reactionType: string) => {
     if (!user) {
-      alert("로그인해야 공감할 수 있습니다.");
+      setMessage({ type: 'error', text: "로그인 후 반응을 남길 수 있습니다." });
       return;
     }
 
-    const { data: existingLike, error: fetchError } = await supabase
-      .from('thanks_reactions')
-      .select('*')
-      .eq('post_id', postId)
-      .eq('user_id', user.id)
-      .single();
+    const existingReaction = reactions[postId]?.find(r => r.user_id === user.id && r.reaction_type === reactionType);
 
-    if (fetchError && fetchError.code !== 'PGRST116') {
-      console.error("Error fetching existing like:", fetchError.message);
-      return;
-    }
-
-    if (existingLike) {
-      if (existingLike.reaction_type === reactionType) {
+    try {
+      if (existingReaction) {
+        // 이미 반응이 있으면 제거
         const { error } = await supabase
           .from('thanks_reactions')
           .delete()
-          .eq('id', existingLike.id);
-        if (error) {
-          console.error("Error unliking post:", error.message);
-          return;
-        }
-        setThanksPosts(prevPosts =>
-          prevPosts.map(post =>
-            post.id === postId
-              ? { ...post, likes: (post.likes || []).filter(l => l.user_id !== user.id) }
-              : post
-          )
-        );
+          .eq('id', existingReaction.id);
+        if (error) throw error;
+        setReactions(prev => ({
+          ...prev,
+          [postId]: prev[postId]?.filter(r => r.id !== existingReaction.id) || []
+        }));
       } else {
-        const { error } = await supabase
+        // 반응이 없으면 추가
+        const { data, error } = await supabase
           .from('thanks_reactions')
-          .update({ reaction_type: reactionType, updated_at: new Date().toISOString() })
-          .eq('id', existingLike.id);
-        if (error) {
-          console.error("Error updating like type:", error.message);
-          return;
-        }
-        setThanksPosts(prevPosts =>
-          prevPosts.map(post =>
-            post.id === postId
-              ? { ...post, likes: (post.likes || []).map(l => l.user_id === user.id ? { ...l, reaction_type: reactionType } : l) }
-              : post
-          )
-        );
+          .insert({
+            post_id: postId,
+            user_id: user.id,
+            reaction_type: reactionType,
+          })
+          .select()
+          .single();
+        if (error) throw error;
+        setReactions(prev => ({
+          ...prev,
+          [postId]: [...(prev[postId] || []), data]
+        }));
       }
-    } else {
-      const { error } = await supabase.from('thanks_reactions').insert({
-        post_id: postId,
-        user_id: user.id,
-        reaction_type: reactionType,
-      });
-      if (error) {
-        console.error("Error liking post:", error.message);
-        return;
-      }
-      setThanksPosts(prevPosts =>
-        prevPosts.map(post =>
-          post.id === postId
-            ? { ...post, likes: [...(post.likes || []), { user_id: user.id, reaction_type: reactionType }] }
-            : post
-        )
-      );
+    } catch (error: any) {
+      console.error("Error handling reaction:", error);
+      setMessage({ type: 'error', text: `반응 처리 실패: ${error.message}` });
     }
-    router.refresh();
   };
 
-  const renderReactionButtons = (post: ThankPost) => {
-    const currentLikes = post.likes || [];
-    const userReaction = currentLikes.find(l => l.user_id === user?.id);
-    const getReactionCount = (type: string) => currentLikes.filter(l => l.reaction_type === type).length;
-
-    const ReactionButton = ({ type, icon: Icon, label }: { type: string; icon: React.ElementType; label: string }) => (
-      <Button
-        variant="ghost"
-        size="sm"
-        className={`flex items-center space-x-1 ${userReaction?.reaction_type === type ? 'text-blue-600 font-bold' : 'text-gray-500 hover:text-blue-600'}`}
-        onClick={() => handleReaction(post.id, type)}
-        disabled={!user}
-      >
-        <Icon className="h-4 w-4" />
-        <span>{getReactionCount(type)}</span>
-      </Button>
-    );
-
-    return (
-      <div className="flex flex-wrap gap-x-2 gap-y-1 justify-start">
-        <ReactionButton type="heart" icon={Heart} label="Heart" />
-        <ReactionButton type="thumbs_up" icon={ThumbsUp} label="Thumbs Up" />
-        <ReactionButton type="laugh" icon={Laugh} label="Laugh" />
-        <ReactionButton type="smile" icon={Smile} label="Smile" />
-        <ReactionButton type="frown" icon={Frown} label="Frown" />
-      </div>
-    );
+  // 각 반응 타입별 개수 계산
+  const getReactionCounts = (postId: string) => {
+    const counts: Record<string, number> = {};
+    reactions[postId]?.forEach(r => {
+      counts[r.reaction_type] = (counts[r.reaction_type] || 0) + 1;
+    });
+    return counts;
   };
 
+  // 사용자가 특정 반응을 이미 남겼는지 확인
+  const hasUserReacted = (postId: string, reactionType: string) => {
+    return reactions[postId]?.some(r => r.user_id === user?.id && r.reaction_type === reactionType);
+  };
+
+  // 반응 이모티콘 맵
+  const reactionEmojis: Record<string, string> = {
+    'like': '👍',
+    'heart': '❤️',
+    'amen': '🙌',
+    'smile': '😊',
+  };
+
+  // "더보기" 버튼 클릭 핸들러
   const handleLoadMore = () => {
-    setPostsToShow(prev => prev + POSTS_PER_LOAD);
+    setVisiblePostsCount(prevCount => prevCount + POSTS_PER_LOAD);
   };
-
-  const displayedPosts = thanksPosts.slice(0, postsToShow);
-  const hasMorePosts = thanksPosts.length > postsToShow;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-      {/* 전역 편집 모드 버튼 */}
-      {userRole === 'admin' && (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-yellow-50 py-8 pt-16">
+      {/* Admin Controls */}
+      {isAdmin && (
         <div className="fixed top-24 right-8 z-50 flex flex-col space-y-2">
           {!isPageEditing ? (
             <Button variant="outline" size="icon" onClick={() => setIsPageEditing(true)}>
@@ -356,8 +431,8 @@ export default function ThanksPageClient({ initialContent, initialThanksPosts }:
               <Button variant="outline" size="icon" onClick={handleSaveAll} disabled={isSavingAll}>
                 {isSavingAll ? <span className="animate-spin text-blue-500">🔄</span> : <Save className="h-5 w-5 text-green-600" />}
               </Button>
-              <Button variant="outline" size="icon" onClick={handleCancelAll} disabled={isSavingAll}>
-                <X className="h-5 w-5 text-red-600" />
+              <Button variant="outline" size="icon" onClick={handleCancelAll} className="border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white bg-transparent">
+                <X className="h-5 w-5" />
               </Button>
             </>
           )}
@@ -365,189 +440,229 @@ export default function ThanksPageClient({ initialContent, initialThanksPosts }:
       )}
 
       {/* Hero Section */}
-      <section className="py-16 px-4 pt-32 text-center">
-        <div className="container mx-auto">
-          <h1 className="text-5xl font-bold text-gray-900 mb-6">
+      <div className="bg-gradient-to-r from-blue-700 to-blue-800 text-white h-[25vh] flex items-center justify-center border-b-4 border-yellow-500 py-10">
+        <div className="container mx-auto px-4 text-center">
+          <div className="mb-3">
+            <span className="text-3xl md:text-4xl">🙏</span>
+          </div>
+          <h1 className="text-2xl md:text-3xl lg:text-3xl font-extrabold mb-4">
             <EditableText
               page="thanks"
-              section="main"
+              section="hero"
               contentKey="title"
-              initialValue={initialContent?.main?.title || "Thanks Board"}
+              initialValue={initialContent?.hero?.title || "감사 게시판"}
+              onContentChange={(section: string, key: string, value: string) =>
+                handleContentChange("hero", "title", value)
+              }
               isEditingPage={isPageEditing}
-              onContentChange={handleContentChange}
               tag="span"
-              className="text-5xl font-bold text-gray-900"
+              className="text-white"
             />
           </h1>
-          <div className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
+          <p className="text-sm md:text-base text-blue-200 max-w-3xl mx-auto leading-relaxed">
             <EditableText
               page="thanks"
-              section="main"
+              section="hero"
               contentKey="description"
-              initialValue={initialContent?.main?.description || "Share your gratitude and blessings with our community."}
+              initialValue={
+                initialContent?.hero?.description ||
+                "하나님께 드리는 감사와 은혜를 나누는 공간입니다. 당신의 간증을 공유해주세요."
+              }
+              onContentChange={(section: string, key: string, value: string) =>
+                handleContentChange("hero", "description", value)
+              }
               isEditingPage={isPageEditing}
-              onContentChange={handleContentChange}
               tag="span"
-              className="text-xl text-gray-600"
+              className="text-sm md:text-base text-blue-200"
+              isTextArea={true}
             />
-          </div>
+          </p>
         </div>
-      </section>
+      </div>
 
-      {/* 필터 및 정렬 옵션 */}
-      <section className="py-4 px-4">
-        <div className="container mx-auto max-w-2xl flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0 sm:space-x-4">
-          {/* 정렬 기준 */}
-          <div className="flex items-center space-x-2 w-full sm:w-auto">
-            <label htmlFor="sort-by" className="text-gray-700 text-sm font-medium whitespace-nowrap">정렬:</label>
-            <Select value={selectedSortBy} onValueChange={handleSortByChange}>
-              <SelectTrigger id="sort-by" className="w-full sm:w-[180px]">
-                <SelectValue placeholder="정렬 기준" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="created_at_desc">최신순</SelectItem>
-                <SelectItem value="created_at_asc">오래된순</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* 작성자 역할별 필터 */}
-          <div className="flex items-center space-x-2 w-full sm:w-auto">
-            <label htmlFor="role-filter" className="text-gray-700 text-sm font-medium whitespace-nowrap">작성자:</label>
-            <Select value={selectedRoleFilter} onValueChange={handleRoleFilterChange}>
-              <SelectTrigger id="role-filter" className="w-full sm:w-[180px]">
-                <SelectValue placeholder="작성자 역할" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">전체</SelectItem>
-                <SelectItem value="admin">관리자</SelectItem>
-                <SelectItem value="user">멤버</SelectItem>
-                <SelectItem value="child">어린이</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* 날짜 필터 */}
-          <div className="flex items-center space-x-2 w-full sm:w-auto">
-            <label htmlFor="date-filter" className="text-gray-700 text-sm font-medium whitespace-nowrap">날짜:</label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant={"outline"}
-                  className={cn(
-                    "w-full sm:w-[180px] justify-start text-left font-normal",
-                    !selectedDate && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {selectedDate ? format(selectedDate, "PPP") : <span>날짜 선택</span>}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={handleDateFilterChange}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
-            {selectedDate && (
-              <Button variant="ghost" size="icon" onClick={() => handleDateFilterChange(undefined)}>
-                <X className="h-4 w-4" />
+      {/* 감사 게시물 작성 버튼 섹션 */}
+      <section className="py-8 bg-gray-100 border-b border-gray-200 text-center">
+        <div className="container mx-auto px-4 max-w-2xl">
+          <Dialog open={isWriteModalOpen} onOpenChange={setIsWriteModalOpen}>
+            <DialogTrigger asChild>
+              <Button
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg text-lg shadow-md"
+              >
+                <Edit3 className="mr-2 h-5 w-5" /> 감사 게시물 작성
               </Button>
-            )}
-          </div>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[600px] bg-white text-gray-900 p-6 rounded-lg shadow-lg">
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-bold text-blue-900">감사 게시물 작성</DialogTitle>
+                <DialogDescription className="text-gray-700">하나님께 감사한 일들을 나누어 주세요.</DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handlePostSubmit} className="space-y-4 py-4">
+                {message && (
+                  <Alert variant={message.type === 'error' ? 'destructive' : 'default'} className={message.type === 'error' ? 'bg-red-900 text-white border-red-700' : 'bg-green-900 text-white border-green-700'}>
+                    {message.type === 'error' ? <XCircle className="h-4 w-4" /> : <CheckCircle className="h-4 w-4" />}
+                    <AlertTitle>{message.type === 'error' ? "오류!" : "성공!"}</AlertTitle>
+                    <AlertDescription>{message.text}</AlertDescription>
+                  </Alert>
+                )}
+                <div>
+                  <Label htmlFor="postTitle" className="text-blue-900 font-semibold">제목</Label>
+                  <Textarea
+                    id="postTitle"
+                    value={newPostTitle}
+                    onChange={(e) => setNewPostTitle(e.target.value)}
+                    placeholder="감사 게시물의 제목을 입력하세요."
+                    rows={1}
+                    required
+                    className="mt-1 border-blue-300 focus:border-blue-700 focus:ring-blue-700"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="postContent" className="text-blue-900 font-semibold">내용</Label>
+                  <Textarea
+                    id="postContent"
+                    value={newPostContent}
+                    onChange={(e) => setNewPostContent(e.target.value)}
+                    placeholder="감사한 내용을 자세히 작성해주세요."
+                    rows={5}
+                    required
+                    className="mt-1 border-blue-300 focus:border-blue-700 focus:ring-blue-700"
+                  />
+                </div>
+                <DialogFooter className="pt-4">
+                  <Button type="submit" disabled={isSubmittingPost} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg">
+                    {isSubmittingPost ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <PlusCircle className="mr-2 h-4 w-4" />}
+                    게시물 작성
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
         </div>
       </section>
 
-      {/* New Post Form */}
-      {user && (userProfile?.can_comment || userRole === 'admin') && (
-        <section className="py-8 px-4">
-          <div className="container mx-auto max-w-2xl">
-            <Button onClick={() => setShowNewPostForm(!showNewPostForm)} className="mb-4 w-full">
-              {showNewPostForm ? "감사 제목 작성 취소" : <><PlusCircle className="mr-2 h-5 w-5" /> 감사 제목 작성</>}
-            </Button>
-            {showNewPostForm && (
-              <Card className="shadow-sm rounded-lg border bg-card text-card-foreground p-6 hover:shadow-lg transition-shadow duration-300">
-                <h2 className="text-2xl font-bold mb-4">새 감사 제목 작성</h2>
-                <form onSubmit={handleAddPost} className="space-y-4">
-                  <div>
-                    <label htmlFor="postTitle" className="block text-sm font-medium text-gray-700 mb-1">제목</label>
-                    <Input
-                      id="postTitle"
-                      type="text"
-                      value={newPostTitle}
-                      onChange={(e) => setNewPostTitle(e.target.value)}
-                      placeholder="감사 제목을 입력하세요"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="postContent" className="block text-sm font-medium text-gray-700 mb-1">내용</label>
-                    <Textarea
-                      id="postContent"
-                      value={newPostContent}
-                      onChange={(e) => setNewPostContent(e.target.value)}
-                      placeholder="감사 내용을 입력하세요"
-                      rows={5}
-                      required
-                    />
-                  </div>
-                  <Button type="submit" disabled={isSubmittingPost}>
-                    {isSubmittingPost ? "작성 중..." : "감사 제목 제출"}
-                  </Button>
-                </form>
-              </Card>
-            )}
-          </div>
-        </section>
-      )}
-
-      {/* Thanks Posts List */}
-      <section className="py-8 px-4">
-        <div className="container mx-auto max-w-2xl">
-          {displayedPosts.length === 0 && thanksPosts.length === 0 ? (
-            <p className="text-center text-gray-600">아직 작성된 감사 제목이 없습니다. 첫 감사 제목을 작성해보세요!</p>
+      {/* 감사 게시물 목록 */}
+      <section className="py-8">
+        <div className="container mx-auto px-4 max-w-5xl">
+          <h2 className="text-2xl md:text-3xl font-bold text-center text-blue-900 mb-8">
+            <EditableText
+              page="thanks"
+              section="posts_list"
+              contentKey="title"
+              initialValue={initialContent?.posts_list?.title || "모든 감사 게시물"}
+              onContentChange={(section: string, key: string, value: string) =>
+                handleContentChange("posts_list", "title", value)
+              }
+              isEditingPage={isPageEditing}
+              tag="span"
+              className="text-2xl md:text-3xl font-bold text-center text-blue-900"
+            />
+          </h2>
+          {thanksPosts.length === 0 ? (
+            <p className="text-gray-600 text-base text-center mt-10">아직 감사 게시물이 없습니다. 첫 게시물을 작성해주세요!</p>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {displayedPosts.map(post => (
-                <Card key={post.id} className="shadow-sm rounded-lg border bg-card text-card-foreground relative hover:shadow-lg transition-shadow duration-300">
-                  <CardHeader>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {thanksPosts.slice(0, visiblePostsCount).map((post) => (
+                <Card key={post.id} className="shadow-xl border-0 bg-gradient-to-br from-white to-blue-50 min-h-[280px]"> {/* 변경: min-h를 280px로 줄임 */}
+                  <CardHeader className="pb-2">
                     <div className="flex items-center space-x-3 mb-2">
-                      <Avatar>
-                        <AvatarImage src={post.author_profile_picture_url || "/placeholder.svg"} alt={post.author_nickname} />
-                        <AvatarFallback>{post.author_nickname?.charAt(0) || "U"}</AvatarFallback>
+                      <Avatar className="h-9 w-9">
+                        <AvatarImage src={post.author_profile_picture_url || `https://api.dicebear.com/7.x/initials/svg?seed=${post.author_nickname}`} alt={post.author_nickname} />
+                        <AvatarFallback>{post.author_nickname?.charAt(0) || '?'}</AvatarFallback>
                       </Avatar>
                       <div>
-                        <CardTitle className="text-lg font-semibold">{post.title}</CardTitle>
-                        <CardDescription className="text-sm text-gray-500">
-                          {post.author_nickname} ({post.author_role || '알 수 없음'}) • {new Date(post.created_at).toLocaleString()}
+                        <CardTitle className="text-base font-bold text-blue-900">{post.author_nickname}</CardTitle>
+                        <CardDescription className="text-xs text-gray-600">
+                          {format(new Date(post.created_at), 'yyyy년 MM월 dd일 HH:mm')}
+                          {post.created_at !== post.updated_at && " (수정됨)"}
                         </CardDescription>
                       </div>
                     </div>
+                    <h3 className="text-base font-bold text-blue-900 mb-2 line-clamp-2">{post.title}</h3>
                   </CardHeader>
-                  <CardContent>
-                    <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{post.content}</p>
-                  </CardContent>
-                  <CardFooter className="flex justify-between items-center border-t pt-4">
-                    {renderReactionButtons(post)}
-                    <div className="flex items-center space-x-4 text-gray-500">
-                      <div className="flex items-center space-x-1">
-                        <MessageCircle className="h-4 w-4" />
-                        <span>{(post.comments || []).length}</span>
-                      </div>
+                  <CardContent className="pt-0">
+                    <p className="text-sm text-gray-700 whitespace-pre-wrap mb-4 max-h-[60px] overflow-y-auto">{post.content}</p>
+
+                    {/* 반응 섹션 */}
+                    <div className="flex items-center space-x-0.5 border-t border-b border-blue-100 py-1.5 my-2">
+                      {Object.entries(reactionEmojis).map(([type, emoji]) => (
+                        <Button
+                          key={type}
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleReaction(post.id, type)}
+                          className={`flex items-center text-gray-600 hover:text-blue-700 text-xxs ${hasUserReacted(post.id, type) ? 'bg-blue-100 text-blue-700' : ''}`}
+                        >
+                          <span className="text-sm mr-0.5">{emoji}</span>
+                          <span className="text-xxs">{getReactionCounts(post.id)[type] || 0}</span>
+                        </Button>
+                      ))}
                     </div>
-                  </CardFooter>
-                  {/* TODO: 댓글 목록 및 댓글 작성 폼 추가 (후순위) */}
+
+                    {/* 댓글 목록 */}
+                    <div className="mt-3 space-y-2 max-h-[80px] overflow-y-auto">
+                      <h4 className="text-sm font-semibold text-blue-800">댓글 ({comments[post.id]?.length || 0})</h4>
+                      {comments[post.id]?.map(comment => (
+                        <div key={comment.id} className="bg-blue-50 p-2 rounded-lg border border-blue-100">
+                          <div className="flex items-center space-x-2 mb-1">
+                            <Avatar className="h-5 w-5">
+                              <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${comment.author_nickname}`} alt={comment.author_nickname} />
+                              <AvatarFallback className="text-xs">{comment.author_nickname?.charAt(0) || '?'}</AvatarFallback>
+                            </Avatar>
+                            <span className="font-semibold text-blue-800 text-xs">{comment.author_nickname}</span>
+                            <span className="text-xxs text-gray-500">
+                              {format(new Date(comment.created_at), 'yyyy년 MM월 dd일 HH:mm')}
+                            </span>
+                          </div>
+                          <p className="text-xs text-gray-700 ml-7 whitespace-pre-wrap">{comment.comment}</p>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* 댓글 작성 폼 */}
+                    {user && userProfile?.can_comment && (
+                      <div className="mt-3">
+                        <Textarea
+                          value={newCommentContent[post.id] || ""}
+                          onChange={(e) => setNewCommentContent(prev => ({ ...prev, [post.id]: e.target.value }))}
+                          placeholder="댓글을 입력하세요."
+                          rows={1}
+                          className="mt-1 border-blue-300 focus:border-blue-700 focus:ring-blue-700 text-sm"
+                        />
+                        <Button
+                          onClick={() => handleCommentSubmit(post.id)}
+                          disabled={isSubmittingComment[post.id]}
+                          className="mt-2 bg-blue-500 hover:bg-blue-600 text-white text-xs py-1.5 px-2 rounded-lg"
+                        >
+                          {isSubmittingComment[post.id] ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <MessageCircle className="mr-1 h-3 w-3" />}
+                          댓글 작성
+                        </Button>
+                      </div>
+                    )}
+
+                    {/* 관리자용 삭제 버튼 */}
+                    {isAdmin && (
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleDeletePost(post.id)}
+                        className="mt-3 bg-red-600 hover:bg-red-700 text-white text-xs"
+                      >
+                        <Trash2 className="h-3 w-3 mr-1" /> 게시물 삭제
+                      </Button>
+                    )}
+                  </CardContent>
                 </Card>
               ))}
             </div>
           )}
-          {/* 더보기 버튼 */}
-          {hasMorePosts && (
-            <div className="text-center mt-6">
-              <Button onClick={handleLoadMore} variant="outline">
+          {thanksPosts.length > visiblePostsCount && (
+            <div className="text-center mt-8">
+              <Button
+                variant="outline"
+                onClick={handleLoadMore}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg text-lg"
+              >
+                <ChevronDown className="h-5 w-5 mr-2" />
                 더보기
               </Button>
             </div>

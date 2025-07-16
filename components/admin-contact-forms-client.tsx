@@ -13,7 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Loader2, CheckCircle, XCircle, Trash2, Edit, User as UserIcon, X, ArrowLeft } from "lucide-react"; // ArrowLeft 아이콘 추가
+import { Loader2, CheckCircle, XCircle, Trash2, Edit, User as UserIcon, X } from "lucide-react"; // ArrowLeft 아이콘 제거
 import { format } from "date-fns";
 import { Checkbox } from "@/components/ui/checkbox";
 
@@ -177,18 +177,6 @@ export default function AdminUsersClient({ initialUsers }: AdminUsersClientProps
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white py-16 pt-0 px-4"> {/* pt-0 조정 */}
       <div className="container mx-auto max-w-5xl">
-        {/* 뒤로가기 버튼을 좌측 상단에 배치 */}
-        <div className="mb-8"> {/* 제목 위쪽에 여백 추가 */}
-          <Button
-            variant="outline"
-            className="bg-gray-700 hover:bg-gray-600 text-white border-gray-600"
-            onClick={() => router.back()}
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            뒤로가기
-          </Button>
-        </div>
-
         <Card className="shadow-lg bg-gray-800 border border-gray-700 text-white">
           <CardHeader>
             <CardTitle className="text-2xl font-bold text-white">사용자 목록</CardTitle>
