@@ -2,29 +2,51 @@
 "use client";
 
 import * as React from "react";
-import { useState } from "react";
+import { useState, useMemo } from "react"; // useMemo 추가
 import { useAuth } from "@/contexts/auth-context";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
-import { Settings, Save, X, Bookmark } from "lucide-react"; // 아이콘 추가
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Settings, Save, X, Bookmark, PlusCircle, Edit3, MessageCircle, Loader2, CheckCircle, XCircle, Trash2 } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import EditableText from "@/components/editable-text";
 import { Input } from "@/components/ui/input";
-import Link from "next/link"; // Link import 추가
+import { Label } from "@/components/ui/label";
+import EditableText from "@/components/editable-text";
+import Link from "next/link";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { format } from "date-fns";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface PrayerRequest {
   id: string;
   category: "ukraine" | "bozhiymirchurch" | "members" | "children";
   title: string;
-  content: string; // 기도제목 내용 (3-6줄)
+  content: string;
   author_id: string;
   author_nickname: string;
   created_at: string;
-  answer_content?: string | null; // string | null 추가
-  answer_author_id?: string | null; // string | null 추가
-  answer_author_nickname?: string | null; // string | null 추가
-  answered_at?: string | null; // string | null 추가
+  answer_content?: string | null;
+  answer_author_id?: string | null;
+  answer_author_nickname?: string | null;
+  answered_at?: string | null;
+}
+
+interface ThanksComment {
+  id: string;
+  post_id: string;
+  author_id: string;
+  author_nickname: string;
+  comment: string;
+  created_at: string;
+}
+
+interface ThanksReaction {
+  id: string;
+  user_id: string;
+  post_id: string;
+  reaction_type: string;
+  created_at: string;
 }
 
 interface PrayerPageClientProps {
@@ -40,6 +62,23 @@ export default function PrayerPageClient({ initialContent, initialPrayerRequests
   const [prayerRequests, setPrayerRequests] = useState<PrayerRequest[]>(initialPrayerRequests);
   const [editingAnswerId, setEditingAnswerId] = useState<string | null>(null);
   const [currentAnswer, setCurrentAnswer] = useState<string>("");
+
+  const [newPostTitle, setNewPostTitle] = useState("");
+  const [newPostContent, setNewPostContent] = useState("");
+  const [newPostCategory, setNewPostCategory] = useState<"ukraine" | "bozhiymirchurch" | "members" | "children">("ukraine");
+  const [isSubmittingPost, setIsSubmittingPost] = useState(false);
+  const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+
+  const [comments, setComments] = useState<Record<string, ThanksComment[]>>({});
+  const [newCommentContent, setNewCommentContent] = useState<Record<string, string>>({});
+  const [isSubmittingComment, setIsSubmittingComment] = useState<Record<string, boolean>>({});
+
+  const [reactions, setReactions] = useState<Record<string, ThanksReaction[]>>({});
+
+  const [isWriteModalOpen, setIsWriteModalOpen] = useState(false);
+  // 카테고리 필터링을 위한 상태 추가
+  const [selectedFilterCategory, setSelectedFilterCategory] = useState<"all" | "ukraine" | "bozhiymirchurch" | "members" | "children">("all");
+
 
   const handleContentChange = (section: string, key: string, value: string) => {
     setChangedContent(prev => ({
@@ -110,21 +149,19 @@ export default function PrayerPageClient({ initialContent, initialPrayerRequests
     }
   };
 
-  // 응답 받은 내용 편집 시작
   const handleEditAnswer = (prayerId: string, currentAnswerContent: string) => {
     setEditingAnswerId(prayerId);
     setCurrentAnswer(currentAnswerContent);
   };
 
-  // 응답 받은 내용 저장
   const handleSaveAnswer = async (prayerId: string) => {
     if (!user || !userProfile?.id || !userProfile?.nickname) {
-      alert("로그인해야 응답을 작성할 수 있습니다.");
+      setMessage({ type: 'error', text: "로그인해야 응답을 작성할 수 있습니다." });
       return;
     }
 
     const { error } = await supabase
-      .from('prayer_requests') // 'prayer_requests' 테이블 가정
+      .from('prayer_requests')
       .update({
         answer_content: currentAnswer,
         answer_author_id: user.id,
@@ -135,28 +172,27 @@ export default function PrayerPageClient({ initialContent, initialPrayerRequests
 
     if (error) {
       console.error("Error saving answer:", error.message);
-      alert(`응답 저장 중 오류 발생: ${error.message}`);
+      setMessage({ type: 'error', text: `응답 저장 중 오류 발생: ${error.message}` });
     } else {
+      setMessage({ type: 'success', text: "응답이 성공적으로 저장되었습니다!" });
       setPrayerRequests(prev =>
         prev.map(req =>
           req.id === prayerId
-            ? { 
-                ...req, 
-                answer_content: currentAnswer, 
-                answer_author_id: user.id, 
-                answer_author_nickname: userProfile.nickname, 
-                answered_at: new Date().toISOString() 
+            ? {
+                ...req,
+                answer_content: currentAnswer,
+                answer_author_id: user.id,
+                answer_author_nickname: userProfile.nickname,
+                answered_at: new Date().toISOString()
               }
             : req
         )
       );
       setEditingAnswerId(null);
       setCurrentAnswer("");
-      alert("응답이 성공적으로 저장되었습니다!");
     }
   };
 
-  // 응답 받은 내용 취소
   const handleCancelAnswer = () => {
     setEditingAnswerId(null);
     setCurrentAnswer("");
@@ -169,8 +205,87 @@ export default function PrayerPageClient({ initialContent, initialPrayerRequests
     { key: "children", titleKey: "children_title", descriptionKey: "children_description", icon: "👧👦" },
   ];
 
+  const handleNewPrayerRequestSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmittingPost(true);
+    setMessage(null);
+
+    if (!user || !userProfile) {
+      setMessage({ type: 'error', text: "로그인 후 기도 요청을 작성할 수 있습니다." });
+      setIsSubmittingPost(false);
+      return;
+    }
+    if (!newPostTitle.trim() || !newPostContent.trim()) {
+      setMessage({ type: 'error', text: "제목과 내용을 입력해주세요." });
+      setIsSubmittingPost(false);
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('prayer_requests')
+        .insert({
+          category: newPostCategory,
+          title: newPostTitle,
+          content: newPostContent,
+          author_id: user.id,
+          author_nickname: userProfile.nickname || user.email || '익명',
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error("Error submitting prayer request:", error);
+        setMessage({ type: 'error', text: `기도 요청 작성에 실패했습니다: ${error.message}` });
+      } else {
+        setMessage({ type: 'success', text: "기도 요청이 성공적으로 작성되었습니다!" });
+        setPrayerRequests(prev => [data, ...prev]);
+        setNewPostTitle("");
+        setNewPostContent("");
+        setNewPostCategory("ukraine");
+        setIsWriteModalOpen(false);
+      }
+    } catch (err) {
+      console.error("Unexpected error during prayer request submission:", err);
+      setMessage({ type: 'error', text: "기도 요청 작성 중 예상치 못한 오류가 발생했습니다." });
+    } finally {
+      setIsSubmittingPost(false);
+    }
+  };
+
+  const handleDeleteRequest = async (requestId: string) => {
+    if (!confirm("정말로 이 기도 요청을 삭제하시겠습니까?")) return;
+
+    try {
+      const { error } = await supabase
+        .from('prayer_requests')
+        .delete()
+        .eq('id', requestId);
+
+      if (error) {
+        console.error("Error deleting prayer request:", error);
+        setMessage({ type: 'error', text: `기도 요청 삭제에 실패했습니다: ${error.message}` });
+      } else {
+        setMessage({ type: 'success', text: "기도 요청이 성공적으로 삭제되었습니다!" });
+        setPrayerRequests(prev => prev.filter(req => req.id !== requestId));
+      }
+    } catch (err) {
+      console.error("Unexpected error during prayer request deletion:", err);
+      setMessage({ type: 'error', text: "기도 요청 삭제 중 예상치 못한 오류가 발생했습니다." });
+    }
+  };
+
+  // 선택된 카테고리에 따라 기도 요청을 필터링하는 useMemo
+  const filteredPrayerRequests = useMemo(() => {
+    if (selectedFilterCategory === "all") {
+      return prayerRequests;
+    }
+    return prayerRequests.filter(req => req.category === selectedFilterCategory);
+  }, [prayerRequests, selectedFilterCategory]);
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-yellow-50 pt-16">
+      {/* Admin Controls */}
       {userRole === 'admin' && (
         <div className="fixed top-24 right-8 z-50 flex flex-col space-y-2">
           {!isPageEditing ? (
@@ -190,9 +305,13 @@ export default function PrayerPageClient({ initialContent, initialPrayerRequests
         </div>
       )}
 
-      <section className="py-16 px-4 pt-32 text-center">
-        <div className="container mx-auto">
-          <h1 className="text-5xl font-bold text-gray-900 mb-6">
+      {/* Hero Section */}
+      <div className="bg-gradient-to-r from-blue-700 to-blue-800 text-white h-[25vh] flex items-center justify-center border-b-4 border-yellow-500">
+        <div className="container mx-auto px-4 text-center">
+          <div className="mb-2">
+            <span className="text-3xl md:text-4xl">🙏</span>
+          </div>
+          <h1 className="text-2xl md:text-3xl lg:text-3xl font-extrabold mb-3">
             <EditableText
               page="prayer"
               section="main"
@@ -201,30 +320,32 @@ export default function PrayerPageClient({ initialContent, initialPrayerRequests
               isEditingPage={isPageEditing}
               onContentChange={handleContentChange}
               tag="span"
-              className="text-5xl font-bold text-gray-900"
+              className="text-white"
             />
           </h1>
-          <div className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
+          <p className="text-sm md:text-base text-blue-200 max-w-4xl mx-auto leading-relaxed">
             <EditableText
               page="prayer"
               section="main"
               contentKey="description"
-              initialValue={initialContent?.main?.description || "United in prayer for our community and the world."}
+              initialValue={initialContent?.main?.description || "Share your prayer requests with our church family. We believe in the power of prayer and want to lift up your needs before God together."}
               isEditingPage={isPageEditing}
               onContentChange={handleContentChange}
               tag="span"
-              className="text-xl text-gray-600"
+              className="text-sm md:text-base text-blue-200"
+              isTextArea={true}
             />
-          </div>
+          </p>
         </div>
-      </section>
+      </div>
 
-      <section className="py-8 px-4">
-        <div className="container mx-auto grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* Prayer Categories Section */}
+      <section className="py-8 bg-blue-50 border-b border-gray-200">
+        <div className="container mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {prayerCategories.map(category => (
-            <Card key={category.key} className="shadow-sm rounded-lg border bg-card text-card-foreground p-6 text-center hover:shadow-lg transition-shadow duration-300 border-l-4 border-l-blue-600">
+            <Card key={category.key} className="shadow-md rounded-lg border border-gray-200 bg-white p-6 text-center hover:shadow-lg transition-shadow duration-300 transform hover:scale-105">
               <div className="text-5xl mb-4">{category.icon}</div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              <h2 className="text-lg font-bold text-blue-900 mb-2">
                 <EditableText
                   page="prayer"
                   section={category.key}
@@ -233,10 +354,10 @@ export default function PrayerPageClient({ initialContent, initialPrayerRequests
                   isEditingPage={isPageEditing}
                   onContentChange={handleContentChange}
                   tag="span"
-                  className="text-2xl font-bold text-gray-900"
+                  className="text-lg font-bold text-blue-900"
                 />
               </h2>
-              <div className="text-gray-600 mb-4">
+              <p className="text-sm text-gray-700 leading-relaxed">
                 <EditableText
                   page="prayer"
                   section={category.key}
@@ -245,126 +366,288 @@ export default function PrayerPageClient({ initialContent, initialPrayerRequests
                   isEditingPage={isPageEditing}
                   onContentChange={handleContentChange}
                   tag="span"
-                  className="text-gray-600"
+                  className="text-sm text-gray-700"
                   isTextArea={true}
                 />
-              </div>
-              {/* TODO: Add a button to add new prayer requests if needed for users, for now only show existing */}
+              </p>
             </Card>
           ))}
         </div>
       </section>
 
-      {/* Prayer Requests List by Category */}
-      <section className="py-8 px-4">
-        <div className="container mx-auto space-y-12">
-          {prayerCategories.map(category => (
-            <div key={category.key}>
-              <h2 className="text-3xl font-bold text-gray-900 text-center mb-6">
-                {initialContent?.[category.key]?.[category.titleKey] || category.key.charAt(0).toUpperCase() + category.key.slice(1)} Prayer Requests
-              </h2>
-              <div className="grid md:grid-cols-1 lg:grid-cols-2 gap-6">
-                {prayerRequests.filter(req => req.category === category.key).length === 0 ? (
-                    <p className="text-center text-gray-600 col-span-full">아직 이 카테고리에 대한 기도 제목이 없습니다.</p>
-                ) : (
-                    prayerRequests.filter(req => req.category === category.key).map(req => (
-                        <Card key={req.id} className="shadow-sm rounded-lg border bg-card text-card-foreground p-6 relative hover:shadow-lg transition-shadow duration-300">
-                            <CardTitle className="text-lg font-semibold mb-2">{req.title}</CardTitle>
-                            <CardContent className="p-0 text-gray-700 leading-relaxed whitespace-pre-wrap mb-4">
-                                {req.content}
-                            </CardContent>
-                            <div className="text-sm text-gray-500 mb-4">
-                                {req.author_nickname} • {new Date(req.created_at).toLocaleDateString()}
-                            </div>
+      {/* New Prayer Request Button & Dialog Section */}
+      <section className="py-8 bg-white border-b border-gray-200 text-center">
+        <div className="container mx-auto px-4 max-w-2xl">
+          {/* 카테고리 필터링 드롭다운 */}
+          <div className="mb-6">
+            <h3 className="text-lg font-bold text-blue-900 mb-3">
+              <EditableText
+                page="prayer"
+                section="filters"
+                contentKey="title"
+                initialValue={initialContent?.filters?.title || "기도 제목 필터링"}
+                isEditingPage={isPageEditing}
+                onContentChange={handleContentChange}
+                tag="span"
+                className="text-lg font-bold text-blue-900"
+              />
+            </h3>
+            <Select
+              value={selectedFilterCategory}
+              onValueChange={(value: "all" | "ukraine" | "bozhiymirchurch" | "members" | "children") => setSelectedFilterCategory(value)}
+            >
+              <SelectTrigger className="w-full md:w-1/2 mx-auto h-10 border-blue-300 focus:border-blue-700 focus:ring-blue-700 text-base">
+                <SelectValue placeholder="모든 카테고리" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">
+                  <EditableText
+                    page="prayer"
+                    section="filters"
+                    contentKey="all_posts"
+                    initialValue={initialContent?.filters?.all_posts || "모든 기도 제목"}
+                    isEditingPage={isPageEditing}
+                    onContentChange={handleContentChange}
+                    tag="span"
+                    className="inline"
+                  />
+                </SelectItem>
+                {prayerCategories.map(cat => (
+                  <SelectItem key={cat.key} value={cat.key}>
+                    <EditableText
+                      page="prayer"
+                      section="filters"
+                      contentKey={`${cat.key}_filter`} // 새로운 contentKey
+                      initialValue={initialContent?.filters?.[`${cat.key}_filter`] || cat.key.charAt(0).toUpperCase() + cat.key.slice(1)}
+                      isEditingPage={isPageEditing}
+                      onContentChange={handleContentChange}
+                      tag="span"
+                      className="inline"
+                    />
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-                            {/* 응답 내용 섹션 */}
-                            {req.answer_content && (
-                                <div className="mt-4 p-4 bg-gray-100 rounded-lg border border-gray-200">
-                                    <h4 className="font-semibold text-gray-800 mb-2 flex items-center">
-                                        <Bookmark className="h-4 w-4 mr-2 text-blue-600" />
-                                        응답 받은 내용
-                                    </h4>
-                                    <p className="text-gray-700 whitespace-pre-wrap">{req.answer_content}</p>
-                                    <div className="text-xs text-gray-500 mt-2">
-                                        by {req.answer_author_nickname} on {req.answered_at ? new Date(req.answered_at).toLocaleDateString() : 'N/A'}
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* 응답 작성/편집 버튼 및 폼 */}
-                            {(user?.id === req.author_id || userRole === 'admin') && (
-                                <div className="mt-4 border-t pt-4">
-                                    {editingAnswerId === req.id ? (
-                                        <div className="space-y-2">
-                                            <Textarea
-                                                value={currentAnswer}
-                                                onChange={(e) => setCurrentAnswer(e.target.value)}
-                                                placeholder="응답 받은 내용을 입력하세요..."
-                                                rows={3}
-                                            />
-                                            <div className="flex justify-end space-x-2">
-                                                {/* Explicitly define child elements as variables */}
-                                                {/* Button at line 356 equivalent */}
-                                                <Button variant="outline" onClick={handleCancelAnswer}>
-                                                    <span>취소</span>
-                                                </Button>
-                                                <Button onClick={() => handleSaveAnswer(req.id)}>
-                                                    <span>저장</span>
-                                                </Button>
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        // Explicitly define child element as variable
-                                        <Button
-                                            variant="outline"
-                                            onClick={() => handleEditAnswer(req.id, req.answer_content || "")}
-                                            className="w-full"
-                                        >
-                                            <span>
-                                                {req.answer_content ? "응답 내용 수정" : "응답 내용 작성"}
-                                            </span>
-                                        </Button>
-                                    )}
-                                </div>
-                            )}
-                        </Card>
-                    ))
+          <Dialog open={isWriteModalOpen} onOpenChange={setIsWriteModalOpen}>
+            <DialogTrigger asChild>
+              <Button
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg text-lg shadow-md"
+              >
+                <PlusCircle className="mr-2 h-5 w-5" /> 새 기도 요청 작성
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[600px] bg-white text-gray-900 p-6 rounded-lg shadow-lg">
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-bold text-blue-900">새 기도 요청 작성</DialogTitle>
+                <DialogDescription className="text-gray-700">하나님께 당신의 필요를 나누어 주세요.</DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handleNewPrayerRequestSubmit} className="space-y-4 py-4">
+                {message && (
+                  <Alert variant={message.type === 'error' ? 'destructive' : 'default'} className={message.type === 'error' ? 'bg-red-900 text-white border-red-700' : 'bg-green-900 text-white border-green-700'}>
+                    {message.type === 'error' ? <XCircle className="h-4 w-4" /> : <CheckCircle className="h-4 w-4" />}
+                    <AlertTitle>{message.type === 'error' ? "오류!" : "성공!"}</AlertTitle>
+                    <AlertDescription>{message.text}</AlertDescription>
+                  </Alert>
                 )}
-              </div>
-            </div>
-          ))}
+                <div>
+                  <Label htmlFor="newPostCategory" className="text-blue-900 font-semibold">카테고리</Label>
+                  <Select value={newPostCategory} onValueChange={(value: "ukraine" | "bozhiymirchurch" | "members" | "children") => setNewPostCategory(value)}>
+                    <SelectTrigger className="mt-1 h-10 border-blue-300 focus:border-blue-700 focus:ring-blue-700 text-base">
+                      <SelectValue placeholder="카테고리 선택" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {prayerCategories.map(cat => (
+                        <SelectItem key={cat.key} value={cat.key}>{initialContent?.[cat.key]?.[cat.titleKey] || cat.key}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="newPostTitle" className="text-blue-900 font-semibold">기도 제목</Label>
+                  <Input
+                    id="newPostTitle"
+                    type="text"
+                    value={newPostTitle}
+                    onChange={(e) => setNewPostTitle(e.target.value)}
+                    placeholder="간단한 기도 제목을 입력하세요 (예: 전쟁 종식)"
+                    required
+                    className="mt-1 border-blue-300 focus:border-blue-700 focus:ring-blue-700"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="newPostContent" className="text-blue-900 font-semibold">기도 내용</Label>
+                  <Textarea
+                    id="newPostContent"
+                    value={newPostContent}
+                    onChange={(e) => setNewPostContent(e.target.value)}
+                    placeholder="구체적인 기도 내용을 작성해 주세요."
+                    rows={5}
+                    required
+                    className="mt-1 border-blue-300 focus:border-blue-700 focus:ring-blue-700"
+                  />
+                </div>
+                <DialogFooter className="pt-4">
+                  <Button type="submit" disabled={isSubmittingPost} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg">
+                    {isSubmittingPost ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        제출 중...
+                      </>
+                    ) : (
+                      <>
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        기도 요청 제출
+                      </>
+                    )}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
         </div>
       </section>
 
-      <section className="py-16 px-4 text-center bg-gray-50">
-        <div className="container mx-auto">
-          <h2 className="text-3xl font-bold text-gray-900 mb-6">
+      {/* Prayer Requests List by Category */}
+      <section className="py-8 bg-gradient-to-br from-blue-50 to-yellow-50">
+        <div className="container mx-auto space-y-10">
+          {/* 카테고리별 제목은 이제 필터링 드롭다운 아래에 배치되므로 제거 */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredPrayerRequests.length === 0 ? (
+                <p className="text-center text-gray-600 col-span-full py-8">
+                  {selectedFilterCategory === "all"
+                    ? "아직 기도 제목이 없습니다. 첫 게시물을 작성해주세요!"
+                    : `선택하신 카테고리 (${prayerCategories.find(c => c.key === selectedFilterCategory)?.icon} ${initialContent?.filters?.[`${selectedFilterCategory}_filter`] || selectedFilterCategory})에 대한 기도 제목이 없습니다.`}
+                </p>
+            ) : (
+                filteredPrayerRequests.map(req => ( // 필터링된 목록 사용
+                    <Card key={req.id} className="shadow-lg rounded-lg border border-gray-200 bg-white p-6 relative flex flex-col justify-between h-full transform hover:scale-[1.02] transition-transform duration-200">
+                        <div>
+                          <CardTitle className="text-base font-bold text-blue-900 mb-2">{req.title}</CardTitle>
+                          <CardDescription className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap mb-4">
+                              {req.content}
+                          </CardDescription>
+                        </div>
+                        <div>
+                          <div className="text-xs text-gray-500 mb-3">
+                              {req.author_nickname} • {format(new Date(req.created_at), 'yyyy년 MM월 dd일 HH:mm')}
+                          </div>
+
+                          {/* 응답 내용 섹션 */}
+                          {req.answer_content && (
+                              <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
+                                  <h4 className="font-semibold text-blue-800 text-sm mb-1 flex items-center">
+                                      <Bookmark className="h-4 w-4 mr-1 text-blue-600" />
+                                      응답
+                                  </h4>
+                                  <p className="text-gray-700 text-sm whitespace-pre-wrap">{req.answer_content}</p>
+                                  <div className="text-xxs text-gray-500 mt-1">
+                                      by {req.answer_author_nickname} on {req.answered_at ? format(new Date(req.answered_at), 'yyyy년 MM월 dd일') : 'N/A'}
+                                  </div>
+                              </div>
+                          )}
+
+                          {/* 응답 작성/편집 버튼 및 폼 */}
+                          {(user?.id === req.author_id || userRole === 'admin') && (
+                              <div className="mt-4 border-t border-gray-100 pt-4">
+                                  {editingAnswerId === req.id ? (
+                                      <div className="space-y-2">
+                                          <Textarea
+                                              value={currentAnswer}
+                                              onChange={(e) => setCurrentAnswer(e.target.value)}
+                                              placeholder="응답 내용을 입력하세요..."
+                                              rows={3}
+                                              className="text-sm border-blue-300 focus:border-blue-700 focus:ring-blue-700"
+                                          />
+                                          <div className="flex justify-end space-x-2">
+                                              <Button variant="outline" size="sm" onClick={handleCancelAnswer} className="text-red-600 border-red-300 hover:bg-red-50">
+                                                  <X className="h-4 w-4" /> 취소
+                                              </Button>
+                                              <Button size="sm" onClick={() => handleSaveAnswer(req.id)} className="bg-blue-600 hover:bg-blue-700 text-white">
+                                                  <Save className="h-4 w-4" /> 저장
+                                              </Button>
+                                          </div>
+                                      </div>
+                                  ) : (
+                                      <Button
+                                          variant="outline"
+                                          onClick={() => handleEditAnswer(req.id, req.answer_content || "")}
+                                          className="w-full text-blue-600 border-blue-300 hover:bg-blue-50"
+                                      >
+                                          <Edit3 className="h-4 w-4 mr-2" />
+                                          {req.answer_content ? "응답 내용 수정" : "응답 내용 작성"}
+                                      </Button>
+                                  )}
+                              </div>
+                          )}
+
+                          {/* 삭제 버튼 (관리자 또는 작성자만) */}
+                          {(user?.id === req.author_id || userRole === 'admin') && (
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => handleDeleteRequest(req.id)}
+                              className="mt-3 bg-red-600 hover:bg-red-700 text-white w-full"
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" /> 기도 요청 삭제
+                            </Button>
+                          )}
+                        </div>
+                    </Card>
+                ))
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* Scripture Section */}
+      <section className="py-8 bg-gradient-to-br from-blue-600 to-blue-700 text-white border-y border-white/20">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-xl md:text-2xl font-extrabold mb-6">
             <EditableText
               page="prayer"
-              section="cta"
+              section="scripture"
               contentKey="title"
-              initialValue={initialContent?.cta?.title || "Submit Your Prayer Request"}
+              initialValue={initialContent?.scripture?.title || "God Hears Our Prayers"}
               isEditingPage={isPageEditing}
               onContentChange={handleContentChange}
               tag="span"
-              className="text-3xl font-bold text-gray-900 mb-6"
+              className="text-white"
             />
           </h2>
-          <div className="text-xl text-gray-600 mb-8">
-            <EditableText
-              page="prayer"
-              section="cta"
-              contentKey="description"
-              initialValue={initialContent?.cta?.description || "Let us pray with you and for you."}
-              isEditingPage={isPageEditing}
-              onContentChange={handleContentChange}
-              tag="span"
-              className="text-xl text-gray-600"
-            />
-          </div>
-          <Button asChild size="lg" className="bg-blue-600 hover:bg-blue-700">
-            <Link href="/prayer/new"><span>기도 요청 추가</span></Link>
-          </Button>
+          <Card className="max-w-5xl mx-auto shadow-2xl border border-gray-600 bg-white/10 backdrop-blur-sm">
+            <CardContent className="p-5">
+              <blockquote className="text-base italic text-yellow-300 mb-4 leading-relaxed">
+                <EditableText
+                  page="prayer"
+                  section="scripture"
+                  contentKey="quote"
+                  initialValue={
+                    initialContent?.scripture?.quote ||
+                    "Do not be anxious about anything, but in every situation, by prayer and petition, with thanksgiving, present your requests to God."
+                  }
+                  isEditingPage={isPageEditing}
+                  onContentChange={handleContentChange}
+                  tag="span"
+                  className="text-base italic text-yellow-300"
+                  isTextArea={true}
+                />
+              </blockquote>
+              <p className="text-sm font-semibold text-white mb-4">
+                <EditableText
+                  page="prayer"
+                  section="scripture"
+                  contentKey="reference"
+                  initialValue={initialContent?.scripture?.reference || "Philippians 4:6"}
+                  isEditingPage={isPageEditing}
+                  onContentChange={handleContentChange}
+                  tag="span"
+                  className="text-sm font-semibold text-white"
+                />
+              </p>
+            </CardContent>
+          </Card>
         </div>
       </section>
     </div>
