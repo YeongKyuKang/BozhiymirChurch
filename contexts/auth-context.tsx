@@ -21,7 +21,8 @@ interface AuthContextType {
   signInWithPassword: (email: string, password: string) => Promise<any>;
   signUp: (email: string, password: string, nickname: string) => Promise<any>; // 닉네임 추가
   signOut: () => Promise<any>;
-  updateUserProfile: (profileData: any) => Promise<any>; // 프로필 업데이트 함수 추가
+  updateUserProfile: (profileData: any) => Promise<{ data?: any; error: any | null }>; // 변경됨: 반환 타입 수정
+  uploadProfilePicture: (file: File) => Promise<{ error: any; url?: string }>; // 변경됨: uploadProfilePicture 타입 정의 추가
   fetchUserProfile: () => Promise<void>; // 프로필 가져오는 함수 추가
 }
 
@@ -141,18 +142,45 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     setUserRole(null);
   };
 
-  const updateUserProfile = async (profileData: any) => {
+  const updateUserProfile = async (profileData: any): Promise<{ data?: any; error: any | null }> => { // 변경됨: 반환 타입 명시 및 로직 수정
     if (!user) {
-      throw new Error("User not logged in.");
+      return { error: new Error("User not logged in.") };
     }
     const { data, error } = await supabase
       .from("profiles")
       .update(profileData)
       .eq("id", user.id);
 
-    if (error) throw error;
+    if (error) {
+        console.error("Error updating user profile in DB:", error); // 오류 로깅
+        return { error }; // 오류 객체 반환
+    }
     await fetchUserProfile(user.id); // 프로필 업데이트 후 최신 정보 다시 가져오기
-    return data;
+    return { data, error: null }; // 성공 시 데이터와 null 오류 반환
+  };
+
+  const uploadProfilePicture = async (file: File) => {
+    if (!user) return { error: new Error("User not logged in.") };
+
+    const fileExt = file.name.split(".").pop();
+    const fileName = `${Math.random()}.${fileExt}`;
+    const filePath = `${user.id}/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage.from("profile-pictures").upload(filePath, file);
+
+    if (uploadError) {
+      return { error: uploadError };
+    }
+
+    const { data } = supabase.storage.from("profile-pictures").getPublicUrl(filePath);
+
+    const publicUrl = data.publicUrl;
+
+    const { error: updateError } = await updateUserProfile({ // updateUserProfile의 반환 타입이 변경되어 이제 error 속성을 안전하게 접근 가능
+      profile_picture_url: publicUrl,
+    });
+
+    return { error: updateError, url: publicUrl };
   };
 
   const value = {
@@ -166,6 +194,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     signUp,
     signOut,
     updateUserProfile,
+    uploadProfilePicture,
     fetchUserProfile,
   };
 
