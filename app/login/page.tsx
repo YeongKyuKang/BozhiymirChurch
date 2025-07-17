@@ -1,3 +1,4 @@
+// app/login/page.tsx
 "use client"
 
 import type React from "react"
@@ -19,7 +20,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
-  const { signIn } = useAuth()
+  const { signInWithPassword } = useAuth() // 변경됨: signIn 대신 signInWithPassword 가져오기
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -27,7 +28,7 @@ export default function LoginPage() {
     setLoading(true)
     setError("")
 
-    const { error } = await signIn(email, password)
+    const { error } = await signInWithPassword(email, password) // 변경됨: signIn 대신 signInWithPassword 호출
 
     if (error) {
       setError(error.message)
