@@ -1,10 +1,11 @@
-// app/layout.tsx (Modified file)
 import type React from "react";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { AuthProvider } from "@/contexts/auth-context";
-import { LanguageProvider } from "@/contexts/language-context"; // 새로 추가
+import { LanguageProvider } from "@/contexts/language-context";
 import "./globals.css";
+import { Suspense } from "react";
+import { Analytics } from "@vercel/analytics/next";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -19,7 +20,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={inter.className}>
         <LanguageProvider>
           <AuthProvider>
-            {children}
+            <Suspense fallback={<div>Loading...</div>}>
+              {children}
+            </Suspense>
+            <Analytics />
           </AuthProvider>
         </LanguageProvider>
       </body>

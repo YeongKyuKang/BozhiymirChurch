@@ -4,14 +4,21 @@ import { Button } from "@/components/ui/button"
 import EditableText from "@/components/editable-text"
 import Link from "next/link"
 import { Users, Heart, Handshake } from "lucide-react"
+import { useLanguage } from "@/contexts/language-context"; // 번역 기능을 위해 추가
 
 interface CommunitySectionProps {
-  initialContent: Record<string, any>
+  initialContent: {
+    // 새로운 UI 구조에 맞게 타입 정의 수정
+    community_about?: Record<string, string>;
+    community_highlights?: Record<string, string>;
+  };
   isEditingPage: boolean
   onContentChange: (section: string, key: string, value: string) => void
 }
 
 export default function CommunitySection({ initialContent, isEditingPage, onContentChange }: CommunitySectionProps) {
+  const { t } = useLanguage(); // 번역 함수 가져오기
+
   return (
     <section className="py-16 md:py-24 bg-gradient-to-br from-blue-50 to-yellow-50">
       <div className="container mx-auto px-4 text-center">
@@ -140,7 +147,8 @@ export default function CommunitySection({ initialContent, isEditingPage, onCont
                 className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-8 py-4 rounded-full font-bold text-lg shadow-xl transform hover:scale-105 transition-all duration-300"
               >
                 <Link href="/join">
-                  <span>Join Our Family Today</span>
+                  {/* t() 함수로 버튼 텍스트를 감싸 번역 적용 */}
+                  <span>{t("Join Our Family Today")}</span>
                 </Link>
               </Button>
               <Button
@@ -149,7 +157,8 @@ export default function CommunitySection({ initialContent, isEditingPage, onCont
                 className="border-2 border-yellow-500 text-yellow-600 hover:bg-yellow-500 hover:text-white px-8 py-4 rounded-full font-bold text-lg shadow-lg transform hover:scale-105 transition-all duration-300 bg-transparent"
               >
                 <Link href="/ukrainian-ministry">
-                  <span>Ukrainian Ministry</span>
+                  {/* t() 함수로 버튼 텍스트를 감싸 번역 적용 */}
+                  <span>{t("Ukrainian Ministry")}</span>
                 </Link>
               </Button>
             </div>

@@ -1,4 +1,3 @@
-// contexts/language-context.tsx (Final Version)
 "use client";
 
 import React, { createContext, useContext, useState, ReactNode, useCallback } from 'react';
@@ -7,12 +6,12 @@ import ruTranslations from '@/lib/translations/ru.json';
 
 export type Language = 'en' | 'ko' | 'ru';
 
-const translations = {
+const translations: Record<string, Record<string, string>> = {
   ko: koTranslations,
   ru: ruTranslations,
 };
 
-type TranslationKey = keyof (typeof koTranslations & typeof ruTranslations);
+type TranslationKey = keyof typeof koTranslations | keyof typeof ruTranslations;
 
 interface LanguageContextType {
   language: Language;
@@ -33,7 +32,7 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
 
   const t = useCallback((key: string): string => {
     if (language === 'en' || !key) return key;
-    return translations[language][key as TranslationKey] || key;
+    return translations[language]?.[key] || key;
   }, [language]);
 
   return (

@@ -1,4 +1,3 @@
-// components/editable-text.tsx (Modified file)
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -8,7 +7,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/language-context";
 
-// 'export' 키워드를 추가하여 이 타입을 다른 파일에서 import 할 수 있도록 합니다.
 export interface EditableTextProps {
   page: string;
   section: string;
@@ -41,6 +39,7 @@ const EditableText: React.FC<EditableTextProps> = ({
     setEditedValue(initialValue);
   }, [initialValue]);
 
+  // 편집 모드일 때는 원본(영어)을, 아닐 때는 번역된 텍스트를 보여줌
   const displayValue = isEditingPage ? editedValue : t(initialValue);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -52,7 +51,7 @@ const EditableText: React.FC<EditableTextProps> = ({
   };
 
   return (
-    <div className={cn("relative", className, isEditingPage && userRole === "admin" ? "p-2 border-2 border-dashed border-blue-400" : "")}>
+    <div className={cn("relative", className, isEditingPage && userRole === "admin" ? "p-2 border-2 border-dashed border-blue-400 rounded-md" : "")}>
       {isEditingPage && userRole === "admin" ? (
         isTextArea ? (
           <Textarea value={editedValue} onChange={handleInputChange} className="w-full text-gray-900" rows={5} placeholder={placeholder} />
