@@ -5,7 +5,7 @@ import { Suspense } from "react";
 // Suspense 바운더리로 감싸서 안전하게 렌더링합니다.
 export default function WordPostsPage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<div className="flex justify-center items-center h-screen">Loading...</div>}>
       <WordPostsClient />
     </Suspense>
   );
