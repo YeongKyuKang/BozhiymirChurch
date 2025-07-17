@@ -3,10 +3,10 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Menu, X, ChevronDown, User, LogOut, Settings, Globe } from "lucide-react" // Globe 아이콘 추가
+import { Menu, X, ChevronDown, User, LogOut, Settings, Globe } from "lucide-react"
 import Link from "next/link"
 import { useAuth } from "@/contexts/auth-context"
-import { useLanguage } from "@/contexts/language-context" // 언어 컨텍스트 훅 추가
+import { useLanguage } from "@/contexts/language-context"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,15 +22,15 @@ export default function Header() {
   const [isAboutOpen, setIsAboutOpen] = useState(false)
   const [isFaithOpen, setIsFaithOpen] = useState(false)
   const { user, userProfile, userRole, signOut } = useAuth()
-  const { t, setLanguage } = useLanguage() // 번역 함수와 언어 설정 함수 가져오기
+  const { t, setLanguage } = useLanguage()
   const router = useRouter()
 
   const aboutItems = [
-    { name: "OUR STORY", href: "/story" },
+    { name: "OUR_STORY", href: "/story" },
     { name: "JESUS", href: "/jesus" },
     { name: "BELIEFS", href: "/beliefs" },
     { name: "LEADERSHIP", href: "/leadership" },
-    { name: "UKRAINIAN MINISTRY", href: "/ukrainian-ministry" },
+    { name: "UKRAINIAN_MINISTRY", href: "/ukrainian-ministry" },
   ]
 
   const faithItems = [
@@ -88,7 +88,7 @@ export default function Header() {
                         className="block px-4 py-3 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
                         onClick={() => setIsAboutOpen(false)}
                       >
-                        {item.name}
+                        {t(item.name)}
                       </Link>
                     ))}
                   </div>
@@ -113,7 +113,7 @@ export default function Header() {
                         <ChevronDown className="ml-1 h-4 w-4" />
                       </button>
                     </TooltipTrigger>
-                    <TooltipContent><p className="text-sm">로그인 유저만 사용가능</p></TooltipContent>
+                    <TooltipContent><p className="text-sm">{t('LOGIN_USER_ONLY_AVAILABLE')}</p></TooltipContent>
                   </Tooltip>
                 ) : (
                   <>
@@ -125,7 +125,7 @@ export default function Header() {
                       <div className="w-64 bg-white rounded-xl shadow-2xl border border-gray-200 py-2 z-50">
                         {faithItems.map((item) => (
                           <Link key={item.name} href={item.href} className="block px-4 py-3 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors" onClick={() => setIsFaithOpen(false)}>
-                            {item.name}
+                            {t(item.name)}
                           </Link>
                         ))}
                       </div>
@@ -155,9 +155,9 @@ export default function Header() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="bg-white rounded-xl shadow-xl">
-                  <DropdownMenuItem onClick={() => setLanguage('ko')}>{t('korean')}</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setLanguage('en')}>{t('english')}</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setLanguage('ru')}>{t('russian')}</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setLanguage('ko')}>한국어</DropdownMenuItem> {/* 언어 이름 원어로 고정 */}
+                  <DropdownMenuItem onClick={() => setLanguage('en')}>English</DropdownMenuItem> {/* 언어 이름 원어로 고정 */}
+                  <DropdownMenuItem onClick={() => setLanguage('ru')}>Русский</DropdownMenuItem> {/* 언어 이름 원어로 고정 */}
                 </DropdownMenuContent>
               </DropdownMenu>
 
@@ -171,10 +171,10 @@ export default function Header() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48 bg-white rounded-xl shadow-xl">
-                    <DropdownMenuItem asChild><Link href="/profile" className="text-sm">Profile</Link></DropdownMenuItem>
-                    {userRole === "admin" && (<DropdownMenuItem asChild><Link href="/admin" className="text-sm">Admin Panel</Link></DropdownMenuItem>)}
+                    <DropdownMenuItem asChild><Link href="/profile" className="text-sm">{t('PROFILE')}</Link></DropdownMenuItem>
+                    {userRole === "admin" && (<DropdownMenuItem asChild><Link href="/admin" className="text-sm">{t('ADMIN_PANEL')}</Link></DropdownMenuItem>)}
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleSignOut} className="text-sm"><LogOut className="h-4 w-4 mr-2" />Sign Out</DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleSignOut} className="text-sm"><LogOut className="h-4 w-4 mr-2" />{t('SIGN_OUT')}</DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (

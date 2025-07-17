@@ -1,7 +1,10 @@
 import Link from "next/link"
 import { MapPin, Phone, Mail, Clock } from "lucide-react"
+import { useLanguage } from "@/contexts/language-context" // 번역 적용: useLanguage 훅 추가
 
 export default function Footer() {
+  const { t } = useLanguage() // 번역 적용: t 함수 가져오기
+
   return (
     <footer className="bg-gradient-to-r from-blue-900 to-blue-800 text-white py-12 border-t-4 border-yellow-500">
       <div className="container mx-auto px-4">
@@ -24,27 +27,27 @@ export default function Footer() {
               </div>
             </div>
             <p className="text-blue-200 text-base leading-relaxed">
-              A welcoming community where families grow together in faith and fellowship.
+              {t('FOOTER_WELCOME_COMMUNITY_DESC')} {/* 번역 적용 */}
             </p>
             <div className="mt-4 text-2xl">🇺🇦</div>
           </div>
 
           <div>
-            <h4 className="font-bold text-lg mb-4 text-yellow-300">Quick Links</h4>
+            <h4 className="font-bold text-lg mb-4 text-yellow-300">{t('QUICK_LINKS')}</h4> {/* 번역 적용 */}
             <ul className="space-y-2">
               <li>
                 <Link href="/leadership" className="text-blue-200 hover:text-yellow-300 transition-colors text-base">
-                  Leadership
+                  {t('LEADERSHIP')} {/* 번역 적용 */}
                 </Link>
               </li>
               <li>
                 <Link href="/events" className="text-blue-200 hover:text-yellow-300 transition-colors text-base">
-                  Events
+                  {t('EVENTS')} {/* 번역 적용 */}
                 </Link>
               </li>
               <li>
                 <Link href="/join" className="text-blue-200 hover:text-yellow-300 transition-colors text-base">
-                  Join Us
+                  {t('JOIN')} {/* 번역 적용 */}
                 </Link>
               </li>
               <li>
@@ -52,14 +55,14 @@ export default function Footer() {
                   href="/ukrainian-ministry"
                   className="text-blue-200 hover:text-yellow-300 transition-colors text-base"
                 >
-                  Ukrainian Ministry
+                  {t('UKRAINIAN_MINISTRY')} {/* 번역 적용 */}
                 </Link>
               </li>
             </ul>
           </div>
 
           <div>
-            <h4 className="font-bold text-lg mb-4 text-yellow-300">Contact Info</h4>
+            <h4 className="font-bold text-lg mb-4 text-yellow-300">{t('CONTACT_INFO')}</h4> {/* 번역 적용 */}
             <div className="space-y-3">
               <div className="flex items-start text-blue-200">
                 <MapPin className="h-5 w-5 mr-3 mt-1 flex-shrink-0 text-yellow-300" />
@@ -81,13 +84,13 @@ export default function Footer() {
           </div>
 
           <div>
-            <h4 className="font-bold text-lg mb-4 text-yellow-300">Service Times</h4>
+            <h4 className="font-bold text-lg mb-4 text-yellow-300">{t('SERVICE_TIMES')}</h4> {/* 번역 적용 */}
             <div className="space-y-2 text-blue-200">
               <div className="flex items-start">
                 <Clock className="h-5 w-5 mr-3 mt-1 text-yellow-300" />
                 <div className="text-base">
-                  <p>Sunday: 9:00 AM, 10:30 AM, 12:00 PM</p>
-                  <p>Wednesday: 7:00 PM</p>
+                  <p>{t('SUNDAY_SERVICE_TIMES')}</p> {/* 번역 적용 */}
+                  <p>{t('WEDNESDAY_SERVICE_TIMES')}</p> {/* 번역 적용 */}
                 </div>
               </div>
             </div>
@@ -95,7 +98,7 @@ export default function Footer() {
         </div>
 
         <div className="border-t border-blue-700 mt-8 pt-8 text-center text-blue-300">
-          <p className="text-base">&copy; {new Date().getFullYear()} Bozhiymir Church. All rights reserved.</p>
+          <p className="text-base">&copy; {new Date().getFullYear()} {t('BOZHIYMIR_CHURCH_ALL_RIGHTS_RESERVED')}.</p> {/* 번역 적용 */}
         </div>
       </div>
     </footer>

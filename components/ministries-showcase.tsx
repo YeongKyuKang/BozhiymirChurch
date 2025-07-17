@@ -22,7 +22,7 @@ export default function MinistriesShowcase({ initialContent, isEditingPage, onCo
             page="home"
             section="ministries"
             contentKey="title"
-            initialValue={initialContent?.ministries?.title || "Our Ministries"}
+            initialValue={initialContent?.ministries?.title || "Our Ministries"} // 원래 영어 텍스트로 복원
             isEditingPage={isEditingPage}
             onContentChange={onContentChange}
             tag="span"
@@ -38,7 +38,7 @@ export default function MinistriesShowcase({ initialContent, isEditingPage, onCo
                   page="home"
                   section="ministries"
                   contentKey="ministry1_title"
-                  initialValue={initialContent?.ministries?.ministry1_title || "Children's Ministry"}
+                  initialValue={initialContent?.ministries?.ministry1_title || "Children's Ministry"} // 원래 영어 텍스트로 복원
                   isEditingPage={isEditingPage}
                   onContentChange={onContentChange}
                   tag="span"
@@ -51,7 +51,7 @@ export default function MinistriesShowcase({ initialContent, isEditingPage, onCo
                   page="home"
                   section="ministries"
                   contentKey="ministry1_description"
-                  initialValue={initialContent?.ministries?.ministry1_description || "Dedicated programs for children to learn and grow in faith through fun activities and biblical teachings."}
+                  initialValue={initialContent?.ministries?.ministry1_description || "Dedicated programs for children to learn and grow in faith through fun activities and biblical teachings."} // 원래 영어 텍스트로 복원
                   isEditingPage={isEditingPage}
                   onContentChange={onContentChange}
                   tag="span"
@@ -69,7 +69,7 @@ export default function MinistriesShowcase({ initialContent, isEditingPage, onCo
                   page="home"
                   section="ministries"
                   contentKey="ministry2_title"
-                  initialValue={initialContent?.ministries?.ministry2_title || "Youth & Young Adults"}
+                  initialValue={initialContent?.ministries?.ministry2_title || "Youth & Young Adults"} // 원래 영어 텍스트로 복원
                   isEditingPage={isEditingPage}
                   onContentChange={onContentChange}
                   tag="span"
@@ -82,7 +82,7 @@ export default function MinistriesShowcase({ initialContent, isEditingPage, onCo
                   page="home"
                   section="ministries"
                   contentKey="ministry2_description"
-                  initialValue={initialContent?.ministries?.ministry2_description || "Engaging events and small groups designed to empower young people in their spiritual journey and build lasting friendships."}
+                  initialValue={initialContent?.ministries?.ministry2_description || "Engaging events and small groups designed to empower young people in their spiritual journey and build lasting friendships."} // 원래 영어 텍스트로 복원
                   isEditingPage={isEditingPage}
                   onContentChange={onContentChange}
                   tag="span"
@@ -100,7 +100,7 @@ export default function MinistriesShowcase({ initialContent, isEditingPage, onCo
                   page="home"
                   section="ministries"
                   contentKey="ministry3_title"
-                  initialValue={initialContent?.ministries?.ministry3_title || "Bible Study & Discipleship"}
+                  initialValue={initialContent?.ministries?.ministry3_title || "Bible Study & Discipleship"} // 원래 영어 텍스트로 복원
                   isEditingPage={isEditingPage}
                   onContentChange={onContentChange}
                   tag="span"
@@ -113,7 +113,7 @@ export default function MinistriesShowcase({ initialContent, isEditingPage, onCo
                   page="home"
                   section="ministries"
                   contentKey="ministry3_description"
-                  initialValue={initialContent?.ministries?.ministry3_description || "Deepen your understanding of God's Word through our weekly Bible studies and discipleship programs for all ages."}
+                  initialValue={initialContent?.ministries?.ministry3_description || "Deepen your understanding of God's Word through our weekly Bible studies and discipleship programs for all ages."} // 원래 영어 텍스트로 복원
                   isEditingPage={isEditingPage}
                   onContentChange={onContentChange}
                   tag="span"
