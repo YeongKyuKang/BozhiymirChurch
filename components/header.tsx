@@ -1,4 +1,3 @@
-// components/header.tsx (Modified file)
 "use client"
 
 import { useState } from "react"
@@ -14,6 +13,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
 import { useRouter } from "next/navigation"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
@@ -22,15 +27,15 @@ export default function Header() {
   const [isAboutOpen, setIsAboutOpen] = useState(false)
   const [isFaithOpen, setIsFaithOpen] = useState(false)
   const { user, userProfile, userRole, signOut } = useAuth()
-  const { t, setLanguage } = useLanguage()
+  const { t, setLanguage, language } = useLanguage()
   const router = useRouter()
 
   const aboutItems = [
-    { name: "OUR_STORY", href: "/story" },
+    { name: "OUR STORY", href: "/story" },
     { name: "JESUS", href: "/jesus" },
     { name: "BELIEFS", href: "/beliefs" },
     { name: "LEADERSHIP", href: "/leadership" },
-    { name: "UKRAINIAN_MINISTRY", href: "/ukrainian-ministry" },
+    { name: "UKRAINIAN MINISTRY", href: "/ukrainian-ministry" },
   ]
 
   const faithItems = [
@@ -50,7 +55,7 @@ export default function Header() {
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             {/* Logo */}
-            <Link href="/" className="flex items-center space-x-2">
+            <Link href="/" className="flex items-center space-x-2" onClick={() => setIsMenuOpen(false)}>
               <div className="flex items-center space-x-2">
                 <div className="w-8 h-8 grid grid-cols-2 gap-1">
                   <div className="w-3 h-3 bg-white rounded-full"></div>
@@ -88,7 +93,7 @@ export default function Header() {
                         className="block px-4 py-3 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
                         onClick={() => setIsAboutOpen(false)}
                       >
-                        {t(item.name)}
+                        {t(item.name as any)}
                       </Link>
                     ))}
                   </div>
@@ -113,7 +118,7 @@ export default function Header() {
                         <ChevronDown className="ml-1 h-4 w-4" />
                       </button>
                     </TooltipTrigger>
-                    <TooltipContent><p className="text-sm">{t('LOGIN_USER_ONLY_AVAILABLE')}</p></TooltipContent>
+                    <TooltipContent><p className="text-sm">로그인 유저만 사용가능</p></TooltipContent>
                   </Tooltip>
                 ) : (
                   <>
@@ -125,7 +130,7 @@ export default function Header() {
                       <div className="w-64 bg-white rounded-xl shadow-2xl border border-gray-200 py-2 z-50">
                         {faithItems.map((item) => (
                           <Link key={item.name} href={item.href} className="block px-4 py-3 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors" onClick={() => setIsFaithOpen(false)}>
-                            {t(item.name)}
+                            {t(item.name as any)}
                           </Link>
                         ))}
                       </div>
@@ -138,7 +143,6 @@ export default function Header() {
                 {t('JOIN')}
               </Link>
               
-              {/* Admin Settings Button */}
               {userRole === "admin" && (
                 <Button variant="ghost" size="sm" asChild>
                   <Link href="/admin">
@@ -147,7 +151,6 @@ export default function Header() {
                 </Button>
               )}
 
-              {/* --- 언어 선택 드롭다운 메뉴 --- */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="h-9 w-9">
@@ -155,13 +158,12 @@ export default function Header() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="bg-white rounded-xl shadow-xl">
-                  <DropdownMenuItem onClick={() => setLanguage('ko')}>한국어</DropdownMenuItem> {/* 언어 이름 원어로 고정 */}
-                  <DropdownMenuItem onClick={() => setLanguage('en')}>English</DropdownMenuItem> {/* 언어 이름 원어로 고정 */}
-                  <DropdownMenuItem onClick={() => setLanguage('ru')}>Русский</DropdownMenuItem> {/* 언어 이름 원어로 고정 */}
+                  <DropdownMenuItem onClick={() => setLanguage('ko')}>{t('한국어')}</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setLanguage('en')}>{t('English')}</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setLanguage('ru')}>{t('Русский')}</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              {/* Authentication Section */}
               {user ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -171,10 +173,10 @@ export default function Header() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48 bg-white rounded-xl shadow-xl">
-                    <DropdownMenuItem asChild><Link href="/profile" className="text-sm">{t('PROFILE')}</Link></DropdownMenuItem>
-                    {userRole === "admin" && (<DropdownMenuItem asChild><Link href="/admin" className="text-sm">{t('ADMIN_PANEL')}</Link></DropdownMenuItem>)}
+                    <DropdownMenuItem asChild><Link href="/profile" className="text-sm">Profile</Link></DropdownMenuItem>
+                    {userRole === "admin" && (<DropdownMenuItem asChild><Link href="/admin" className="text-sm">Admin Panel</Link></DropdownMenuItem>)}
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleSignOut} className="text-sm"><LogOut className="h-4 w-4 mr-2" />{t('SIGN_OUT')}</DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleSignOut} className="text-sm"><LogOut className="h-4 w-4 mr-2" />Sign Out</DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
@@ -195,11 +197,75 @@ export default function Header() {
             </Button>
           </div>
 
-          {/* Mobile Navigation */}
+          {/* --- Mobile Navigation Menu --- */}
           {isMenuOpen && (
-             <nav className="lg:hidden mt-4 pb-4">
-               {/* 모바일 메뉴 구현은 다음 단계에서 진행하겠습니다. */}
-             </nav>
+             <div className="lg:hidden mt-4 pb-4 border-t border-white/20">
+                <div className="flex flex-col space-y-2 pt-4">
+                    {/* 모바일 About 아코디언 */}
+                    <Accordion type="single" collapsible className="w-full">
+                        <AccordionItem value="about" className="border-b-0">
+                            <AccordionTrigger className="text-white text-base font-medium hover:no-underline py-3">{t('ABOUT')}</AccordionTrigger>
+                            <AccordionContent>
+                                <div className="flex flex-col space-y-1 pl-4">
+                                    {aboutItems.map(item => (
+                                        <Link key={item.name} href={item.href} onClick={() => setIsMenuOpen(false)} className="text-white/80 hover:text-yellow-300 py-2 text-sm">{t(item.name as any)}</Link>
+                                    ))}
+                                </div>
+                            </AccordionContent>
+                        </AccordionItem>
+                    </Accordion>
+
+                    <Link href="/events" onClick={() => setIsMenuOpen(false)} className="text-white text-base font-medium hover:text-yellow-300 py-3 px-4 rounded-md">{t('EVENTS')}</Link>
+
+                    {/* 모바일 Faith 아코디언 */}
+                    {user ? (
+                        <Accordion type="single" collapsible className="w-full">
+                            <AccordionItem value="faith" className="border-b-0">
+                                <AccordionTrigger className="text-white text-base font-medium hover:no-underline py-3">{t('FAITH')}</AccordionTrigger>
+                                <AccordionContent>
+                                    <div className="flex flex-col space-y-1 pl-4">
+                                        {faithItems.map(item => (
+                                            <Link key={item.name} href={item.href} onClick={() => setIsMenuOpen(false)} className="text-white/80 hover:text-yellow-300 py-2 text-sm">{t(item.name as any)}</Link>
+                                        ))}
+                                    </div>
+                                </AccordionContent>
+                            </AccordionItem>
+                        </Accordion>
+                    ) : (
+                        <span className="text-gray-400 text-base font-medium py-3 px-4 cursor-not-allowed">{t('FAITH')}</span>
+                    )}
+
+                    <Link href="/join" onClick={() => setIsMenuOpen(false)} className="text-white text-base font-medium hover:text-yellow-300 py-3 px-4 rounded-md">{t('JOIN')}</Link>
+                    
+                    <div className="pt-4 border-t border-white/20">
+                        {user ? (
+                             <div className="flex flex-col space-y-2">
+                                <Link href="/profile" onClick={() => setIsMenuOpen(false)} className="flex items-center text-white/80 hover:text-yellow-300 py-2 text-sm"><User className="h-4 w-4 mr-2" /> Profile</Link>
+                                {userRole === 'admin' && <Link href="/admin" onClick={() => setIsMenuOpen(false)} className="flex items-center text-white/80 hover:text-yellow-300 py-2 text-sm"><Settings className="h-4 w-4 mr-2" /> Admin Panel</Link>}
+                                <button onClick={() => { handleSignOut(); setIsMenuOpen(false); }} className="flex items-center text-red-400 hover:text-red-300 py-2 text-sm"><LogOut className="h-4 w-4 mr-2" /> Sign Out</button>
+                             </div>
+                        ) : (
+                            <div className="flex flex-col space-y-3">
+                                <Button asChild variant="outline" className="w-full bg-transparent text-white border-white/50">
+                                    <Link href="/login" onClick={() => setIsMenuOpen(false)}>{t('LOGIN')}</Link>
+                                </Button>
+                                <Button asChild className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 text-blue-900 font-bold">
+                                    <Link href="/register" onClick={() => setIsMenuOpen(false)}>{t('REGISTER')}</Link>
+                                </Button>
+                            </div>
+                        )}
+                    </div>
+                    
+                    {/* 모바일 언어 선택 */}
+                    <div className="pt-4 border-t border-white/20">
+                        <div className="flex justify-around items-center">
+                            <Button variant="ghost" size="sm" onClick={() => setLanguage('ko')} className={`text-sm ${language === 'ko' ? 'text-yellow-300' : 'text-white/70'}`}>한국어</Button>
+                            <Button variant="ghost" size="sm" onClick={() => setLanguage('en')} className={`text-sm ${language === 'en' ? 'text-yellow-300' : 'text-white/70'}`}>English</Button>
+                            <Button variant="ghost" size="sm" onClick={() => setLanguage('ru')} className={`text-sm ${language === 'ru' ? 'text-yellow-300' : 'text-white/70'}`}>Русский</Button>
+                        </div>
+                    </div>
+                </div>
+             </div>
           )}
         </div>
       </header>

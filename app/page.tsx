@@ -1,4 +1,3 @@
-// app/page.tsx (Final and Definitive Version with Full Logging)
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
@@ -93,7 +92,7 @@ export default function Page() {
 
   console.log(`%c[상태 변경] 현재 뷰: ${view}`, 'color: yellow; font-weight: bold;');
 
-  // 1. 어떤 화면을 보여줄지 결정
+  // 1. 어떤 화면을 보여줄지 결정 (최초 1회만 실행)
   useEffect(() => {
     // 개발 환경의 이중 실행 방지
     if (effectRan.current === true) return;
@@ -101,6 +100,7 @@ export default function Page() {
 
     console.log("%c[최초 실행] 어떤 뷰를 보여줄지 결정합니다.", 'color: lightblue;');
     const today = new Date();
+    // 목표 날짜: 2025년 7월 18일
     const isTargetDate = today.getDate() === 18 && today.getMonth() === 6 && today.getFullYear() === 2025;
     
     // --- 로컬 테스트용 ---
@@ -132,7 +132,9 @@ export default function Page() {
         } else {
           const contentMap: Record<string, any> = {};
           data.forEach(item => {
-            if (!contentMap[item.section]) contentMap[item.section] = {};
+            if (!contentMap[item.section]) {
+              contentMap[item.section] = {};
+            }
             contentMap[item.section][item.key] = item.value;
           });
           console.log("%c[데이터 로딩] 홈페이지 콘텐츠 로딩 완료.", 'color: cyan;');
@@ -150,7 +152,7 @@ export default function Page() {
   };
 
   // --- 현재 상태에 따라 적절한 화면을 렌더링 ---
-  if (view === 'checking' || (view === 'home' && !homePageContent)) {
+  if (view === 'checking') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black text-white">
         <p>Loading...</p>
@@ -158,23 +160,33 @@ export default function Page() {
     );
   }
 
-  return (
-    <>
-      {view === 'video' && (
-        <main className="fixed inset-0 bg-black z-[100]">
-          <YouTubePlayer videoId="MGGMszebZHU" onEnd={handleVideoEnd} />
-        </main>
-      )}
+  if (view === 'video') {
+    return (
+      <main className="fixed inset-0 bg-black z-[100]">
+        {/* ▼▼▼ 여기에 원하시는 YouTube 영상 ID를 넣어주세요. ▼▼▼ */}
+        <YouTubePlayer videoId="dQw4w9WgXcQ" onEnd={handleVideoEnd} />
+      </main>
+    );
+  }
 
-      <div style={{ visibility: view === 'home' ? 'visible' : 'hidden' }}>
-        {homePageContent && (
-          <>
-            <Header />
-            <HomePageClient initialContent={homePageContent} />
-            <Footer />
-          </>
-        )}
-      </div>
-    </>
-  );
+  if (view === 'home') {
+    // homePageContent가 로드될 때까지 로딩 상태를 표시합니다.
+    if (!homePageContent) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-black text-white">
+          <p>Loading Homepage...</p>
+        </div>
+      );
+    }
+    // homePageContent가 로드되면 홈페이지를 렌더링합니다.
+    return (
+      <>
+        <Header />
+        <HomePageClient initialContent={homePageContent} />
+        <Footer />
+      </>
+    );
+  }
+
+  return null; // 렌더링할 것이 없는 경우 (도달하지 않아야 함)
 }
