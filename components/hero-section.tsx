@@ -1,10 +1,11 @@
-// components/hero-section.tsx
 "use client"
 import { useState, useEffect, useRef } from "react"
 import type React from "react"
 
 import Image from "next/image"
 import EditableText from "@/components/editable-text"
+import Link from "next/link"
+import { Users, Heart, Handshake } from "lucide-react"
 
 interface HeroSectionProps {
   heroContent: Record<string, string>
@@ -26,9 +27,6 @@ export default function HeroSection({ heroContent, isEditingPage, onContentChang
     "/images/bozhiymir6.jpg", // index 4
     "/images/bozhiymir7.jpg", // index 5
   ]
-
-  // Define the fixed background image URL
-  // const fixedBackgroundImageUrl = "/images/bozhiymir_fixed_background.jpg"; // You can change this path to your desired fixed image
 
   // 자동 슬라이드 기능
   const startAutoSlide = () => {
@@ -93,7 +91,6 @@ export default function HeroSection({ heroContent, isEditingPage, onContentChang
             className={`absolute inset-0 transition-opacity duration-1000 ${
               index === currentImageIndex ? "opacity-100" : "opacity-0"
             } flex items-center justify-center`}
-            // 모든 동적 이미지의 z-index를 10으로 통일하여 오버레이 아래에 위치하도록 합니다.
             style={{ zIndex: 10 }}
           >
             <Image
@@ -102,23 +99,23 @@ export default function HeroSection({ heroContent, isEditingPage, onContentChang
               fill
               sizes="100vw"
               style={{
-                objectFit: index === 4 || index === 5 ? "contain" : "cover", // 5번째, 6번째 이미지는 contain 유지
+                objectFit: index === 4 || index === 5 ? "contain" : "cover",
                 objectPosition: "center",
               }}
-              priority={index === 0} // Only prioritize the first carousel image
+              priority={index === 0}
               unoptimized={true}
             />
           </div>
         ))}
 
-        {/* Black overlay: now bg-black/70 as originally requested, over dynamic images */}
+        {/* Black overlay */}
         <div
           className={`absolute inset-0 bg-black/70 transition-opacity duration-1000`}
-          style={{ zIndex: 15 }} // Z-index to be above dynamic images (z-10)
+          style={{ zIndex: 15 }}
         ></div>
       </div>
 
-      {/* 모바일 친화적 인디케이터 (z-index adjusted to be on top) */}
+      {/* 인디케이터 */}
       <div className="absolute bottom-4 md:bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-2 z-30">
         {backgroundImages.map((_, index) => (
           <button
@@ -128,14 +125,14 @@ export default function HeroSection({ heroContent, isEditingPage, onContentChang
               stopAutoSlide()
               setTimeout(() => startAutoSlide(), 2000)
             }}
-            className={`w-2 h-2 md:w-3 md:h-3 rounded-full transition-all duration-300 ${
+            className={`w-3 h-3 rounded-full transition-all duration-300 ${ // 모바일과 데스크톱 크기를 통일
               index === currentImageIndex ? "bg-white scale-125" : "bg-white/50 hover:bg-white/75"
             }`}
           />
         ))}
       </div>
 
-      {/* Floating Ukrainian Elements (z-index adjusted to be on top) */}
+      {/* Floating Ukrainian Elements */}
       <div className="absolute inset-0 pointer-events-none z-30">
         <div className="absolute top-20 left-10 w-2 h-2 md:w-3 md:h-3 bg-blue-400 rounded-full animate-pulse"></div>
         <div className="absolute top-32 right-20 w-1.5 h-1.5 md:w-2 md:h-2 bg-yellow-400 rounded-full animate-pulse delay-1000"></div>
@@ -145,7 +142,7 @@ export default function HeroSection({ heroContent, isEditingPage, onContentChang
 
       <div
         className={`relative z-30 text-center text-white px-4 max-w-4xl mx-auto transition-opacity duration-1000 ${
-          currentImageIndex === 4 || currentImageIndex === 5 ? "opacity-0" : "opacity-100" // 5번째, 6번째 이미지에서 투명하게
+          currentImageIndex === 4 || currentImageIndex === 5 ? "opacity-0" : "opacity-100"
         }`}
       >
         <h1 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold mb-3 md:mb-4 leading-tight">

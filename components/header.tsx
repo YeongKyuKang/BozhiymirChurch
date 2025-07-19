@@ -197,35 +197,35 @@ export default function Header() {
             </Button>
           </div>
 
-          {/* --- Mobile Navigation Menu --- */}
+          {/* --- Mobile Navigation Menu (Hover effects removed) --- */}
           {isMenuOpen && (
              <div className="lg:hidden mt-4 pb-4 border-t border-white/20">
                 <div className="flex flex-col space-y-2 pt-4">
                     {/* 모바일 About 아코디언 */}
                     <Accordion type="single" collapsible className="w-full">
                         <AccordionItem value="about" className="border-b-0">
-                            <AccordionTrigger className="text-white text-base font-medium hover:no-underline py-3">{t('ABOUT')}</AccordionTrigger>
+                            <AccordionTrigger className="text-white text-base font-medium py-3">{t('ABOUT')}</AccordionTrigger>
                             <AccordionContent>
                                 <div className="flex flex-col space-y-1 pl-4">
                                     {aboutItems.map(item => (
-                                        <Link key={item.name} href={item.href} onClick={() => setIsMenuOpen(false)} className="text-white/80 hover:text-yellow-300 py-2 text-sm">{t(item.name as any)}</Link>
+                                        <Link key={item.name} href={item.href} onClick={() => setIsMenuOpen(false)} className="text-white/80 py-2 text-sm">{t(item.name as any)}</Link>
                                     ))}
                                 </div>
                             </AccordionContent>
                         </AccordionItem>
                     </Accordion>
 
-                    <Link href="/events" onClick={() => setIsMenuOpen(false)} className="text-white text-base font-medium hover:text-yellow-300 py-3 px-4 rounded-md">{t('EVENTS')}</Link>
+                    <Link href="/events" onClick={() => setIsMenuOpen(false)} className="text-white text-base font-medium py-3 px-4 rounded-md">{t('EVENTS')}</Link>
 
                     {/* 모바일 Faith 아코디언 */}
                     {user ? (
                         <Accordion type="single" collapsible className="w-full">
                             <AccordionItem value="faith" className="border-b-0">
-                                <AccordionTrigger className="text-white text-base font-medium hover:no-underline py-3">{t('FAITH')}</AccordionTrigger>
+                                <AccordionTrigger className="text-white text-base font-medium py-3">{t('FAITH')}</AccordionTrigger>
                                 <AccordionContent>
                                     <div className="flex flex-col space-y-1 pl-4">
                                         {faithItems.map(item => (
-                                            <Link key={item.name} href={item.href} onClick={() => setIsMenuOpen(false)} className="text-white/80 hover:text-yellow-300 py-2 text-sm">{t(item.name as any)}</Link>
+                                            <Link key={item.name} href={item.href} onClick={() => setIsMenuOpen(false)} className="text-white/80 py-2 text-sm">{t(item.name as any)}</Link>
                                         ))}
                                     </div>
                                 </AccordionContent>
@@ -235,14 +235,14 @@ export default function Header() {
                         <span className="text-gray-400 text-base font-medium py-3 px-4 cursor-not-allowed">{t('FAITH')}</span>
                     )}
 
-                    <Link href="/join" onClick={() => setIsMenuOpen(false)} className="text-white text-base font-medium hover:text-yellow-300 py-3 px-4 rounded-md">{t('JOIN')}</Link>
+                    <Link href="/join" onClick={() => setIsMenuOpen(false)} className="text-white text-base font-medium py-3 px-4 rounded-md">{t('JOIN')}</Link>
                     
                     <div className="pt-4 border-t border-white/20">
                         {user ? (
                              <div className="flex flex-col space-y-2">
-                                <Link href="/profile" onClick={() => setIsMenuOpen(false)} className="flex items-center text-white/80 hover:text-yellow-300 py-2 text-sm"><User className="h-4 w-4 mr-2" /> Profile</Link>
-                                {userRole === 'admin' && <Link href="/admin" onClick={() => setIsMenuOpen(false)} className="flex items-center text-white/80 hover:text-yellow-300 py-2 text-sm"><Settings className="h-4 w-4 mr-2" /> Admin Panel</Link>}
-                                <button onClick={() => { handleSignOut(); setIsMenuOpen(false); }} className="flex items-center text-red-400 hover:text-red-300 py-2 text-sm"><LogOut className="h-4 w-4 mr-2" /> Sign Out</button>
+                                <Link href="/profile" onClick={() => setIsMenuOpen(false)} className="flex items-center text-white/80 py-2 text-sm"><User className="h-4 w-4 mr-2" /> Profile</Link>
+                                {userRole === 'admin' && <Link href="/admin" onClick={() => setIsMenuOpen(false)} className="flex items-center text-white/80 py-2 text-sm"><Settings className="h-4 w-4 mr-2" /> Admin Panel</Link>}
+                                <button onClick={() => { handleSignOut(); setIsMenuOpen(false); }} className="flex items-center text-red-400 py-2 text-sm"><LogOut className="h-4 w-4 mr-2" /> Sign Out</button>
                              </div>
                         ) : (
                             <div className="flex flex-col space-y-3">
@@ -259,9 +259,9 @@ export default function Header() {
                     {/* 모바일 언어 선택 */}
                     <div className="pt-4 border-t border-white/20">
                         <div className="flex justify-around items-center">
-                            <Button variant="ghost" size="sm" onClick={() => setLanguage('ko')}>{t('한국어')}</Button>
-                            <Button variant="ghost" size="sm" onClick={() => setLanguage('en')}>{t('English')}</Button>
-                            <Button variant="ghost" size="sm" onClick={() => setLanguage('ru')}>{t('Русский')}</Button>
+                            <Button variant="ghost" size="sm" onClick={() => setLanguage('ko')} className={`text-sm ${language === 'ko' ? 'text-yellow-300' : 'text-white/70'}`}>한국어</Button>
+                            <Button variant="ghost" size="sm" onClick={() => setLanguage('en')} className={`text-sm ${language === 'en' ? 'text-yellow-300' : 'text-white/70'}`}>English</Button>
+                            <Button variant="ghost" size="sm" onClick={() => setLanguage('ru')} className={`text-sm ${language === 'ru' ? 'text-yellow-300' : 'text-white/70'}`}>Русский</Button>
                         </div>
                     </div>
                 </div>
