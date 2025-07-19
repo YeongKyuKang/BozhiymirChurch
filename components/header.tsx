@@ -259,9 +259,9 @@ export default function Header() {
                     {/* 모바일 언어 선택 */}
                     <div className="pt-4 border-t border-white/20">
                         <div className="flex justify-around items-center">
-                            <Button variant="ghost" size="sm" onClick={() => setLanguage('ko')} className={`text-sm ${language === 'ko' ? 'text-yellow-300' : 'text-white/70'}`}>한국어</Button>
-                            <Button variant="ghost" size="sm" onClick={() => setLanguage('en')} className={`text-sm ${language === 'en' ? 'text-yellow-300' : 'text-white/70'}`}>English</Button>
-                            <Button variant="ghost" size="sm" onClick={() => setLanguage('ru')} className={`text-sm ${language === 'ru' ? 'text-yellow-300' : 'text-white/70'}`}>Русский</Button>
+                            <Button variant="ghost" size="sm" onClick={() => setLanguage('ko')}>{t('한국어')}</Button>
+                            <Button variant="ghost" size="sm" onClick={() => setLanguage('en')}>{t('English')}</Button>
+                            <Button variant="ghost" size="sm" onClick={() => setLanguage('ru')}>{t('Русский')}</Button>
                         </div>
                     </div>
                 </div>
