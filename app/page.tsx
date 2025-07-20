@@ -56,7 +56,6 @@ const YouTubePlayer = ({ videoId, onEnd }: { videoId: string; onEnd: () => void 
         events: {
           'onReady': (event: any) => {
             console.log("LOG: YouTubePlayer - 플레이어 준비 완료 (onReady). 음소거 후 재생 시작.");
-            event.target.mute();
             event.target.playVideo();
           },
           'onStateChange': (event: any) => {
