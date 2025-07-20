@@ -52,7 +52,7 @@ const YouTubePlayer = ({ videoId, onEnd }: { videoId: string; onEnd: () => void 
         height: '100%',
         width: '100%',
         videoId: videoId,
-        playerVars: { autoplay: 1, controls: 0, modestbranding: 1, showinfo: 0, rel: 0, fs: 1, playsinline: 1 },
+        playerVars: { autoplay: 1, controls: 0, modestbranding: 1, showinfo: 0, rel: 0, fs: 1, playsinline: 1, vq: 'hd1080' },
         events: {
           'onReady': (event: any) => {
             console.log("LOG: YouTubePlayer - 플레이어 준비 완료 (onReady). 음소거 후 재생 시작.");
@@ -163,7 +163,7 @@ export default function Page() {
     return (
       <main className="fixed inset-0 bg-black z-[100]">
         {/* ▼▼▼ 여기에 원하시는 YouTube 영상 ID를 넣어주세요. ▼▼▼ */}
-        <YouTubePlayer videoId="zfBt4tA3XSA" onEnd={handleVideoEnd} />
+        <YouTubePlayer videoId="MGGMszebZHU" onEnd={handleVideoEnd} />
       </main>
     );
   }
