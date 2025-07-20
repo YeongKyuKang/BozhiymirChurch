@@ -164,7 +164,7 @@ export default function Page() {
     return (
       <main className="fixed inset-0 bg-black z-[100]">
         {/* ▼▼▼ 여기에 원하시는 YouTube 영상 ID를 넣어주세요. ▼▼▼ */}
-        <YouTubePlayer videoId="MGGMszebZHU" onEnd={handleVideoEnd} />
+        <YouTubePlayer videoId="zfBt4tA3XSA" onEnd={handleVideoEnd} />
       </main>
     );
   }
