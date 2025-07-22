@@ -4,6 +4,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Menu, X, ChevronDown, User, LogOut, Settings, Globe } from "lucide-react"
 import Link from "next/link"
+import Image from "next/image" // Image 컴포넌트 임포트 추가
 import { useAuth } from "@/contexts/auth-context"
 import { useLanguage } from "@/contexts/language-context"
 import {
@@ -56,17 +57,16 @@ export default function Header() {
           <div className="flex items-center justify-between">
             {/* Logo */}
             <Link href="/" className="flex items-center space-x-2" onClick={() => setIsMenuOpen(false)}>
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 grid grid-cols-2 gap-1">
-                  <div className="w-3 h-3 bg-white rounded-full"></div>
-                  <div className="w-3 h-3 bg-blue-400 rounded-full"></div>
-                  <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
-                  <div className="w-3 h-3 bg-white rounded-full"></div>
-                </div>
-                <div>
-                  <span className="text-white font-bold text-lg tracking-wide">BOZHIYMIR</span>
-                  <div className="text-white/80 text-xs font-medium">CHURCH</div>
-                </div>
+              {/* 여기에 로고 이미지로 대체 */}
+              <div className="relative h-10 w-40"> {/* 로고 이미지 크기에 맞게 조정 */}
+                  <Image
+                      src="/images/Bozhiy-Mir_LOGO.png" // public 폴더에 직접 업로드한 이미지 경로
+                      alt="Bozhiymir Church Logo"
+                      fill // 부모 div의 크기에 맞춰 이미지를 채웁니다.
+                      style={{ objectFit: 'contain' }} // 이미지가 잘리지 않고 비율을 유지하도록 합니다.
+                      priority // 페이지 로드 시 우선적으로 로드되도록 설정 (선택 사항)
+                      unoptimized={true} // Vercel 배포 시 Next.js Image Optimization을 비활성화 (선택 사항)
+                  />
               </div>
             </Link>
 
@@ -197,7 +197,7 @@ export default function Header() {
             </Button>
           </div>
 
-          {/* --- Mobile Navigation Menu (Hover effects removed) --- */}
+          {/* --- Mobile Navigation Menu --- */}
           {isMenuOpen && (
              <div className="lg:hidden mt-4 pb-4 border-t border-white/20">
                 <div className="flex flex-col space-y-2 pt-4">

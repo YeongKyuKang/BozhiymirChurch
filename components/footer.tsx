@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { MapPin, Phone, Mail, Clock } from "lucide-react"
 import { useLanguage } from "@/contexts/language-context" // 번역 적용: useLanguage 훅 추가
+import Image from "next/image" // Image 컴포넌트 임포트 추가
 
 export default function Footer() {
   const { t } = useLanguage() // 번역 적용: t 함수 가져오기
@@ -12,21 +13,15 @@ export default function Footer() {
       <div className="container mx-auto px-4">
         <div className="grid md:grid-cols-4 gap-8">
           <div>
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 grid grid-cols-2 gap-1">
-                <div className="w-3 h-3 bg-white rounded-full"></div>
-                <div className="w-3 h-3 bg-blue-400 rounded-full"></div>
-                <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
-                <div className="w-3 h-3 bg-white rounded-full"></div>
-              </div>
-              <div>
-                <span className="text-white font-bold text-lg tracking-wide">BOZHIYMIR</span>
-                <div className="text-white/80 text-xs font-medium">CHURCH</div>
-              </div>
-            <div>
-                <span className="text-white font-bold text-xl tracking-wide">BOZHIYMIR</span>
-                <div className="text-yellow-300 text-sm font-medium">CHURCH</div>
-              </div>
+            {/* 여기에 로고 이미지로 대체 */}
+            <div className="relative h-10 w-40 mb-3"> {/* 푸터 로고 크기와 마진 조정 */}
+                <Image
+                    src="images/Bozhiy-Mir_LOGO.png" // public 폴더에 직접 업로드한 이미지 경로
+                    alt="Bozhiymir Church Logo"
+                    fill // 부모 div의 크기에 맞춰 이미지를 채웁니다.
+                    style={{ objectFit: 'contain' }} // 이미지가 잘리지 않고 비율을 유지하도록 합니다.
+                    unoptimized={true} // Vercel 배포 시 Next.js Image Optimization을 비활성화 (선택 사항)
+                />
             </div>
             <p className="text-blue-200 text-base leading-relaxed">
               {t('FOOTER_WELCOME_COMMUNITY_DESC')}
@@ -69,9 +64,9 @@ export default function Footer() {
               <div className="flex items-start text-blue-200">
                 <MapPin className="h-5 w-5 mr-3 mt-1 flex-shrink-0 text-yellow-300" />
                 <span className="text-base">
-                  123 Community Street
+                  Poloneza 87, 
                   <br />
-                  Poland, OR 97201
+                  02-826 Warszawa
                 </span>
               </div>
               <div className="flex items-center text-blue-200">

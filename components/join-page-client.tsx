@@ -414,7 +414,7 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
                     page="join"
                     section="contact"
                     contentKey="address"
-                    initialValue={content?.contact?.address || "123 Church Street\nPoland, OR 97201"}
+                    initialValue={content?.contact?.address || "Poloneza 87,\n02-826 Warszawa"}
                     tag="span"
                     className="text-blue-200"
                     isTextArea={true}
