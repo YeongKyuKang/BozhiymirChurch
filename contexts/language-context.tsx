@@ -27,8 +27,15 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({
   const [language, setLanguageState] = useState<string>(() => {
     if (typeof window !== "undefined") {
       const storedLang = localStorage.getItem("language");
-      console.log(`LOG: Initial language state from localStorage: ${storedLang || 'none'}, default: en`);
-      return storedLang || "en";
+      // 만약 로컬 스토리지에 'en'이 아닌 다른 언어 (예: 'ko', 'ru')가 저장되어 있다면,
+      // 첫 로드 시에는 'en'으로 강제합니다.
+      // 하지만 'en'이 저장되어 있거나 아무것도 저장되어 있지 않다면 'en'으로 시작합니다.
+      if (storedLang && storedLang !== "en") {
+        console.log(`LOG: Stored language '${storedLang}' found, but forcing initial language to 'en'.`);
+        return "en";
+      }
+      console.log(`LOG: Initial language state from localStorage: ${storedLang || 'none'}, defaulting to 'en'.`);
+      return storedLang || "en"; // 'en'이거나 저장된 언어가 없으면 'en'으로 시작
     }
     console.log("LOG: Initial language state (server-side/no window): en");
     return "en";
@@ -41,7 +48,6 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({
     setLoading(true);
     try {
       if (lang !== 'en') {
-        // --- 변경된 부분 시작 ---
         console.log(`LOG: Fetching translation file from public directory: /translations/${lang}.json`);
         const response = await fetch(`/translations/${lang}.json`); // public 폴더의 루트를 기준으로 경로 설정
 
@@ -49,7 +55,6 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({
           throw new Error(`HTTP error! status: ${response.status} for /translations/${lang}.json`);
         }
         const langTranslations = await response.json();
-        // --- 변경된 부분 끝 ---
         
         setTranslations(langTranslations);
         console.log(`LOG: Successfully loaded translations for ${lang}. Keys count: ${Object.keys(langTranslations).length}`);
