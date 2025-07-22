@@ -103,7 +103,7 @@ export default function Page() {
     const isTargetDate = today.getDate() === 18 && today.getMonth() === 6 && today.getFullYear() === 2025;
     
     // --- 로컬 테스트용 ---
-    const shouldShowWelcomeVideo = true; 
+    const shouldShowWelcomeVideo = isTargetDate; 
     // -------------------
 
     const videoHasBeenPlayed = sessionStorage.getItem('welcomeVideoPlayed');
