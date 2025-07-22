@@ -125,7 +125,8 @@ export default function HeroSection({ heroContent, isEditingPage, onContentChang
               stopAutoSlide()
               setTimeout(() => startAutoSlide(), 2000)
             }}
-            className={`w-3 h-3 rounded-full transition-all duration-300 ${ // 모바일과 데스크톱 크기를 통일
+            // 모바일은 w-2 h-2, 데스크톱은 md:w-3 md:h-3
+            className={`w-2 h-2 md:w-3 md:h-3 rounded-full transition-all duration-300 ${ // ✨ 반응형 크기 조정 ✨
               index === currentImageIndex ? "bg-white scale-125" : "bg-white/50 hover:bg-white/75"
             }`}
           />
