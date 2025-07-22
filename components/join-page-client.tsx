@@ -14,6 +14,7 @@ import { Heart, Users, Calendar, Mail, Phone, MapPin, Handshake, Church, Lightbu
 import EditableText from "@/components/editable-text"
 import { useToast } from "@/components/ui/use-toast"
 import Link from "next/link"
+import { useLanguage } from "@/contexts/language-context"
 
 interface JoinPageClientProps {
   initialContent: Record<string, any>
@@ -22,12 +23,13 @@ interface JoinPageClientProps {
 export default function JoinPageClient({ initialContent }: JoinPageClientProps) {
   const content = initialContent
   const { toast } = useToast()
+  const { t } = useLanguage()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
-    email: "", // email 필드
-    phone: "", // phone 필드
+    email: "",
+    phone: "",
     age: "",
     interests: [] as string[],
     message: "",
@@ -37,30 +39,29 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
-    console.log("Form submission started. isSubmitting set to true."); // 로그 1
+    console.log("Form submission started. isSubmitting set to true.");
 
-    // 필수 필드 유효성 검사: phone 필드 추가, message 최소 길이 검사 추가
     if (
       !formData.firstName ||
       !formData.lastName ||
       !formData.email ||
-      !formData.phone || // 전화번호 필드 필수 추가
+      !formData.phone ||
       !formData.age ||
       formData.interests.length === 0 ||
       !formData.message ||
-      formData.message.length < 50 // 메시지 최소 길이 50자 검사 추가
+      formData.message.length < 50
     ) {
-      console.log("Client-side validation failed."); // 로그 2
+      console.log("Client-side validation failed.");
       toast({
-        title: "필수 필드를 채워주세요.",
-        description: "이름, 성, 이메일, 전화번호, 연령대, 관심 분야, 메시지(최소 50자)는 필수 입력 사항입니다.", // 설명 업데이트
+        title: t("필수 필드를 채워주세요."),
+        description: t("이름, 성, 이메일, 전화번호, 연령대, 관심 분야, 메시지(최소 50자)는 필수 입력 사항입니다."),
         variant: "destructive",
       })
       setIsSubmitting(false)
       return
     }
 
-    console.log("Client-side validation passed. Attempting fetch."); // 로그 3
+    console.log("Client-side validation passed. Attempting fetch.");
     try {
       const response = await fetch("/api/contact", {
         method: "POST",
@@ -70,22 +71,22 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
         body: JSON.stringify({
           first_name: formData.firstName,
           last_name: formData.lastName,
-          email: formData.email, // email 필드 전송
-          phone: formData.phone, // phone 필드 전송
+          email: formData.email,
+          phone: formData.phone,
           age_group: formData.age,
           interests: formData.interests,
           message: formData.message,
           receive_updates: formData.newsletter,
           type: "join_request",
-          subject: "새로운 교회 가입 신청",
+          subject: t("새로운 교회 가입 신청"),
         }),
       })
 
       if (response.ok) {
-        console.log("Form submission successful."); // 로그 4
+        console.log("Form submission successful.");
         toast({
-          title: "신청이 완료되었습니다!",
-          description: "곧 연락드리겠습니다. 감사합니다.",
+          title: t("신청이 완료되었습니다!"),
+          description: t("곧 연락드리겠습니다. 감사합니다."),
         })
         setFormData({
           firstName: "",
@@ -99,19 +100,19 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
         })
       } else {
         const errorData = await response.json()
-        console.error("Server responded with an error:", errorData); // 로그 5
-        throw new Error(errorData.message || "Failed to submit")
+        console.error("Server responded with an error:", errorData);
+        throw new Error(errorData.message || t("다시 시도해주세요."));
       }
     } catch (error: any) {
-      console.error("Caught an error during fetch:", error); // 로그 6
+      console.error("Caught an error during fetch:", error);
       toast({
-        title: "오류가 발생했습니다",
-        description: error.message || "다시 시도해주세요.",
+        title: t("오류가 발생했습니다"),
+        description: error.message || t("다시 시도해주세요."),
         variant: "destructive",
       })
     } finally {
       setIsSubmitting(false)
-      console.log("Form submission ended. isSubmitting set to false."); // 로그 7
+      console.log("Form submission ended. isSubmitting set to false.");
     }
   }
 
@@ -123,31 +124,46 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
   }
 
   const interestOptions = [
-    "주일 예배",
-    "성경 공부",
-    "찬양팀",
-    "청년부",
-    "어린이부",
-    "봉사활동",
-    "우크라이나 사역",
-    "기도 모임",
+    "Sunday Service",
+    "Bible Study",
+    "Worship Team",
+    "Youth & Young Adults",
+    "Children's Ministry",
+    "Volunteering",
+    "Ukrainian Ministry",
+    "Prayer Meeting",
   ]
 
   const whyJoinReasons = [
     {
       icon: <Heart className="h-7 w-7 text-blue-900" />,
-      titleKey: "reason1_title",
-      descriptionKey: "reason1_description",
+      contentKeyTitle: "Community & Fellowship",
+      contentKeyDescription: "Experience genuine connection and support within our vibrant church family.",
     },
     {
       icon: <Users className="h-7 w-7 text-blue-900" />,
-      titleKey: "reason2_title",
-      descriptionKey: "reason2_description",
+      contentKeyTitle: "Spiritual Growth",
+      contentKeyDescription: "Deepen your faith through engaging worship, insightful teachings, and prayer.",
     },
     {
       icon: <Calendar className="h-7 w-7 text-blue-900" />,
-      titleKey: "reason3_title",
-      descriptionKey: "reason3_description",
+      contentKeyTitle: "Service & Outreach",
+      contentKeyDescription: "Discover opportunities to serve others and make a positive impact in our community and beyond.",
+    },
+    {
+      icon: <Lightbulb className="h-7 w-7 text-blue-900" />,
+      contentKeyTitle: "Biblical Teaching",
+      contentKeyDescription: "Receive sound, practical teaching rooted in God's Word that applies to everyday life.",
+    },
+    {
+      icon: <Handshake className="h-7 w-7 text-blue-900" />,
+      contentKeyTitle: "Prayer & Support",
+      contentKeyDescription: "Find comfort and strength in our dedicated prayer ministry and caring support network.",
+    },
+    {
+      icon: <Church className="h-7 w-7 text-blue-900" />,
+      contentKeyTitle: "Mission & Vision",
+      contentKeyDescription: "Be part of a church with a clear mission to spread the Gospel and make disciples.",
     },
   ]
 
@@ -162,9 +178,9 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
           <h1 className="text-3xl md:text-4xl lg:text-4xl font-extrabold mb-5">
             <EditableText
               page="join"
-              section="hero"
+              section="main"
               contentKey="title"
-              initialValue={content?.hero?.title || "Join Our Church Family"}
+              initialValue={content?.main?.title || "Join Our Church Family"}
               tag="span"
               className="text-white"
             />
@@ -172,11 +188,11 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
           <p className="text-lg md:text-xl text-blue-200 max-w-4xl mx-auto leading-relaxed">
             <EditableText
               page="join"
-              section="hero"
+              section="main"
               contentKey="description"
               initialValue={
-                content?.hero?.description ||
-                "Find your spiritual home and grow in faith with a loving community."
+                content?.main?.description ||
+                "Discover how to connect with Bozhiymir Church, attend our services, and become part of our loving community."
               }
               tag="span"
               className="text-lg md:text-xl text-blue-200"
@@ -209,8 +225,8 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
                   <EditableText
                     page="join"
                     section="why_join"
-                    contentKey={reason.titleKey}
-                    initialValue={content?.why_join?.[reason.titleKey] || `Reason ${index + 1}`}
+                    contentKey={`reason${index + 1}_title`}
+                    initialValue={content?.why_join?.[`reason${index + 1}_title`] || reason.contentKeyTitle}
                     tag="span"
                     className="text-lg md:text-xl font-bold"
                   />
@@ -219,11 +235,8 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
                   <EditableText
                     page="join"
                     section="why_join"
-                    contentKey={reason.descriptionKey}
-                    initialValue={
-                      content?.why_join?.[reason.descriptionKey] ||
-                      "Description of this reason."
-                    }
+                    contentKey={`reason${index + 1}_description`}
+                    initialValue={content?.why_join?.[`reason${index + 1}_description`] || reason.contentKeyDescription}
                     tag="span"
                     className="text-gray-700"
                     isTextArea={true}
@@ -255,7 +268,7 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <Label htmlFor="firstName" className="text-blue-900 font-semibold text-base">
-                        First Name *</Label>
+                        {t("First Name")} *</Label> {/* ✅ t() 함수 사용 */}
                       <Input
                         id="firstName"
                         type="text"
@@ -263,12 +276,12 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
                         value={formData.firstName}
                         onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                         className="mt-3 h-12 border-blue-300 focus:border-blue-700 focus:ring-blue-700 text-base"
-                        placeholder="Enter your first name"
+                        placeholder={t("Enter your first name")}
                       />
                     </div>
                     <div>
                       <Label htmlFor="lastName" className="text-blue-900 font-semibold text-base">
-                        Last Name *</Label>
+                        {t("Last Name")} *</Label> {/* ✅ t() 함수 사용 */}
                       <Input
                         id="lastName"
                         type="text"
@@ -276,7 +289,7 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
                         value={formData.lastName}
                         onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
                         className="mt-3 h-12 border-blue-300 focus:border-blue-700 focus:ring-blue-700 text-base"
-                        placeholder="Enter your last name"
+                        placeholder={t("Enter your last name")}
                       />
                     </div>
                   </div>
@@ -284,7 +297,7 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <Label htmlFor="email" className="text-blue-900 font-semibold text-base">
-                        Email Address *</Label>
+                        {t("Email Address")} *</Label> {/* ✅ t() 함수 사용 */}
                       <Input
                         id="email"
                         type="email"
@@ -292,45 +305,45 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                         className="mt-3 h-12 border-blue-300 focus:border-blue-700 focus:ring-blue-700 text-base"
-                        placeholder="Enter your email address"
+                        placeholder={t("Enter your email address")}
                       />
                     </div>
                     <div>
                       <Label htmlFor="phone" className="text-blue-900 font-semibold text-base">
-                        Phone Number *</Label> {/* 전화번호 Label에 * 추가 */}
+                        {t("Phone Number")} *</Label> {/* ✅ t() 함수 사용 */}
                       <Input
                         id="phone"
                         type="tel"
-                        required // required 속성 추가
+                        required
                         value={formData.phone}
                         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                         className="mt-3 h-12 border-blue-300 focus:border-blue-700 focus:ring-blue-700 text-base"
-                        placeholder="Enter your phone number"
+                        placeholder={t("Enter your phone number")} 
                       />
                     </div>
                   </div>
 
                   <div>
                     <Label htmlFor="age" className="text-blue-900 font-semibold text-base">
-                      Age Group</Label>
-                    <Select value={formData.age} onValueChange={(value) => setFormData({ ...formData, age: value })}>
+                      {t("Age Group")}</Label> {/* ✅ t() 함수 사용 */}
+                    <Select value={formData.age} onValueChange={(value) => setFormData({ ...formData, age: value })} required>
                       <SelectTrigger className="mt-3 h-12 border-blue-300 focus:border-blue-700 focus:ring-blue-700 text-base">
-                        <SelectValue placeholder="Select your age group" />
+                        <SelectValue placeholder={t("Select your age group")} /> {/* ✅ t() 함수 사용 */}
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="10s">10-19</SelectItem>
-                        <SelectItem value="20s">20-29</SelectItem>
-                        <SelectItem value="30s">30-39</SelectItem>
-                        <SelectItem value="40s">40-49</SelectItem>
-                        <SelectItem value="50s">50-59</SelectItem>
-                        <SelectItem value="60s">60+</SelectItem>
+                        <SelectItem value="10s">{t("10-19")}</SelectItem> {/* ✅ t() 함수 사용 */}
+                        <SelectItem value="20s">{t("20-29")}</SelectItem> {/* ✅ t() 함수 사용 */}
+                        <SelectItem value="30s">{t("30-39")}</SelectItem> {/* ✅ t() 함수 사용 */}
+                        <SelectItem value="40s">{t("40-49")}</SelectItem> {/* ✅ t() 함수 사용 */}
+                        <SelectItem value="50s">{t("50-59")}</SelectItem> {/* ✅ t() 함수 사용 */}
+                        <SelectItem value="60s">{t("60+")}</SelectItem> {/* ✅ t() 함수 사용 */}
                       </SelectContent>
                     </Select>
                   </div>
 
                   <div>
                     <Label className="text-blue-900 font-semibold text-base mb-4 block">
-                      Areas of Interest (Select all that apply)
+                      {t("Areas of Interest (Select all that apply)")} {/* ✅ t() 함수 사용 */}
                     </Label>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                       {interestOptions.map((interest) => (
@@ -342,7 +355,7 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
                             className="border-blue-500 data-[state=checked]:bg-blue-700 data-[state=checked]:text-white"
                           />
                           <Label htmlFor={interest} className="text-sm cursor-pointer text-gray-700">
-                            {interest}
+                            {t(interest)} {/* ✅ interestOptions 배열의 영문 문자열을 t()로 감쌈 */}
                           </Label>
                         </div>
                       ))}
@@ -351,16 +364,15 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
 
                   <div>
                     <Label htmlFor="message" className="text-blue-900 font-semibold text-base">
-                      Message *</Label>
+                      {t("Message")} *</Label> {/* ✅ t() 함수 사용 */}
                     <Textarea
                       id="message"
                       value={formData.message}
                       onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                       className="mt-3 border-blue-300 focus:border-blue-700 focus:ring-blue-700 text-base"
-                      rows={4}
-                      placeholder="Tell us about yourself or any questions you have (minimum 50 characters)" // placeholder 업데이트
+                      placeholder={t("Tell us about yourself or any questions you have (minimum 50 characters)")}
                       required
-                      minLength={50} // minLength 속성 추가
+                      minLength={50}
                     />
                   </div>
                   <Button
@@ -368,7 +380,7 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
                     disabled={isSubmitting}
                     className="w-full h-12 bg-gradient-to-r from-blue-700 to-blue-800 hover:from-blue-800 hover:to-blue-900 text-white font-bold text-lg rounded-full shadow-xl transform hover:scale-105 transition-all duration-300"
                   >
-                    {isSubmitting ? "Submitting..." : "Submit Application"}
+                    {isSubmitting ? t("Submitting...") : t("Submit Application")} {/* ✅ t() 함수 사용 */}
                   </Button>
                 </form>
               </CardContent>
@@ -377,7 +389,7 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
         </div>
       </section>
 
-      {/* Contact Info */}
+      {/* Contact Info Section */}
       <section className="py-10 bg-gradient-to-r from-blue-700 to-blue-800 text-white">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-8">
@@ -394,13 +406,15 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
             <Card className="text-center hover:shadow-2xl transition-all duration-500 transform hover:scale-105 border-0 shadow-xl bg-white/10 backdrop-blur-sm">
               <CardContent className="p-6">
                 <MapPin className="h-12 w-12 mx-auto mb-4 text-yellow-500" />
-                <h3 className="text-lg md:text-xl font-bold mb-3">Address</h3>
+                <h3 className="text-lg md:text-xl font-bold mb-3">
+                  {t("Address")} {/* ✅ t() 함수 사용 */}
+                </h3>
                 <p className="text-blue-200 leading-relaxed">
                   <EditableText
                     page="join"
                     section="contact"
                     contentKey="address"
-                    initialValue={content?.contact?.address || "123 Church Street\nYour City, State 12345"}
+                    initialValue={content?.contact?.address || "123 Church Street\nPoland, OR 97201"}
                     tag="span"
                     className="text-blue-200"
                     isTextArea={true}
@@ -411,7 +425,9 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
             <Card className="text-center hover:shadow-2xl transition-all duration-500 transform hover:scale-105 border-0 shadow-xl bg-white/10 backdrop-blur-sm">
               <CardContent className="p-6">
                 <Phone className="h-12 w-12 mx-auto mb-4 text-yellow-500" />
-                <h3 className="text-lg md:text-xl font-bold mb-3">Phone</h3>
+                <h3 className="text-lg md:text-xl font-bold mb-3">
+                  {t("Phone")} {/* ✅ t() 함수 사용 */}
+                </h3>
                 <p className="text-blue-200">
                   <EditableText
                     page="join"
@@ -427,7 +443,9 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
             <Card className="text-center hover:shadow-2xl transition-all duration-500 transform hover:scale-105 border-0 shadow-xl bg-white/10 backdrop-blur-sm">
               <CardContent className="p-6">
                 <Mail className="h-12 w-12 mx-auto mb-4 text-yellow-500" />
-                <h3 className="text-lg md:text-xl font-bold mb-3">Email</h3>
+                <h3 className="text-lg md:text-xl font-bold mb-3">
+                  {t("Email")} {/* ✅ t() 함수 사용 */}
+                </h3>
                 <p className="text-blue-200">
                   <EditableText
                     page="join"
@@ -441,6 +459,156 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
               </CardContent>
             </Card>
           </div>
+          {/* Service Times (EditableText로 관리되지 않는 텍스트) */}
+          <div className="mt-8 text-center text-blue-200">
+            <p className="text-xl font-semibold mb-2">
+              {t("Service Times")} {/* ✅ t() 함수 사용 */}
+            </p>
+            <p className="text-lg">
+              {t("Sunday: 9:00 AM, 10:30 AM, 12:00 PM\nWednesday: 7:00 PM")} {/* ✅ t() 함수 사용 */}
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Ministry Highlight Section */}
+      <section className="py-12 bg-white text-gray-900">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-3xl md:text-4xl font-bold mb-6">
+            <EditableText
+              page="join"
+              section="ministry_highlight"
+              contentKey="highlight_title"
+              initialValue={content?.ministry_highlight?.highlight_title || "Our Special Calling"}
+              tag="span"
+              className="text-3xl md:text-4xl font-bold"
+            />
+          </h2>
+          <h3 className="text-xl md:text-2xl font-semibold text-blue-700 mb-4">
+            <EditableText
+              page="join"
+              section="ministry_highlight"
+              contentKey="highlight_subtitle"
+              initialValue={content?.ministry_highlight?.highlight_subtitle || "Ukrainian Children Ministry"}
+              tag="span"
+              className="text-xl md:text-2xl font-semibold text-blue-700"
+            />
+          </h3>
+          <p className="text-lg max-w-2xl mx-auto mb-8">
+            <EditableText
+              page="join"
+              section="ministry_highlight"
+              contentKey="highlight_description"
+              initialValue={content?.ministry_highlight?.highlight_description || "Learn about our vital ministry supporting Ukrainian children and how you can get involved."}
+              tag="span"
+              className="text-lg"
+              isTextArea={true}
+            />
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+            <div className="bg-blue-500 text-white p-6 rounded-lg shadow-lg">
+              <h4 className="text-4xl font-extrabold mb-2">
+                <EditableText
+                  page="join"
+                  section="ministry_highlight"
+                  contentKey="stat1_number"
+                  initialValue={content?.ministry_highlight?.stat1_number || "47+"}
+                  tag="span"
+                  className="text-4xl font-extrabold"
+                />
+              </h4>
+              <p className="text-lg">
+                <EditableText
+                  page="join"
+                  section="ministry_highlight"
+                  contentKey="stat1_label"
+                  initialValue={content?.ministry_highlight?.stat1_label || "Children Supported"}
+                  tag="span"
+                  className="text-lg"
+                />
+              </p>
+            </div>
+            <div className="bg-green-500 text-white p-6 rounded-lg shadow-lg">
+              <h4 className="text-4xl font-extrabold mb-2">
+                <EditableText
+                  page="join"
+                  section="ministry_highlight"
+                  contentKey="stat2_number"
+                  initialValue={content?.ministry_highlight?.stat2_number || "25+"}
+                  tag="span"
+                  className="text-4xl font-extrabold"
+                />
+              </h4>
+              <p className="text-lg">
+                <EditableText
+                  page="join"
+                  section="ministry_highlight"
+                  contentKey="stat2_label"
+                  initialValue={content?.ministry_highlight?.stat2_label || "Host Families"}
+                  tag="span"
+                  className="text-lg"
+                />
+              </p>
+            </div>
+            <div className="bg-purple-500 text-white p-6 rounded-lg shadow-lg">
+              <h4 className="text-4xl font-extrabold mb-2">
+                <EditableText
+                  page="join"
+                  section="ministry_highlight"
+                  contentKey="stat3_number"
+                  initialValue={content?.ministry_highlight?.stat3_number || "100%"}
+                  tag="span"
+                  className="text-4xl font-extrabold"
+                />
+              </h4>
+              <p className="text-lg">
+                <EditableText
+                  page="join"
+                  section="ministry_highlight"
+                  contentKey="stat3_label"
+                  initialValue={content?.ministry_highlight?.stat3_label || "Needs Met"}
+                  tag="span"
+                  className="text-lg"
+                />
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-12 bg-gray-100 text-center">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            <EditableText
+              page="join"
+              section="cta"
+              contentKey="cta_title"
+              initialValue={content?.cta?.cta_title || "Ready to Connect?"}
+              tag="span"
+              className="text-3xl md:text-4xl font-bold text-gray-900"
+            />
+          </h2>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-8">
+            <EditableText
+              page="join"
+              section="cta"
+              contentKey="cta_description"
+              initialValue={content?.cta?.cta_description || "We are excited to welcome you to our church family!"}
+              tag="span"
+              className="text-lg text-gray-600"
+              isTextArea={true}
+            />
+          </p>
+          <Button
+            asChild
+            className="bg-blue-700 hover:bg-blue-800 text-white font-semibold py-3 px-8 rounded-full shadow-lg transform hover:scale-105 transition-all duration-300"
+          >
+            <Link href="/contact">
+              {t("CONTACT_US_BUTTON")}
+            </Link>
+          </Button>
         </div>
       </section>
     </div>
