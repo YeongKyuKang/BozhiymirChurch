@@ -32,7 +32,6 @@ export default function Footer() {
             <p className="text-blue-200 text-base leading-relaxed">
               {hardcodedFooterContent.FOOTER_WELCOME_COMMUNITY_DESC}
             </p>
-            <div className="mt-4 text-2xl">🇺🇦</div>
           </div>
 
           <div>
