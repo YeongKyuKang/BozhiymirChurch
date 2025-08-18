@@ -5,18 +5,15 @@ import { MapPin, Phone, Mail, Clock } from 'lucide-react'
 import { useLanguage } from '@/contexts/language-context'
 import Image from 'next/image'
 
-interface FooterProps {
-  footerContent: {
-    FOOTER_WELCOME_COMMUNITY_DESC?: string;
-    SUNDAY_SERVICE_TIMES?: string;
-    WEDNESDAY_SERVICE_TIMES?: string;
-  };
-}
-
-export default function Footer({ footerContent }: FooterProps) {
+export default function Footer() {
   const { t } = useLanguage()
-
   const year = new Date().getFullYear()
+
+  // 하드코딩된 푸터 텍스트
+  const hardcodedFooterContent = {
+    FOOTER_WELCOME_COMMUNITY_DESC: 'A welcoming community where families grow together in faith and fellowship.',
+    SUNDAY_SERVICE_TIMES: 'Sunday: 10:00 ~ 18:30',
+  };
 
   return (
     <footer className="bg-gradient-to-r from-blue-900 to-blue-800 text-white py-12 border-t-4 border-yellow-500">
@@ -25,7 +22,7 @@ export default function Footer({ footerContent }: FooterProps) {
           <div>
             <div className="relative h-10 w-40 mb-3">
               <Image
-                src="images/Bozhiy-Mir_LOGO.png"
+                src="/images/Bozhiy-Mir_LOGO.png"
                 alt="Bozhiymir Church Logo"
                 fill
                 style={{ objectFit: 'contain' }}
@@ -33,7 +30,7 @@ export default function Footer({ footerContent }: FooterProps) {
               />
             </div>
             <p className="text-blue-200 text-base leading-relaxed">
-              {footerContent?.FOOTER_WELCOME_COMMUNITY_DESC}
+              {hardcodedFooterContent.FOOTER_WELCOME_COMMUNITY_DESC}
             </p>
             <div className="mt-4 text-2xl">🇺🇦</div>
           </div>
@@ -95,8 +92,7 @@ export default function Footer({ footerContent }: FooterProps) {
               <div className="flex items-start">
                 <Clock className="h-5 w-5 mr-3 mt-1 text-yellow-300" />
                 <div className="text-base">
-                  <p>{footerContent?.SUNDAY_SERVICE_TIMES}</p>
-                  <p>{footerContent?.WEDNESDAY_SERVICE_TIMES}</p>
+                  <p>{hardcodedFooterContent.SUNDAY_SERVICE_TIMES}</p>
                 </div>
               </div>
             </div>
