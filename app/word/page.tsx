@@ -109,9 +109,7 @@ export default async function WordPage({
 
   return (
     <>
-      <Header />
       <WordPageClient initialContent={content} initialWordPosts={wordPosts} />
-      <Footer />
     </>
   );
 }

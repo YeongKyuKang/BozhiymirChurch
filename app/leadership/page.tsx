@@ -46,9 +46,7 @@ export default async function LeadershipPage() {
 
   return (
     <>
-      <Header />
       <LeadershipPageClient initialContent={content} />
-      <Footer />
     </>
   )
 }

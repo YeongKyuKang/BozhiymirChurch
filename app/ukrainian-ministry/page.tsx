@@ -56,9 +56,7 @@ export default async function UkrainianMinistryPage() {
 
   return (
     <>
-      <Header /> {/* Header 컴포넌트 렌더링 */}
       <UkrainianMinistryPageClient initialContent={content} />
-      <Footer />
     </>
   )
 }

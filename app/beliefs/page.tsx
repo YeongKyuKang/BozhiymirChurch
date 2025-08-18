@@ -52,9 +52,7 @@ export default async function BeliefsPageWrapper() {
 
   return (
     <>
-      <Header />
       <BeliefsPageClient initialContent={initialContent} />
-      <Footer />
     </>
   );
 }

@@ -75,9 +75,7 @@ export default async function PrayerPage() {
 
   return (
     <>
-      <Header />
       <PrayerPageClient initialContent={content} initialPrayerRequests={prayerRequests} /> 
-      <Footer />
     </>
   );
 }

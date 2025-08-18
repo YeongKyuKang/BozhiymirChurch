@@ -46,9 +46,7 @@ export default async function StoryPage() {
 
   return (
     <>
-      <Header /> {/* Header 컴포넌트 렌더링 */}
       <StoryPageClient initialContent={content} />
-      <Footer />
     </>
   )
 }

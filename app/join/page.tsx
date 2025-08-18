@@ -46,9 +46,7 @@ export default async function JoinPage() {
 
   return (
     <>
-      <Header />
       <JoinPageClient initialContent={content} />
-      <Footer />
     </>
   )
 }

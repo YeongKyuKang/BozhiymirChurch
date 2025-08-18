@@ -176,8 +176,6 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-yellow-50">
-      <Header />
-
       <div className="pt-24 pb-16">
         <div className="container mx-auto px-4">
           <div className="max-w-2xl mx-auto">
@@ -349,8 +347,6 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
-
-      <Footer />
     </div>
   )
 }

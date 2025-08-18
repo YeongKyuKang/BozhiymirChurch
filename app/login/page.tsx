@@ -41,8 +41,6 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-yellow-50">
-      <Header />
-
       <div className="pt-24 pb-16">
         <div className="container mx-auto px-4">
           <div className="max-w-md mx-auto">
@@ -101,8 +99,6 @@ export default function LoginPage() {
           </div>
         </div>
       </div>
-
-      <Footer />
     </div>
   )
 }

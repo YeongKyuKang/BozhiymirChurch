@@ -157,9 +157,7 @@ export default async function ThanksPageWrapper({
 
   return (
     <>
-      <Header />
       <ThanksPageClient initialContent={content} initialThanksPosts={thanksPosts} />
-      <Footer />
     </>
   );
 }

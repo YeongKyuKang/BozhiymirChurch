@@ -33,9 +33,7 @@ export default async function JesusPage() {
 
   return (
     <>
-      <Header />
       <JesusPageClient initialContent={content} />
-      <Footer />
     </>
   )
 }

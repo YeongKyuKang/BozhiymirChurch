@@ -1,6 +1,4 @@
 // app/events/page.tsx
-import Header from "@/components/header";
-import Footer from "@/components/footer";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import dynamic from 'next/dynamic';
@@ -47,10 +45,9 @@ async function fetchEventsContentAndData() {
     console.error("Error fetching Events page content:", contentError);
   }
 
-  // 'events' 테이블에서 이벤트 데이터 가져오기 (slug 필드 포함)
   const { data: eventsData} = await supabase
     .from("events")
-    .select("id, created_at, title, description, event_date, start_time, end_time, location, category, image_url, updated_at, slug") // slug 필드 추가
+    .select("id, created_at, title, description, event_date, start_time, end_time, location, category, image_url, updated_at, slug")
     .order("event_date", { ascending: true })
     .order("start_time", { ascending: true });
 
@@ -65,9 +62,7 @@ export default async function EventsPage() {
 
   return (
     <>
-      <Header />
       <SpecificEventsPageClient initialEvents={initialEvents} initialContent={content} />
-      <Footer />
     </>
   );
 }
