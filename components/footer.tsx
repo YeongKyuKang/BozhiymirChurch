@@ -1,30 +1,39 @@
-"use client" // 이 줄을 파일의 가장 상단에 추가합니다.
+'use client'
 
-import Link from "next/link"
-import { MapPin, Phone, Mail, Clock } from "lucide-react"
-import { useLanguage } from "@/contexts/language-context" // 번역 적용: useLanguage 훅 추가
-import Image from "next/image" // Image 컴포넌트 임포트 추가
+import Link from 'next/link'
+import { MapPin, Phone, Mail, Clock } from 'lucide-react'
+import { useLanguage } from '@/contexts/language-context'
+import Image from 'next/image'
 
-export default function Footer() {
-  const { t } = useLanguage() // 번역 적용: t 함수 가져오기
+interface FooterProps {
+  footerContent: {
+    FOOTER_WELCOME_COMMUNITY_DESC?: string;
+    SUNDAY_SERVICE_TIMES?: string;
+    WEDNESDAY_SERVICE_TIMES?: string;
+  };
+}
+
+export default function Footer({ footerContent }: FooterProps) {
+  const { t } = useLanguage()
+
+  const year = new Date().getFullYear()
 
   return (
     <footer className="bg-gradient-to-r from-blue-900 to-blue-800 text-white py-12 border-t-4 border-yellow-500">
       <div className="container mx-auto px-4">
         <div className="grid md:grid-cols-4 gap-8">
           <div>
-            {/* 여기에 로고 이미지로 대체 */}
-            <div className="relative h-10 w-40 mb-3"> {/* 푸터 로고 크기와 마진 조정 */}
-                <Image
-                    src="images/Bozhiy-Mir_LOGO.png" // public 폴더에 직접 업로드한 이미지 경로
-                    alt="Bozhiymir Church Logo"
-                    fill // 부모 div의 크기에 맞춰 이미지를 채웁니다.
-                    style={{ objectFit: 'contain' }} // 이미지가 잘리지 않고 비율을 유지하도록 합니다.
-                    unoptimized={true} // Vercel 배포 시 Next.js Image Optimization을 비활성화 (선택 사항)
-                />
+            <div className="relative h-10 w-40 mb-3">
+              <Image
+                src="images/Bozhiy-Mir_LOGO.png"
+                alt="Bozhiymir Church Logo"
+                fill
+                style={{ objectFit: 'contain' }}
+                unoptimized={true}
+              />
             </div>
             <p className="text-blue-200 text-base leading-relaxed">
-              {t('FOOTER_WELCOME_COMMUNITY_DESC')}
+              {footerContent?.FOOTER_WELCOME_COMMUNITY_DESC}
             </p>
             <div className="mt-4 text-2xl">🇺🇦</div>
           </div>
@@ -86,8 +95,8 @@ export default function Footer() {
               <div className="flex items-start">
                 <Clock className="h-5 w-5 mr-3 mt-1 text-yellow-300" />
                 <div className="text-base">
-                  <p>{t('SUNDAY_SERVICE_TIMES')}</p>
-                  <p>{t('WEDNESDAY_SERVICE_TIMES')}</p>
+                  <p>{footerContent?.SUNDAY_SERVICE_TIMES}</p>
+                  <p>{footerContent?.WEDNESDAY_SERVICE_TIMES}</p>
                 </div>
               </div>
             </div>
@@ -99,5 +108,5 @@ export default function Footer() {
         </div>
       </div>
     </footer>
-  )
+  );
 }

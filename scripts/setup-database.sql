@@ -1082,6 +1082,10 @@ Wednesday: 7:00 PM'),
 ('join', 'cta', 'cta_title', 'Ready to Connect?'),
 ('join', 'cta', 'cta_description', 'We are excited to welcome you to our church family!')
 
+('footer', 'main', 'FOOTER_WELCOME_COMMUNITY_DESC', 'A welcoming community where families grow together in faith and fellowship.'),
+('footer', 'main', 'SUNDAY_SERVICE_TIMES', 'Sunday: 9:00, 10:30, 12:00'),
+('footer', 'main', 'WEDNESDAY_SERVICE_TIMES', 'Wednesday: 7:00 PM');
+
 ON CONFLICT (page, section, key) DO UPDATE SET value = EXCLUDED.value;
 
 -- ########## 6단계: 이벤트 시드 데이터 삽입 ##########
