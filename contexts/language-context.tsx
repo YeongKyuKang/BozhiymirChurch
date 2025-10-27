@@ -8,7 +8,7 @@ import {
   ReactNode,
 } from 'react';
 
-type Language = 'ko' | 'en' | 'ru';
+type Language = 'ko' | 'en' | 'uk';
 
 type Translations = {
   [key: string]: string;
@@ -36,7 +36,7 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
   useEffect(() => {
     const savedLanguage = localStorage.getItem('language');
     let initialLang: Language = 'en';
-    if (savedLanguage && (savedLanguage === 'ko' || savedLanguage === 'ru')) {
+    if (savedLanguage && (savedLanguage === 'ko' || savedLanguage === 'uk')) {
       initialLang = savedLanguage as Language;
     }
     setLanguageState(initialLang);

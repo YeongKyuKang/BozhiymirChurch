@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Menu, X, ChevronDown, User, LogOut, Settings, Globe } from "lucide-react"
 import Link from "next/link"
-import Image from "next/image" // Image 컴포넌트 임포트 추가
+import Image from "next/image"
 import { useAuth } from "@/contexts/auth-context"
 import { useLanguage } from "@/contexts/language-context"
 import {
@@ -27,9 +27,14 @@ export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isAboutOpen, setIsAboutOpen] = useState(false)
   const [isFaithOpen, setIsFaithOpen] = useState(false)
-  const { user, userProfile, userRole, signOut } = useAuth()
+
+  // ★ 1. (32줄 수정) userRole을 제거하고, session을 가져옵니다.
+  const { session, userProfile, signOut } = useAuth()
   const { t, setLanguage, language } = useLanguage()
   const router = useRouter()
+
+  // ★ 2. '승인된 사용자' 변수를 생성합니다. (로그인 O && can_comment O)
+  const isApprovedUser = !!session && !!userProfile?.can_comment
 
   const aboutItems = [
     { name: "OUR STORY", href: "/story" },
@@ -57,15 +62,14 @@ export default function Header() {
           <div className="flex items-center justify-between">
             {/* Logo */}
             <Link href="/" className="flex items-center space-x-2" onClick={() => setIsMenuOpen(false)}>
-              {/* 여기에 로고 이미지로 대체 */}
-              <div className="relative h-10 w-40"> {/* 로고 이미지 크기에 맞게 조정 */}
+              <div className="relative h-10 w-40">
                   <Image
-                      src="/images/Bozhiy-Mir_LOGO.png" // public 폴더에 직접 업로드한 이미지 경로
+                      src="/images/Bozhiy-Mir_LOGO.png"
                       alt="Bozhiymir Church Logo"
-                      fill // 부모 div의 크기에 맞춰 이미지를 채웁니다.
-                      style={{ objectFit: 'contain' }} // 이미지가 잘리지 않고 비율을 유지하도록 합니다.
-                      priority // 페이지 로드 시 우선적으로 로드되도록 설정 (선택 사항)
-                      unoptimized={true} // Vercel 배포 시 Next.js Image Optimization을 비활성화 (선택 사항)
+                      fill
+                      style={{ objectFit: 'contain' }}
+                      priority
+                      unoptimized={true}
                   />
               </div>
             </Link>
@@ -110,7 +114,8 @@ export default function Header() {
                 onMouseEnter={() => setIsFaithOpen(true)}
                 onMouseLeave={() => setIsFaithOpen(false)}
               >
-                {!user ? (
+                {/* ★ 3. isApprovedUser 로직을 사용합니다. */}
+                {!isApprovedUser ? (
                   <Tooltip delayDuration={300}>
                     <TooltipTrigger asChild>
                       <button className="flex items-center text-sm font-medium transition-colors tracking-wide text-gray-400 cursor-not-allowed" disabled>
@@ -118,7 +123,7 @@ export default function Header() {
                         <ChevronDown className="ml-1 h-4 w-4" />
                       </button>
                     </TooltipTrigger>
-                    <TooltipContent><p className="text-sm">로그인 유저만 사용가능</p></TooltipContent>
+                    <TooltipContent><p className="text-sm">{t('header.faith.tooltip')}</p></TooltipContent>
                   </Tooltip>
                 ) : (
                   <>
@@ -143,13 +148,15 @@ export default function Header() {
                 {t('JOIN')}
               </Link>
               
-              {userRole === "admin" && (
+              {/* ★ 4. (요청 사항) 별도 Admin 아이콘 제거 */}
+              {/* {userProfile?.role === "admin" && (
                 <Button variant="ghost" size="sm" asChild>
                   <Link href="/admin">
                     <Settings className="h-5 w-5 text-white hover:text-yellow-300 transition-colors" />
                   </Link>
                 </Button>
               )}
+              */}
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -160,21 +167,23 @@ export default function Header() {
                 <DropdownMenuContent align="end" className="bg-white rounded-xl shadow-xl">
                   <DropdownMenuItem onClick={() => setLanguage('ko')}>{t('한국어')}</DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setLanguage('en')}>{t('English')}</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setLanguage('ru')}>{t('Русский')}</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setLanguage('uk')}>{t('Українська')}</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              {user ? (
+              {/* ★ 5. user 대신 session (로그인 상태)을 확인합니다. */}
+              {session ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="sm" className="text-white hover:bg-blue-700/30 text-sm px-3 py-2 rounded-lg">
                       <User className="h-4 w-4 mr-2" />
-                      {userProfile?.nickname || user.email}
+                      {userProfile?.nickname || userProfile?.email}
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48 bg-white rounded-xl shadow-xl">
                     <DropdownMenuItem asChild><Link href="/profile" className="text-sm">Profile</Link></DropdownMenuItem>
-                    {userRole === "admin" && (<DropdownMenuItem asChild><Link href="/admin" className="text-sm">Admin Panel</Link></DropdownMenuItem>)}
+                    {/* ★ 6. (요청 사항) Admin Panel 링크를 여기에만 남깁니다. (userProfile?.role 사용) */}
+                    {userProfile?.role === "admin" && (<DropdownMenuItem asChild><Link href="/admin" className="text-sm">Admin Panel</Link></DropdownMenuItem>)}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleSignOut} className="text-sm"><LogOut className="h-4 w-4 mr-2" />Sign Out</DropdownMenuItem>
                   </DropdownMenuContent>
@@ -218,7 +227,8 @@ export default function Header() {
                     <Link href="/events" onClick={() => setIsMenuOpen(false)} className="text-white text-base font-medium py-3 px-4 rounded-md">{t('EVENTS')}</Link>
 
                     {/* 모바일 Faith 아코디언 */}
-                    {user ? (
+                    {/* ★ 7. isApprovedUser 로직 사용 */}
+                    {isApprovedUser ? (
                         <Accordion type="single" collapsible className="w-full">
                             <AccordionItem value="faith" className="border-b-0">
                                 <AccordionTrigger className="text-white text-base font-medium py-3">{t('FAITH')}</AccordionTrigger>
@@ -238,10 +248,12 @@ export default function Header() {
                     <Link href="/join" onClick={() => setIsMenuOpen(false)} className="text-white text-base font-medium py-3 px-4 rounded-md">{t('JOIN')}</Link>
                     
                     <div className="pt-4 border-t border-white/20">
-                        {user ? (
+                        {/* ★ 8. session 확인 */}
+                        {session ? (
                              <div className="flex flex-col space-y-2">
                                 <Link href="/profile" onClick={() => setIsMenuOpen(false)} className="flex items-center text-white/80 py-2 text-sm"><User className="h-4 w-4 mr-2" /> Profile</Link>
-                                {userRole === 'admin' && <Link href="/admin" onClick={() => setIsMenuOpen(false)} className="flex items-center text-white/80 py-2 text-sm"><Settings className="h-4 w-4 mr-2" /> Admin Panel</Link>}
+                                {/* ★ 9. (요청 사항) Admin Panel 링크를 여기에만 남깁니다. (userProfile?.role 사용) */}
+                                {userProfile?.role === 'admin' && <Link href="/admin" onClick={() => setIsMenuOpen(false)} className="flex items-center text-white/80 py-2 text-sm"><Settings className="h-4 w-4 mr-2" /> Admin Panel</Link>}
                                 <button onClick={() => { handleSignOut(); setIsMenuOpen(false); }} className="flex items-center text-red-400 py-2 text-sm"><LogOut className="h-4 w-4 mr-2" /> Sign Out</button>
                              </div>
                         ) : (
@@ -251,6 +263,7 @@ export default function Header() {
                                 </Button>
                                 <Button asChild className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 text-blue-900 font-bold">
                                     <Link href="/register" onClick={() => setIsMenuOpen(false)}>{t('REGISTER')}</Link>
+
                                 </Button>
                             </div>
                         )}
@@ -261,7 +274,7 @@ export default function Header() {
                         <div className="flex justify-around items-center">
                             <Button variant="ghost" size="sm" onClick={() => setLanguage('ko')} className={`text-sm ${language === 'ko' ? 'text-yellow-300' : 'text-white/70'}`}>한국어</Button>
                             <Button variant="ghost" size="sm" onClick={() => setLanguage('en')} className={`text-sm ${language === 'en' ? 'text-yellow-300' : 'text-white/70'}`}>English</Button>
-                            <Button variant="ghost" size="sm" onClick={() => setLanguage('ru')} className={`text-sm ${language === 'ru' ? 'text-yellow-300' : 'text-white/70'}`}>Русский</Button>
+                            <Button variant="ghost" size="sm" onClick={() => setLanguage('uk')} className={`text-sm ${language === 'uk' ? 'text-yellow-300' : 'text-white/70'}`}>Українська</Button>
                         </div>
                     </div>
                 </div>

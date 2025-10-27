@@ -1,91 +1,43 @@
-// app/admin/users/page.tsx
-// 이 파일에는 "use client"; 지시자가 없어야 합니다.
+'use client'
 
-// import Header from "@/components/header"; // Header 임포트 제거
-import Footer from "@/components/footer";
-import { createServerClient, type CookieOptions } from "@supabase/ssr";
-import { cookies } from "next/headers";
-import dynamic from 'next/dynamic';
-import { Database } from "@/lib/supabase";
-import { Button } from "@/components/ui/button"; // Button 임포트 유지 (뒤로가기 버튼 스타일링용)
-import { ArrowLeft } from "lucide-react"; // ArrowLeft 아이콘 임포트 유지
-import Link from "next/link"; // Link 임포트 추가 (뒤로가기 버튼 기능용)
+import AdminUsersClient from '@/components/admin-users-client'
+import { useAuth } from '@/contexts/auth-context'
+import { useLanguage } from '@/contexts/language-context' // useLanguage 임포트
+import { redirect } from 'next/navigation'
+import { useEffect } from 'react'
 
-// 클라이언트 컴포넌트를 동적으로 임포트 (SSR 비활성화)
-const AdminUsersClient = dynamic(() => import("@/components/admin-users-client"), { ssr: false });
+export default function AdminUsersPage() {
+  const { session, userProfile, loading } = useAuth()
+  const { t } = useLanguage() // t 함수 초기화
 
-interface UserProfile {
-  id: string;
-  email: string;
-  nickname: string | null;
-  role: string | null;
-  created_at: string;
-  can_comment: boolean;
-}
-
-async function fetchUsersData() {
-  const cookieStore = cookies();
-
-  const supabase = createServerClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get: (name: string) => cookieStore.get(name)?.value,
-        set: (name: string, value: string, options: CookieOptions) => {
-          cookieStore.set({ name, value, ...options });
-        },
-        remove: (name: string, options: CookieOptions) => {
-          cookieStore.set({ name, value: '', ...options });
-        },
-      },
+  useEffect(() => {
+    if (!loading && !session) {
+      redirect('/login')
     }
-  );
+  }, [session, loading])
 
-  const { data, error } = await supabase
-    .from('users')
-    .select(`
-      id,
-      email,
-      nickname,
-      role,
-      created_at,
-      can_comment
-    `);
-
-  if (error) {
-    console.error("Error fetching users on server:", error);
-    return [];
+  if (loading || !userProfile) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+         {/* ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★ */}
+        <p>{t('Loading...')}</p>
+      </div>
+    )
   }
 
-  return data as UserProfile[];
-}
-
-export default async function AdminUsersPage() {
-  const initialUsers = await fetchUsersData();
+  if (userProfile.role !== 'admin') {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+         {/* ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★ */}
+        <p>{t('Access Denied. Only administrators can access this page.')}</p>
+      </div>
+    )
+  }
 
   return (
-    <>
-      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white py-16 pt-24 px-4">
-        <div className="container mx-auto max-w-5xl">
-          {/* 뒤로가기 버튼을 좌측 상단에 배치 */}
-          <div className="mb-8"> {/* 제목 위쪽에 여백 추가 */}
-            <Button
-              asChild // Link 컴포넌트를 Button처럼 스타일링
-              variant="outline"
-              className="bg-gray-700 hover:bg-gray-600 text-white border-gray-600"
-              // onClick 대신 Link의 href 사용
-            >
-              <Link href="/admin">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                뒤로가기
-              </Link>
-            </Button>
-          </div>
-          <AdminUsersClient initialUsers={initialUsers} />
-        </div>
-      </div>
-      <Footer />
-    </>
-  );
+    <div className="container mx-auto p-4">
+      {/* AdminUsersClient는 이제 props를 받지 않습니다. */}
+      <AdminUsersClient />
+    </div>
+  )
 }

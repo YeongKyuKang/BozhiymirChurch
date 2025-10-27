@@ -10,17 +10,19 @@ import HeroSection from "@/components/hero-section";
 import CommunitySection from "@/components/community-section";
 import MinistriesShowcase from "@/components/ministries-showcase";
 import { useRouter } from "next/navigation";
+import { useLanguage } from "@/contexts/language-context"; // 1. useLanguage 훅 임포트
 
 export default function HomePageClient() {
     const { userRole } = useAuth();
     const router = useRouter();
+    const { t } = useLanguage(); // 2. t 함수 가져오기
 
     const [isPageEditing, setIsPageEditing] = useState(false);
     const [changedContent, setChangedContent] = useState<Record<string, Record<string, string>>>({});
     const [isSavingAll, setIsSavingAll] = useState(false);
     const [initialContent, setInitialContent] = useState<Record<string, any> | null>(null);
 
-    // 데이터 로딩 로직
+    // 데이터 로딩 로직 (원본 파일과 동일)
     useEffect(() => {
         const fetchContent = async () => {
             const { data, error } = await supabase.from("content").select("*").eq('page', 'home');
@@ -95,17 +97,19 @@ export default function HomePageClient() {
         setIsPageEditing(false);
         setIsSavingAll(false);
 
+        // 3. alert 텍스트에 t() 함수 적용
         if (updateCount > 0 && revalidated) {
-            alert("홈페이지의 모든 변경 사항이 저장되고 업데이트되었습니다. 새로고침하면 반영됩니다.");
+            alert(t("Homepage has been updated. Please refresh to see changes."));
         } else if (updateCount > 0 && !revalidated) {
-            alert("일부 변경 사항은 저장되었지만, 홈페이지 재검증에 실패했습니다. 수동 새로고침이 필요할 수 있습니다.");
+            alert(t("Content saved, but page revalidation failed. Manual refresh may be needed."));
         } else {
-            alert("변경된 내용이 없거나 저장에 실패했습니다.");
+            alert(t("No changes were saved or saving failed."));
         }
     };
 
     const handleCancelAll = () => {
-        if (confirm("모든 변경 사항을 취소하시겠습니까?")) {
+         // 3. confirm 텍스트에 t() 함수 적용
+        if (confirm(t("Are you sure you want to cancel all changes?"))) {
             setChangedContent({});
             setIsPageEditing(false);
         }
@@ -113,7 +117,7 @@ export default function HomePageClient() {
 
     return (
         <div className="min-h-screen">
-            {/* 전역 편집 모드 버튼 */}
+            {/* 전역 편집 모드 버튼 (원본 파일과 동일) */}
             {userRole === 'admin' && (
                 <div className="fixed top-24 right-8 z-50 flex flex-col space-y-2">
                     {!isPageEditing ? (
@@ -133,6 +137,7 @@ export default function HomePageClient() {
                 </div>
             )}
 
+            {/* 하위 섹션 컴포넌트 호출 (원본 파일과 동일, initialContent가 null일 때를 대비해 || {} 추가) */}
             <HeroSection
                 heroContent={initialContent?.hero || {}}
                 isEditingPage={isPageEditing}

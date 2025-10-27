@@ -1,157 +1,141 @@
-// app/admin/settings/page.tsx
-"use client";
+'use client'
 
-import * as React from "react";
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/contexts/auth-context";
-import { supabase } from "@/lib/supabase";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Loader2, CheckCircle, XCircle, KeyRound, ArrowLeft } from "lucide-react";
+import { useState } from 'react'
+import { useAuth } from '@/contexts/auth-context'
+import { useLanguage } from '@/contexts/language-context' // useLanguage 임포트
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { toast } from 'sonner'
+import { redirect } from 'next/navigation'
+import { useEffect } from 'react'
 
 export default function AdminSettingsPage() {
-  const { user, userRole, loading: authLoading } = useAuth();
-  const router = useRouter();
+  const { session, userProfile, loading } = useAuth()
+  const { t } = useLanguage() // t 함수 가져오기
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const [adminPassword, setAdminPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
-
+  // 접근 제어
   useEffect(() => {
-    if (!authLoading) {
-      if (!user || userRole !== 'admin') {
-        router.push('/');
-      }
+    if (!loading && !session) {
+      redirect('/login')
     }
-  }, [authLoading, user, userRole, router]);
+  }, [session, loading])
 
-  const handleChangeAdminPassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    setMessage(null);
+  if (loading || !userProfile) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+         {/* ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★ */}
+        <p>{t('Loading...')}</p>
+      </div>
+    )
+  }
 
-    if (adminPassword !== confirmPassword) {
-      setMessage({ type: 'error', text: "새 비밀번호와 확인 비밀번호가 일치하지 않습니다." });
-      setIsSubmitting(false);
-      return;
+  if (userProfile.role !== 'admin') {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+         {/* ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★ */}
+        <p>{t('Access Denied. Only administrators can access this page.')}</p>
+      </div>
+    )
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (newPassword !== confirmPassword) {
+       // ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★
+      toast.error(t('New passwords do not match.'))
+      return
+    }
+    if (newPassword.length < 6) {
+       // ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★
+      toast.error(t('Password must be at least 6 characters long.'))
+      return
     }
 
-    if (adminPassword.length < 6) {
-      setMessage({ type: 'error', text: "비밀번호는 최소 6자 이상이어야 합니다." });
-      setIsSubmitting(false);
-      return;
-    }
-
+    setIsSubmitting(true)
     try {
       const response = await fetch('/api/admin/set-admin-password', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ newPassword: adminPassword }),
-      });
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currentPassword, newPassword }),
+      })
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "비밀번호 변경 실패");
+      const result = await response.json()
+
+      if (response.ok) {
+         // ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★
+        toast.success(t('Admin password changed successfully.'))
+        setCurrentPassword('')
+        setNewPassword('')
+        setConfirmPassword('')
+      } else {
+         // ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★
+        toast.error(`${t('Error changing password')}: ${result.error}`)
       }
-
-      setMessage({ type: 'success', text: "관리자 비밀번호가 성공적으로 변경되었습니다!" });
-      setAdminPassword("");
-      setConfirmPassword("");
-    } catch (err: any) {
-      console.error("Error changing admin password:", err);
-      setMessage({ type: 'error', text: `비밀번호 변경에 실패했습니다: ${err.message}` });
+    } catch (error) {
+       // ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★
+      toast.error(t('An unexpected error occurred.'))
+      console.error('Error setting admin password:', error)
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
-
-  if (authLoading || (!user && !authLoading) || (user && userRole !== 'admin')) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-xl text-gray-600">
-        관리자 권한이 필요합니다.
-      </div>
-    );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white py-16 pt-24 px-4">
-      <div className="container mx-auto max-w-3xl">
-        {/* 뒤로가기 버튼을 좌측 상단에 배치 */}
-        <div className="mb-8"> {/* 제목 위쪽에 여백 추가 */}
-          <Button
-            variant="outline"
-            className="bg-gray-700 hover:bg-gray-600 text-white border-gray-600"
-            onClick={() => router.back()}
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            뒤로가기
-          </Button>
-        </div>
-
-        <h1 className="text-4xl font-bold text-center mb-12">사이트 설정</h1>
-        
-        <Card className="shadow-lg bg-gray-800 border border-gray-700 text-white">
-          <CardHeader>
-            <CardTitle className="text-2xl font-bold text-white">관리자 비밀번호 변경</CardTitle>
-            <CardDescription className="text-gray-400">관리자 계정의 비밀번호를 변경합니다.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleChangeAdminPassword} className="space-y-6">
-              {message && (
-                <Alert variant={message.type === 'error' ? 'destructive' : 'default'} className={message.type === 'error' ? 'bg-red-900 text-white border-red-700' : 'bg-green-900 text-white border-green-700'}>
-                  {message.type === 'error' ? <XCircle className="h-4 w-4" /> : <CheckCircle className="h-4 w-4" />}
-                  <AlertTitle>{message.type === 'error' ? "오류!" : "성공!"}</AlertTitle>
-                  <AlertDescription>{message.text}</AlertDescription>
-                </Alert>
-              )}
-
-              <div>
-                <Label htmlFor="adminPassword" className="mb-2 block text-gray-300">새 비밀번호</Label>
-                <Input
-                  id="adminPassword"
-                  type="password"
-                  value={adminPassword}
-                  onChange={(e) => setAdminPassword(e.target.value)}
-                  required
-                  className="bg-gray-700 text-white border-gray-600 placeholder-gray-400 focus:border-blue-500 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <Label htmlFor="confirmPassword" className="mb-2 block text-gray-300">새 비밀번호 확인</Label>
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                  className="bg-gray-700 text-white border-gray-600 placeholder-gray-400 focus:border-blue-500 focus:ring-blue-500"
-                />
-              </div>
-
-              <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg" disabled={isSubmitting}>
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    변경 중...
-                  </>
-                ) : (
-                  <>
-                    <KeyRound className="mr-2 h-4 w-4" />
-                    비밀번호 변경
-                  </>
-                )}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
+    <div className="container mx-auto p-4">
+      <Card className="mx-auto max-w-md">
+        <CardHeader>
+           {/* ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★ */}
+          <CardTitle>{t('Admin Settings')}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+               {/* ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★ */}
+              <Label htmlFor="currentPassword">{t('Current Password')}</Label>
+              <Input
+                id="currentPassword"
+                type="password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+               {/* ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★ */}
+              <Label htmlFor="newPassword">{t('New Password')}</Label>
+              <Input
+                id="newPassword"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                required
+                minLength={6}
+              />
+            </div>
+            <div className="space-y-2">
+               {/* ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★ */}
+              <Label htmlFor="confirmPassword">{t('Confirm New Password')}</Label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+              />
+            </div>
+             {/* ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★ */}
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? t('Changing...') : t('Change Password')}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
     </div>
-  );
+  )
 }

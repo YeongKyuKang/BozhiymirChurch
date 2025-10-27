@@ -1,12 +1,42 @@
-import WordPostsClient from "./word-posts-client";
-import { Suspense } from "react";
+'use client'
 
-// 이 페이지는 이제 서버에서 렌더링되지 않는 클라이언트 컴포넌트를
-// Suspense 바운더리로 감싸서 안전하게 렌더링합니다.
-export default function WordPostsPage() {
+import WordPostsClient from './word-posts-client'
+import { useAuth } from '@/contexts/auth-context'
+import { useLanguage } from '@/contexts/language-context'
+import { redirect } from 'next/navigation'
+import { useEffect } from 'react'
+
+export default function AdminWordPostsPage() {
+  const { session, userProfile, loading } = useAuth()
+  const { t } = useLanguage()
+
+  useEffect(() => {
+    if (!loading && !session) {
+      redirect('/login')
+    }
+  }, [session, loading])
+
+  if (loading || !userProfile) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+         {/* ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★ */}
+        <p>{t('Loading...')}</p>
+      </div>
+    )
+  }
+
+  if (userProfile.role !== 'admin') {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+         {/* ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★ */}
+        <p>{t('Access Denied. Only administrators can access this page.')}</p>
+      </div>
+    )
+  }
+
   return (
-    <Suspense fallback={<div className="flex justify-center items-center h-screen">Loading...</div>}>
+    <div className="container mx-auto p-4">
       <WordPostsClient />
-    </Suspense>
-  );
+    </div>
+  )
 }

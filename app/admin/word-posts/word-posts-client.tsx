@@ -1,425 +1,510 @@
-"use client";
+'use client'
 
-import * as React from "react";
-import { useState, useEffect, useRef, useCallback } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useAuth } from "@/contexts/auth-context";
-import { supabase } from "@/lib/supabase";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Calendar } from "@/components/ui/calendar";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { format, startOfDay } from "date-fns";
-import { toZonedTime, formatInTimeZone } from 'date-fns-tz';
+import { useState, useEffect, useRef } from 'react'
+import { Database } from '@/lib/supabase'
+import { useAuth } from '@/contexts/auth-context'
+import { useLanguage } from '@/contexts/language-context'
+import { supabase } from '@/lib/supabase'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Calendar } from '@/components/ui/calendar'
 import {
-  Settings, Save, X, MessageCircle, Heart, Download, BookOpen,
-  Calendar as CalendarIcon, Frown, ImageIcon, Upload, Loader2,
-  CheckCircle, XCircle, ArrowLeft
-} from "lucide-react";
-import imageCompression from "browser-image-compression";
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
+import { toast } from 'sonner'
+import { format } from 'date-fns'
+import { Calendar as CalendarIcon, Upload, Trash2 } from 'lucide-react'
+import Image from 'next/image'
+import imageCompression from 'browser-image-compression'
 
-interface WordPost {
-  id: string;
-  title: string;
-  content: string;
-  word_date: string;
-  author_id: string;
-  author_nickname: string;
-  created_at: string;
-  updated_at: string;
-  image_url?: string | null;
+type WordPost = Database['public']['Tables']['word_posts']['Row']
+
+interface WordPostsClientProps {}
+
+export default function WordPostsClient({}: WordPostsClientProps) {
+  const { user, userProfile } = useAuth()
+  const { t } = useLanguage() // t 함수 가져오기
+  const [wordPosts, setWordPosts] = useState<WordPost[]>([])
+  const [loading, setLoading] = useState(true)
+
+  const [isEditing, setIsEditing] = useState<string | null>(null)
+  const [currentPost, setCurrentPost] = useState<Partial<WordPost>>({})
+  const [wordDate, setWordDate] = useState<Date | undefined>(undefined)
+  const [backgroundImage, setBackgroundImage] = useState<File | null>(null)
+  const [backgroundPreview, setBackgroundPreview] = useState<string>('')
+  const [isUploading, setIsUploading] = useState(false)
+  const [postToDelete, setPostToDelete] = useState<WordPost | null>(null)
+
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    const fetchWordPosts = async () => {
+      setLoading(true)
+      const { data, error } = await supabase
+        .from('word_posts')
+        .select('*')
+        .order('word_date', { ascending: false })
+
+      if (error) {
+        console.error('Error fetching word posts:', error)
+         // ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★
+        toast.error(t('Error fetching word posts.')) 
+      } else {
+        setWordPosts(data || [])
+      }
+      setLoading(false)
+    }
+    fetchWordPosts()
+  }, [t])
+
+  const handleEdit = (post: WordPost) => {
+    setIsEditing(post.id)
+    setCurrentPost({ ...post })
+    setWordDate(post.word_date ? new Date(post.word_date) : undefined)
+    setBackgroundPreview(post.image_url || '')
+    setBackgroundImage(null)
+  }
+
+  const handleNew = () => {
+    setIsEditing('new')
+    setCurrentPost({})
+    setWordDate(undefined)
+    setBackgroundPreview('')
+    setBackgroundImage(null)
+  }
+
+  const handleCancel = () => {
+    setIsEditing(null)
+    setCurrentPost({})
+    setWordDate(undefined)
+    setBackgroundPreview('')
+    setBackgroundImage(null)
+  }
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
+    const { name, value } = e.target
+    setCurrentPost((prev) => ({ ...prev, [name]: value }))
+  }
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+         // ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★
+        toast.error(t('Image must be less than 5MB.')) 
+        return
+      }
+      if (!file.type.startsWith('image/')) {
+         // ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★
+        toast.error(t('Please select a valid image file.')) 
+        return
+      }
+
+      setIsUploading(true)
+      try {
+        const options = { maxSizeMB: 1, maxWidthOrHeight: 1920 }
+        const compressedFile = await imageCompression(file, options)
+
+        setBackgroundImage(compressedFile)
+        const reader = new FileReader()
+        reader.onloadend = () => {
+          setBackgroundPreview(reader.result as string)
+        }
+        reader.readAsDataURL(compressedFile)
+      } catch (error) {
+        console.error('Error compressing image:', error)
+         // ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★
+        toast.error(t('Failed to compress image.')) 
+      } finally {
+        setIsUploading(false)
+      }
+    }
+  }
+
+  const handleRemoveImage = async () => {
+    if (isEditing && isEditing !== 'new' && currentPost.image_url) {
+        const fileName = currentPost.image_url.split('/').pop()
+        if (fileName) {
+            setBackgroundPreview('')
+            setCurrentPost(prev => ({ ...prev, image_url: null }))
+            setBackgroundImage(null)
+
+            const { error: deleteError } = await supabase.storage
+                .from('word-backgrounds')
+                .remove([fileName])
+
+            if (deleteError) {
+                console.error("Error deleting image from storage:", deleteError)
+                 // ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★
+                toast.error(t('Error deleting image from storage.')) 
+                handleEdit(wordPosts.find(p => p.id === isEditing)!)
+            } else {
+                 const { error: dbUpdateError } = await supabase
+                    .from('word_posts')
+                    .update({ image_url: null })
+                    .eq('id', isEditing)
+
+                 if (dbUpdateError) {
+                    console.error("Error updating image_url in DB:", dbUpdateError)
+                 } else {
+                     // ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★
+                    toast.success(t('Image removed successfully.')) 
+                 }
+            }
+        }
+    } else {
+        setBackgroundPreview('')
+        setBackgroundImage(null)
+        setCurrentPost(prev => ({ ...prev, image_url: null }))
+    }
 }
 
-const POLAND_TIMEZONE = 'Europe/Warsaw';
-
-export default function WordPostsClient() {
-  const { user, userProfile, userRole, loading: authLoading } = useAuth();
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const postId = searchParams.get('id');
-
-  const [wordDate, setWordDate] = useState<Date | undefined>(() => {
-    const now = new Date();
-    return new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
-  });
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imageUrlPreview, setImageUrlPreview] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isCompressing, setIsCompressing] = useState(false);
-  const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
-  const [isDateConflicting, setIsDateConflicting] = useState(false);
-
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (!authLoading) {
-      if (!user || userRole !== 'admin') {
-        router.push('/');
-        return;
-      }
-
-      if (postId) {
-        const fetchPost = async () => {
-          const { data, error } = await supabase
-            .from('word_posts')
-            .select('*')
-            .eq('id', postId)
-            .single();
-
-          if (error) {
-            console.error("Error fetching word post for editing:", error);
-            setMessage({ type: 'error', text: "말씀 게시물을 불러오는 데 실패했습니다." });
-            return;
-          }
-
-          if (data) {
-            setTitle(data.title);
-            setContent(data.content);
-            const [year, month, day] = data.word_date.split('-').map(Number);
-            setWordDate(new Date(Date.UTC(year, month - 1, day)));
-            setImageUrlPreview(data.image_url || null);
-          }
-        };
-        fetchPost();
-      }
-    }
-  }, [authLoading, user, userRole, postId, router]);
-
-  useEffect(() => {
-    if (wordDate) {
-      const checkDateConflict = async () => {
-        const formattedDateForQuery = wordDate.toISOString().substring(0, 10);
-        const { data, error } = await supabase
-          .from('word_posts')
-          .select('id')
-          .eq('word_date', formattedDateForQuery);
-
-        if (error) {
-          console.error("Error checking date conflict:", error);
-          setIsDateConflicting(false);
-          return;
-        }
-
-        const isConflict = data.some(post => post.id !== postId);
-        setIsDateConflicting(isConflict);
-        if (isConflict) {
-          setMessage({ type: 'error', text: `선택하신 날짜 (${formattedDateForQuery})에 이미 말씀 게시물이 존재합니다. 다른 날짜를 선택하거나 기존 게시물을 편집해 주세요.` });
-        } else {
-          setMessage(null);
-        }
-      };
-      checkDateConflict();
-    }
-  }, [wordDate, postId]);
-
-  const handleImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (!file.type.startsWith("image/")) {
-      setMessage({ type: 'error', text: "이미지 파일만 업로드할 수 있습니다." });
-      return;
+  const handleSave = async () => {
+    if (!currentPost.title || !currentPost.content || !wordDate || !user || !userProfile) {
+       // ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★
+      toast.error(t('Title, content, and date are required.')) 
+      return
     }
 
-    setMessage(null);
-    setIsCompressing(true);
+    setLoading(true)
+    let imageUrl = currentPost.image_url
 
-    try {
-      const options = {
-        maxSizeMB: 1,
-        maxWidthOrHeight: 1920,
-        useWebWorker: true,
-      };
-      const compressedFile = await imageCompression(file, options);
-
-      setImageFile(compressedFile);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImageUrlPreview(reader.result as string);
-      };
-      reader.readAsDataURL(compressedFile);
-
-    } catch (error) {
-      console.error("이미지 압축 중 오류 발생:", error);
-      setMessage({ type: 'error', text: "이미지 압축 중 오류가 발생했습니다. 다른 파일을 시도해 주세요." });
-      setImageFile(null);
-      setImageUrlPreview(null);
-    } finally {
-      setIsCompressing(false);
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    setMessage(null);
-
-    if (!user || !userProfile) {
-      setMessage({ type: 'error', text: "사용자 정보가 없습니다. 다시 로그인해주세요." });
-      setIsSubmitting(false);
-      return;
-    }
-    if (!title.trim() || !content.trim() || !wordDate) {
-      setMessage({ type: 'error', text: "제목, 내용, 날짜는 필수 입력 사항입니다." });
-      setIsSubmitting(false);
-      return;
-    }
-    if (isDateConflicting) {
-      setMessage({ type: 'error', text: "선택하신 날짜에 이미 말씀 게시물이 존재합니다. 다른 날짜를 선택하거나 기존 게시물을 편집해 주세요." });
-      setIsSubmitting(false);
-      return;
-    }
-
-    let finalImageUrl: string | null = imageUrlPreview;
-
-    if (imageFile) {
-      const fileExt = imageFile.name.split(".").pop();
-      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
-      const filePath = `word-backgrounds/${fileName}`;
-
+    if (backgroundImage) {
+      setIsUploading(true)
+      const fileExt = backgroundImage.name.split('.').pop()
+      const fileName = `${Date.now()}.${fileExt}`
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('word-backgrounds')
-        .upload(filePath, imageFile, {
-          cacheControl: '3600',
-          upsert: false,
-        });
+        .upload(fileName, backgroundImage, { upsert: true })
 
+      setIsUploading(false)
       if (uploadError) {
-        console.error("이미지 업로드 오류:", uploadData, uploadError);
-        setMessage({ type: 'error', text: `이미지 업로드에 실패했습니다: ${uploadError.message}` });
-        setIsSubmitting(false);
-        return;
+        console.error('Error uploading image:', uploadError)
+         // ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★
+        toast.error(t('Error uploading image.')) 
+        setLoading(false)
+        return
       }
-      finalImageUrl = supabase.storage.from('word-backgrounds').getPublicUrl(filePath).data.publicUrl;
+      const { data: urlData } = supabase.storage
+        .from('word-backgrounds')
+        .getPublicUrl(fileName)
+      imageUrl = urlData.publicUrl
+    } else if (backgroundPreview === '' && currentPost.image_url) {
+        imageUrl = null;
     }
 
-    const postData = {
-      title,
-      content,
-      word_date: wordDate.toISOString().substring(0, 10),
+    const postDataToSave = {
+      ...currentPost,
+      word_date: format(wordDate, 'yyyy-MM-dd'),
+      image_url: imageUrl,
       author_id: user.id,
-      author_nickname: userProfile.nickname || user.email || '관리자',
-      image_url: finalImageUrl,
-    };
-
-    const { error: dbError } = await supabase
-      .from('word_posts')
-      .upsert(postId ? { ...postData, id: postId } : postData);
-
-    if (dbError) {
-      console.error("말씀 게시물 저장 오류:", dbError);
-      setMessage({ type: 'error', text: `말씀 게시물 저장에 실패했습니다: ${dbError.message}` });
-      setIsSubmitting(false);
-      return;
+      author_nickname: userProfile.nickname || userProfile.email || 'Admin',
+    }
+    if (isEditing === 'new') {
+        delete postDataToSave.id;
     }
 
-    setMessage({ type: 'success', text: "말씀 게시물이 성공적으로 저장되었습니다!" });
+
     try {
-      // Note: Revalidation might require a secret token in a real production environment
-      const revalidateResponse = await fetch(`/api/revalidate?path=/word`);
-      if (!revalidateResponse.ok) {
-        const errorData = await revalidateResponse.json();
-        console.error("Revalidation failed:", errorData.message);
-        setMessage(prev => prev ? { ...prev, text: prev.text + " (페이지 재검증 실패)" } : null);
+      let savedPost: WordPost | null = null;
+      if (isEditing === 'new') {
+        const { data, error } = await supabase
+          .from('word_posts')
+          .insert(postDataToSave)
+          .select()
+          .single()
+        if (error) throw error
+        savedPost = data
+        setWordPosts((prev) => [savedPost!, ...prev])
+         // ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★
+        toast.success(t('Word post created successfully.')) 
       } else {
-        console.log("Word page revalidated successfully!");
+        const { data, error } = await supabase
+          .from('word_posts')
+          .update(postDataToSave)
+          .eq('id', isEditing!)
+          .select()
+          .single()
+        if (error) throw error
+        savedPost = data
+        setWordPosts((prev) =>
+          prev.map((p) => (p.id === isEditing ? savedPost! : p)),
+        )
+         // ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★
+        toast.success(t('Word post updated successfully.')) 
       }
-    } catch (err) {
-      console.error("Failed to call revalidate API:", err);
-      setMessage(prev => prev ? { ...prev, text: prev.text + " (페이지 재검증 API 호출 실패)" } : null);
+
+      await fetch('/api/revalidate?path=/word')
+
+      handleCancel()
+    } catch (error: any) {
+      console.error('Error saving word post:', error)
+       // ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★
+      toast.error(`${t('Error saving word post')}: ${error.message}`) 
+    } finally {
+      setLoading(false)
     }
+  }
 
-    if (!postId) {
-      setTitle("");
-      setContent("");
-      const now = new Date();
-      setWordDate(new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate())));
-      setImageFile(null);
-      setImageUrlPreview(null);
+  const handleDelete = async () => {
+    if (!postToDelete) return
+
+    setLoading(true)
+    try {
+        if (postToDelete.image_url) {
+            const fileName = postToDelete.image_url.split('/').pop()
+            if (fileName) {
+                const { error: deleteImageError } = await supabase.storage
+                    .from('word-backgrounds')
+                    .remove([fileName])
+                if (deleteImageError) {
+                    console.error("Error deleting image from storage:", deleteImageError)
+                    // ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★
+                    toast.info(t('Failed to delete image from storage, but the post will be deleted.')) 
+                }
+            }
+        }
+
+        const { error: deleteDbError } = await supabase
+            .from('word_posts')
+            .delete()
+            .eq('id', postToDelete.id)
+
+        if (deleteDbError) {
+            throw deleteDbError
+        }
+
+        setWordPosts((prev) => prev.filter((p) => p.id !== postToDelete.id))
+         // ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★
+        toast.success(t('Word post deleted successfully.')) 
+        setPostToDelete(null)
+
+        await fetch('/api/revalidate?path=/word')
+
+    } catch (error: any) {
+        console.error('Error deleting word post:', error)
+         // ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★
+        toast.error(`${t('Error deleting word post')}: ${error.message}`) 
+    } finally {
+        setLoading(false)
+        setPostToDelete(null)
     }
-    setIsSubmitting(false);
-    router.push('/word');
-  };
+}
 
-  const getDisabledDays = useCallback(() => {
-    const now = new Date();
-    const futureDates = {
-      from: new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate() + 1)),
-      to: new Date(Date.UTC(2100, 0, 1))
-    };
-    const pastBeyondFiveDays = {
-      from: new Date(Date.UTC(1900, 0, 1)),
-      to: new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate() - 6))
-    };
-    return [futureDates, pastBeyondFiveDays];
-  }, []);
-
-  const handleDateSelect = (date: Date | undefined) => {
-    if (date) {
-      setWordDate(new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())));
-    } else {
-      setWordDate(undefined);
-    }
-  };
-
-  if (authLoading || (!user && !authLoading) || (user && userRole !== 'admin')) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-xl text-gray-600">
-        관리자 권한이 필요합니다.
-      </div>
-    );
+  if (loading && wordPosts.length === 0) {
+    // ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★
+    return <div>{t('Loading...')}</div> 
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white py-16 pt-24 px-4">
-      <div className="container mx-auto max-w-3xl">
-        <div className="mb-8">
-          <Button
-            variant="outline"
-            className="bg-gray-700 hover:bg-gray-600 text-white border-gray-600"
-            onClick={() => router.back()}
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            뒤로가기
-          </Button>
-        </div>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+         {/* ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★ */}
+        <h1 className="text-3xl font-bold">{t('Word for Today Management')}</h1>
+        <Button onClick={handleNew}>{t('New Post')}</Button>
+      </div>
 
-        <Card className="shadow-lg bg-gray-800 border border-gray-700 text-white">
-          <CardHeader>
-            <CardTitle className="text-3xl font-bold text-white">
-              {postId ? "말씀 게시물 편집" : "새 말씀 게시물 작성"}
-            </CardTitle>
-            <CardDescription className="text-gray-400">
-              매일 말씀 게시물과 배경 이미지를 관리합니다.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {message && (
-                <Alert variant={message.type === 'error' ? 'destructive' : 'default'} className={message.type === 'error' ? 'bg-red-900 text-white border-red-700' : 'bg-green-900 text-white border-green-700'}>
-                  {message.type === 'error' ? <XCircle className="h-4 w-4" /> : <CheckCircle className="h-4 w-4" />}
-                  <AlertTitle>{message.type === 'error' ? "오류!" : "성공!"}</AlertTitle>
-                  <AlertDescription>{message.text}</AlertDescription>
-                </Alert>
-              )}
-
-              <div>
-                <Label htmlFor="wordDate" className="mb-2 block text-gray-300">말씀 날짜</Label>
+      {isEditing !== null && (
+        <div className="p-6 border rounded-lg space-y-4 bg-gray-50">
+           {/* ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★ */}
+          <h2 className="text-2xl font-semibold">
+            {isEditing === 'new' ? t('Create New Word Post') : t('Edit Word Post')}
+          </h2>
+          <div>
+             {/* ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★ */}
+            <label htmlFor="title" className="block text-sm font-medium text-gray-700">{t('Title (e.g., Verse)')}</label>
+            <Input
+              id="title"
+              name="title"
+              value={currentPost.title || ''}
+              onChange={handleChange}
+               // ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★
+              placeholder={t('e.g., John 3:16')}
+              required
+            />
+          </div>
+          <div>
+             {/* ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★ */}
+            <label htmlFor="content" className="block text-sm font-medium text-gray-700">{t('Content (Scripture Text)')}</label>
+            <Textarea
+              id="content"
+              name="content"
+              value={currentPost.content || ''}
+              onChange={handleChange}
+               // ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★
+              placeholder={t('Enter the scripture text...')}
+              rows={5}
+              required
+            />
+          </div>
+          <div>
+             {/* ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★ */}
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('Word Date')}</label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant={'outline'}
+                  className="w-[280px] justify-start text-left font-normal"
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                   {/* ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★ */}
+                  {wordDate ? format(wordDate, 'PPP') : <span>{t('Pick a date')}</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
                 <Calendar
                   mode="single"
                   selected={wordDate}
-                  onSelect={handleDateSelect}
+                  onSelect={setWordDate}
                   initialFocus
-                  disabled={getDisabledDays()}
-                  className="rounded-md border shadow bg-gray-700 text-white border-gray-600"
                 />
-                {wordDate && (
-                  <p className="text-sm text-gray-400 mt-2">
-                    선택된 날짜: {formatInTimeZone(wordDate, POLAND_TIMEZONE, 'yyyy년 MM월 dd일 (EEE)')}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <Label htmlFor="title" className="mb-2 block text-gray-300">말씀 제목</Label>
-                <Input
-                  id="title"
-                  type="text"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="예: 요한복음 3:16"
-                  required
-                  className="bg-gray-700 text-white border-gray-600 placeholder-gray-400 focus:border-blue-500 focus:ring-blue-500"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="content" className="mb-2 block text-gray-300">말씀 내용</Label>
-                <Textarea
-                  id="content"
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  placeholder="말씀 내용을 입력하세요 (예: 하나님이 세상을 이처럼 사랑하사...)"
-                  rows={6}
-                  required
-                  className="bg-gray-700 text-white border-gray-600 placeholder-gray-400 focus:border-blue-500 focus:ring-blue-500"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="image" className="mb-2 block text-gray-300">배경 이미지 (선택 사항)</Label>
-                <div className="flex items-center space-x-4">
-                  <div className="relative w-32 h-32 border-2 border-dashed border-gray-600 rounded-lg flex items-center justify-center overflow-hidden bg-gray-700">
-                    {imageUrlPreview ? (
-                      <img src={imageUrlPreview} alt="Image Preview" className="w-full h-full object-cover" />
-                    ) : (
-                      <ImageIcon className="h-12 w-12 text-gray-500" />
-                    )}
-                    {isCompressing && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/70 text-white">
-                        <Loader2 className="h-6 w-6 animate-spin" />
-                      </div>
-                    )}
-                  </div>
-                  <Input
-                    id="image"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageFileChange}
-                    ref={fileInputRef}
-                    className="hidden"
-                    disabled={isCompressing}
+              </PopoverContent>
+            </Popover>
+          </div>
+          <div>
+             {/* ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★ */}
+            <label className="block text-sm font-medium text-gray-700">{t('Background Image')}</label>
+            <div className="mt-1 flex items-center space-x-4">
+              <div className="flex-shrink-0 h-20 w-32 relative bg-gray-100 rounded overflow-hidden">
+                {backgroundPreview ? (
+                  <Image
+                    src={backgroundPreview}
+                     // ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★
+                    alt={t('Background Preview')}
+                    layout="fill"
+                    objectFit="cover"
                   />
-                  <Button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={isCompressing}
-                    variant="outline"
-                    className="bg-gray-700 text-white border-gray-600 hover:bg-gray-600 hover:text-white"
-                  >
-                    <Upload className="h-4 w-4 mr-2" />
-                    {isCompressing ? "압축 중..." : "이미지 선택"}
-                  </Button>
-                  {imageUrlPreview && !isCompressing && (
-                    <Button
-                      type="button"
-                      onClick={() => {
-                        setImageFile(null);
-                        setImageUrlPreview(null);
-                        if (fileInputRef.current) fileInputRef.current.value = '';
-                      }}
-                      variant="ghost"
-                      className="text-red-400 hover:bg-gray-700 hover:text-red-500"
-                    >
-                      <X className="h-4 w-4 mr-2" />
-                      이미지 제거
-                    </Button>
-                  )}
-                </div>
-                <p className="text-xs text-gray-400 mt-2">
-                  최대 1MB, JPG/PNG 형식 권장. 자동으로 압축됩니다.
-                </p>
-              </div>
-
-              <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg" disabled={isSubmitting || isCompressing || isDateConflicting}>
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    저장 중...
-                  </>
                 ) : (
-                  postId ? "말씀 업데이트" : "말씀 작성"
+                  <div className="h-full w-full flex items-center justify-center text-gray-400 text-xs">
+                     {/* ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★ */}
+                    {t('No Image')}
+                  </div>
                 )}
+              </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="hidden"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploading}
+              >
+                <Upload className="mr-2 h-4 w-4" />
+                 {/* ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★ */}
+                {isUploading ? t('Uploading...') : t('Upload Image')}
               </Button>
-            </form>
-          </CardContent>
-        </Card>
+               {(backgroundPreview || backgroundImage) && (
+                 <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    onClick={handleRemoveImage}
+                    disabled={isUploading}
+                 >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                     {/* ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★ */}
+                    {t('Remove Image')}
+                 </Button>
+               )}
+            </div>
+          </div>
+          <div className="flex space-x-3 pt-4">
+             {/* ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★ */}
+            <Button onClick={handleSave} disabled={loading || isUploading}>
+              {loading ? t('Saving...') : t('Save')}
+            </Button>
+            {/* ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★ */}
+            <Button variant="outline" onClick={handleCancel} disabled={loading || isUploading}>
+              {t('Cancel')}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Word Posts List */}
+      <div className="space-y-4">
+        {wordPosts.map((post) => (
+          <div key={post.id} className="p-4 border rounded-lg flex justify-between items-start bg-white shadow-sm">
+            <div className="flex space-x-4 items-start">
+               <div className="flex-shrink-0 h-16 w-16 relative bg-gray-100 rounded overflow-hidden">
+                   {post.image_url ? (
+                       <Image
+                           src={post.image_url}
+                           alt={post.title}
+                           layout="fill"
+                           objectFit="cover"
+                       />
+                   ) : (
+                       <div className="h-full w-full flex items-center justify-center text-gray-400 text-xs">
+                          {/* ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★ */}
+                         {t('No Image')}
+                       </div>
+                   )}
+               </div>
+               <div>
+                  <h3 className="text-lg font-semibold">{post.title}</h3>
+                   {/* ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★ */}
+                  <p className="text-sm text-gray-600">{t('Date')}: {format(new Date(post.word_date), 'PPP')}</p>
+                   {/* ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★ */}
+                  <p className="text-sm text-gray-500">{t('Author')}: {post.author_nickname}</p>
+               </div>
+            </div>
+
+            <div className="flex space-x-2 flex-shrink-0">
+               {/* ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★ */}
+              <Button variant="outline" size="sm" onClick={() => handleEdit(post)}>
+                {t('Edit')}
+              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                   {/* ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★ */}
+                  <Button variant="destructive" size="sm" onClick={() => setPostToDelete(post)}>{t('Delete')}</Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                     {/* ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★ */}
+                    <AlertDialogTitle>{t('Are you sure?')}</AlertDialogTitle>
+                    <AlertDialogDescription>
+                       {/* ★ 1. 번역 키를 실제 영어 텍스트로 변경 (주의: 변수 삽입 필요) ★ */}
+                      {t('Post')} "{post.title}" ({format(new Date(post.word_date), 'yyyy-MM-dd')}) {t('will be permanently deleted. This action cannot be undone.')}
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                     {/* ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★ */}
+                    <AlertDialogCancel onClick={() => setPostToDelete(null)}>{t('Cancel')}</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDelete} disabled={loading}>
+                       {/* ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★ */}
+                      {loading ? t('Deleting...') : t('Confirm Delete')}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
-  );
+  )
 }
