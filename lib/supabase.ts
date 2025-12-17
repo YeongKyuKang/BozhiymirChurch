@@ -46,33 +46,56 @@ export type Database = {
         Row: {
           id: string
           email: string
-          role: "admin" | "user" | "child"
+          role: "admin" | "user" | "child" | "guest" // 'guest' 추가
           nickname: string | null
           gender: "male" | "female"| null
           profile_picture_url: string | null
           created_at: string
           updated_at: string
           can_comment: boolean
+          
+          // ★ 추가된 컬럼들 (Row) ★
+          last_name_change: string | null
+          last_pw_change: string | null
+          last_pic_change: string | null
+          code_attempts_today: number | null
+          last_code_attempt_date: string | null
         }
         Insert: {
           id: string
           email: string
-          role?: "admin" | "user" | "child"
+          role?: "admin" | "user" | "child" | "guest"
           nickname?: string | null
           gender?: "male" | "female"| null
           profile_picture_url?: string | null
           created_at?: string
           updated_at?: string
+          can_comment?: boolean
+
+          // ★ 추가된 컬럼들 (Insert) ★
+          last_name_change?: string | null
+          last_pw_change?: string | null
+          last_pic_change?: string | null
+          code_attempts_today?: number | null
+          last_code_attempt_date?: string | null
         }
         Update: {
           id?: string
           email?: string
-          role?: "admin" | "user" | "child"
+          role?: "admin" | "user" | "child" | "guest"
           nickname?: string | null
           gender?: "male" | "female" | null
           profile_picture_url?: string | null
           created_at?: string
           updated_at?: string
+          can_comment?: boolean
+
+          // ★ 추가된 컬럼들 (Update) ★
+          last_name_change?: string | null
+          last_pw_change?: string | null
+          last_pic_change?: string | null
+          code_attempts_today?: number | null
+          last_code_attempt_date?: string | null
         }
       }
       events: {
@@ -130,10 +153,10 @@ export type Database = {
           message: string | null
           is_read: boolean
           created_at: string
-          age_group: string | null // 추가
-          receive_updates: boolean // 추가
-          type: string | null // 추가
-          subject: string | null // 추가
+          age_group: string | null
+          receive_updates: boolean
+          type: string | null
+          subject: string | null
         }
         Insert: {
           id?: string
@@ -145,10 +168,10 @@ export type Database = {
           message?: string | null
           is_read?: boolean
           created_at?: string
-          age_group?: string | null // 추가
-          receive_updates?: boolean // 추가
-          type?: string | null // 추가
-          subject?: string | null // 추가
+          age_group?: string | null
+          receive_updates?: boolean
+          type?: string | null
+          subject?: string | null
         }
         Update: {
           id?: string
@@ -160,10 +183,10 @@ export type Database = {
           message?: string | null
           is_read?: boolean
           created_at?: string
-          age_group?: string | null // 추가
-          receive_updates?: boolean // 추가
-          type?: string | null // 추가
-          subject?: string | null // 추가
+          age_group?: string | null
+          receive_updates?: boolean
+          type?: string | null
+          subject?: string | null
         }
       }
       word_posts: {
@@ -224,13 +247,12 @@ export type Database = {
           created_at?: string
         }
       }
-      // thanks_posts 테이블 정의 추가
       thanks_posts: {
         Row: {
           id: string
           title: string
           content: string
-          category: string // category 컬럼 추가
+          category: string
           author_id: string
           author_nickname: string
           created_at: string
@@ -242,7 +264,7 @@ export type Database = {
           id?: string
           title: string
           content: string
-          category?: string // category 컬럼 추가
+          category?: string
           author_id: string
           author_nickname: string
           created_at?: string
@@ -254,7 +276,7 @@ export type Database = {
           id?: string
           title?: string
           content?: string
-          category?: string // category 컬럼 추가
+          category?: string
           author_id?: string
           author_nickname?: string
           created_at?: string
@@ -263,7 +285,6 @@ export type Database = {
           author_role?: string | null
         }
       }
-      // thanks_comments 테이블 정의 추가
       thanks_comments: {
         Row: {
           id: string
@@ -290,7 +311,6 @@ export type Database = {
           created_at?: string
         }
       }
-      // thanks_reactions 테이블 정의 추가
       thanks_reactions: {
         Row: {
           id: string
@@ -311,6 +331,36 @@ export type Database = {
           user_id?: string
           post_id?: string
           reaction_type?: string
+          created_at?: string
+        }
+      }
+      // ★ registration_codes 테이블 추가 ★
+      registration_codes: {
+        Row: {
+          id: string
+          code: string
+          role: string
+          is_used: boolean
+          used_by_user_id: string | null
+          used_at: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          code: string
+          role?: string
+          is_used?: boolean
+          used_by_user_id?: string | null
+          used_at?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          code?: string
+          role?: string
+          is_used?: boolean
+          used_by_user_id?: string | null
+          used_at?: string | null
           created_at?: string
         }
       }
@@ -398,7 +448,6 @@ export type Database = {
           };
         };
       };
-      // event-banners 버킷 정의 추가
       'event-banners': {
         Objects: {
           Row: {

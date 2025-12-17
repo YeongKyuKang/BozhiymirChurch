@@ -166,7 +166,7 @@ importers:
         version: 7.68.0(react@18.3.1)
       react-resizable-panels:
         specifier: latest
-        version: 4.0.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        version: 4.0.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       recharts:
         specifier: latest
         version: 3.6.0(@types/react@18.3.27)(react-dom@18.3.1(react@18.3.1))(react-is@19.1.0)(react@18.3.1)(redux@5.0.1)
@@ -1504,8 +1504,8 @@ packages:
     resolution: {integrity: sha512-I3yl4r9QB5ZRY3XuJVEPfc2XhZO6YweFPI+UovAzn+8/hb3oJ6lnysaFcjVpkCPfVWFUDvoZ8kmVDP7WyRtYtQ==}
     engines: {node: '>= 0.6.0'}
 
-  baseline-browser-mapping@2.9.8:
-    resolution: {integrity: sha512-Y1fOuNDowLfgKOypdc9SPABfoWXuZHBOyCS4cD52IeZBhr4Md6CLLs6atcxVrzRmQ06E7hSlm5bHHApPKR/byA==}
+  baseline-browser-mapping@2.9.9:
+    resolution: {integrity: sha512-V8fbOCSeOFvlDj7LLChUcqbZrdKD9RU/VR260piF1790vT0mfLSwGc/Qzxv3IqiTukOpNtItePa0HBpMAj7MDg==}
     hasBin: true
 
   big.js@5.2.2:
@@ -2672,8 +2672,8 @@ packages:
       '@types/react':
         optional: true
 
-  react-resizable-panels@4.0.1:
-    resolution: {integrity: sha512-Y8ngCTLVHQa88AdacDkFCm7hRtxCMUpqPvJ1xDoAYbGvADsZ83gmQbTKV3ZpAf4xpr/PM9j25eyPvYlb7IxKdg==}
+  react-resizable-panels@4.0.5:
+    resolution: {integrity: sha512-g2GZ9nO81a37TTBR6SjAY2VyYq4nLYa46lyW52xrB0Y5O0jB1d2GRWn+xDjJu8uGxyJ/5uMGm2SA2EDLKUboMw==}
     peerDependencies:
       react: ^18.0.0 || ^19.0.0
       react-dom: ^18.0.0 || ^19.0.0
@@ -4450,7 +4450,7 @@ snapshots:
 
   base64-arraybuffer@1.0.2: {}
 
-  baseline-browser-mapping@2.9.8: {}
+  baseline-browser-mapping@2.9.9: {}
 
   big.js@5.2.2: {}
 
@@ -4473,7 +4473,7 @@ snapshots:
 
   browserslist@4.28.1:
     dependencies:
-      baseline-browser-mapping: 2.9.8
+      baseline-browser-mapping: 2.9.9
       caniuse-lite: 1.0.30001760
       electron-to-chromium: 1.5.267
       node-releases: 2.0.27
@@ -5584,7 +5584,7 @@ snapshots:
     optionalDependencies:
       '@types/react': 18.3.27
 
-  react-resizable-panels@4.0.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+  react-resizable-panels@4.0.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)

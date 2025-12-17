@@ -1,9 +1,8 @@
-// components/join-page-client.tsx
 "use client"
 
 import type React from "react"
 import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -12,8 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox"
 import { Heart, Users, Calendar, Mail, Phone, MapPin, Handshake, Church, Lightbulb } from "lucide-react"
 import EditableText from "@/components/editable-text"
-import { useToast } from "@/components/ui/use-toast"
-import Link from "next/link"
+import { useToast } from "@/hooks/use-toast" // ✅ 경로 수정됨 (components/ui -> hooks)
 import { useLanguage } from "@/contexts/language-context"
 
 interface JoinPageClientProps {
@@ -39,7 +37,6 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
-    console.log("Form submission started. isSubmitting set to true.");
 
     if (
       !formData.firstName ||
@@ -51,7 +48,6 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
       !formData.message ||
       formData.message.length < 50
     ) {
-      console.log("Client-side validation failed.");
       toast({
         title: t("필수 필드를 채워주세요."),
         description: t("이름, 성, 이메일, 전화번호, 연령대, 관심 분야, 메시지(최소 50자)는 필수 입력 사항입니다."),
@@ -61,7 +57,6 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
       return
     }
 
-    console.log("Client-side validation passed. Attempting fetch.");
     try {
       const response = await fetch("/api/contact", {
         method: "POST",
@@ -83,7 +78,6 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
       })
 
       if (response.ok) {
-        console.log("Form submission successful.");
         toast({
           title: t("신청이 완료되었습니다!"),
           description: t("곧 연락드리겠습니다. 감사합니다."),
@@ -100,11 +94,9 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
         })
       } else {
         const errorData = await response.json()
-        console.error("Server responded with an error:", errorData);
         throw new Error(errorData.message || t("다시 시도해주세요."));
       }
     } catch (error: any) {
-      console.error("Caught an error during fetch:", error);
       toast({
         title: t("오류가 발생했습니다"),
         description: error.message || t("다시 시도해주세요."),
@@ -112,7 +104,6 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
       })
     } finally {
       setIsSubmitting(false)
-      console.log("Form submission ended. isSubmitting set to false.");
     }
   }
 
@@ -268,7 +259,7 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <Label htmlFor="firstName" className="text-blue-900 font-semibold text-base">
-                        {t("First Name")} *</Label> {/* ✅ t() 함수 사용 */}
+                        {t("First Name")} *</Label>
                       <Input
                         id="firstName"
                         type="text"
@@ -281,7 +272,7 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
                     </div>
                     <div>
                       <Label htmlFor="lastName" className="text-blue-900 font-semibold text-base">
-                        {t("Last Name")} *</Label> {/* ✅ t() 함수 사용 */}
+                        {t("Last Name")} *</Label>
                       <Input
                         id="lastName"
                         type="text"
@@ -297,7 +288,7 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <Label htmlFor="email" className="text-blue-900 font-semibold text-base">
-                        {t("Email Address")} *</Label> {/* ✅ t() 함수 사용 */}
+                        {t("Email Address")} *</Label>
                       <Input
                         id="email"
                         type="email"
@@ -310,7 +301,7 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
                     </div>
                     <div>
                       <Label htmlFor="phone" className="text-blue-900 font-semibold text-base">
-                        {t("Phone Number")} *</Label> {/* ✅ t() 함수 사용 */}
+                        {t("Phone Number")} *</Label>
                       <Input
                         id="phone"
                         type="tel"
@@ -325,25 +316,25 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
 
                   <div>
                     <Label htmlFor="age" className="text-blue-900 font-semibold text-base">
-                      {t("Age Group")}</Label> {/* ✅ t() 함수 사용 */}
+                      {t("Age Group")}</Label>
                     <Select value={formData.age} onValueChange={(value) => setFormData({ ...formData, age: value })} required>
                       <SelectTrigger className="mt-3 h-12 border-blue-300 focus:border-blue-700 focus:ring-blue-700 text-base">
-                        <SelectValue placeholder={t("Select your age group")} /> {/* ✅ t() 함수 사용 */}
+                        <SelectValue placeholder={t("Select your age group")} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="10s">{t("10-19")}</SelectItem> {/* ✅ t() 함수 사용 */}
-                        <SelectItem value="20s">{t("20-29")}</SelectItem> {/* ✅ t() 함수 사용 */}
-                        <SelectItem value="30s">{t("30-39")}</SelectItem> {/* ✅ t() 함수 사용 */}
-                        <SelectItem value="40s">{t("40-49")}</SelectItem> {/* ✅ t() 함수 사용 */}
-                        <SelectItem value="50s">{t("50-59")}</SelectItem> {/* ✅ t() 함수 사용 */}
-                        <SelectItem value="60s">{t("60+")}</SelectItem> {/* ✅ t() 함수 사용 */}
+                        <SelectItem value="10s">{t("10-19")}</SelectItem>
+                        <SelectItem value="20s">{t("20-29")}</SelectItem>
+                        <SelectItem value="30s">{t("30-39")}</SelectItem>
+                        <SelectItem value="40s">{t("40-49")}</SelectItem>
+                        <SelectItem value="50s">{t("50-59")}</SelectItem>
+                        <SelectItem value="60s">{t("60+")}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   <div>
                     <Label className="text-blue-900 font-semibold text-base mb-4 block">
-                      {t("Areas of Interest (Select all that apply)")} {/* ✅ t() 함수 사용 */}
+                      {t("Areas of Interest (Select all that apply)")}
                     </Label>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                       {interestOptions.map((interest) => (
@@ -355,7 +346,7 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
                             className="border-blue-500 data-[state=checked]:bg-blue-700 data-[state=checked]:text-white"
                           />
                           <Label htmlFor={interest} className="text-sm cursor-pointer text-gray-700">
-                            {t(interest)} {/* ✅ interestOptions 배열의 영문 문자열을 t()로 감쌈 */}
+                            {t(interest)}
                           </Label>
                         </div>
                       ))}
@@ -364,7 +355,7 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
 
                   <div>
                     <Label htmlFor="message" className="text-blue-900 font-semibold text-base">
-                      {t("Message")} *</Label> {/* ✅ t() 함수 사용 */}
+                      {t("Message")} *</Label>
                     <Textarea
                       id="message"
                       value={formData.message}
@@ -380,7 +371,7 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
                     disabled={isSubmitting}
                     className="w-full h-12 bg-gradient-to-r from-blue-700 to-blue-800 hover:from-blue-800 hover:to-blue-900 text-white font-bold text-lg rounded-full shadow-xl transform hover:scale-105 transition-all duration-300"
                   >
-                    {isSubmitting ? t("Submitting...") : t("Submit Application")} {/* ✅ t() 함수 사용 */}
+                    {isSubmitting ? t("Submitting...") : t("Submit Application")}
                   </Button>
                 </form>
               </CardContent>
@@ -407,7 +398,7 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
               <CardContent className="p-6">
                 <MapPin className="h-12 w-12 mx-auto mb-4 text-yellow-500" />
                 <h3 className="text-lg md:text-xl font-bold mb-3">
-                  {t("Address")} {/* ✅ t() 함수 사용 */}
+                  {t("Address")}
                 </h3>
                 <p className="text-blue-200 leading-relaxed">
                   <EditableText
@@ -426,7 +417,7 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
               <CardContent className="p-6">
                 <Phone className="h-12 w-12 mx-auto mb-4 text-yellow-500" />
                 <h3 className="text-lg md:text-xl font-bold mb-3">
-                  {t("Phone")} {/* ✅ t() 함수 사용 */}
+                  {t("Phone")}
                 </h3>
                 <p className="text-blue-200">
                   <EditableText
@@ -444,7 +435,7 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
               <CardContent className="p-6">
                 <Mail className="h-12 w-12 mx-auto mb-4 text-yellow-500" />
                 <h3 className="text-lg md:text-xl font-bold mb-3">
-                  {t("Email")} {/* ✅ t() 함수 사용 */}
+                  {t("Email")}
                 </h3>
                 <p className="text-blue-200">
                   <EditableText
@@ -462,10 +453,10 @@ export default function JoinPageClient({ initialContent }: JoinPageClientProps) 
           {/* Service Times (EditableText로 관리되지 않는 텍스트) */}
           <div className="mt-8 text-center text-blue-200">
             <p className="text-xl font-semibold mb-2">
-              {t("Service Times")} {/* ✅ t() 함수 사용 */}
+              {t("Service Times")}
             </p>
             <p className="text-lg">
-              {t("Sunday: 9:00 AM, 10:30 AM, 12:00 PM\nWednesday: 7:00 PM")} {/* ✅ t() 함수 사용 */}
+              {t("Sunday: 9:00 AM, 10:30 AM, 12:00 PM\nWednesday: 7:00 PM")}
             </p>
           </div>
         </div>

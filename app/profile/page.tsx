@@ -1,37 +1,24 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
-import { createBrowserClient } from "@supabase/ssr";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/auth-context";
+import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { 
-  User, Mail, Camera, ShieldCheck, LogOut, 
-  Loader2, Edit2, Check, X, Key, ChevronRight, Clock, ShieldAlert, Sparkles, AlertCircle
+  User, Mail, LogOut, Loader2, Edit2, X, Key, ChevronRight, ShieldAlert, Sparkles, AlertTriangle
 } from "lucide-react";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 export default function ProfilePage() {
-  const supabase = useMemo(() => createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  ), []);
+  const { user, userProfile, loading: authLoading, signOut, updateUserProfile } = useAuth();
   const router = useRouter();
 
   // 상태 관리
-  const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
-  const [profile, setProfile] = useState<any>(null);
-  const [user, setUser] = useState<any>(null);
-
-  // 수정 관련 상태
   const [isEditName, setIsEditName] = useState(false);
   const [isEditPw, setIsEditPw] = useState(false);
   const [showVerifyInput, setShowVerifyInput] = useState(false);
@@ -40,66 +27,85 @@ export default function ProfilePage() {
   const [password, setPassword] = useState("");
   const [code, setCode] = useState("");
 
-  // 1. 데이터 가져오기 로직 (새로고침 대응 강화)
-  const fetchData = useCallback(async () => {
-    try {
-      // getSession 대신 getUser를 사용하여 서버측 세션 유효성을 더 정확히 체크합니다.
-      const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
-      
-      if (authError || !authUser) {
-        console.error("세션 없음:", authError);
-        router.push("/login");
-        return;
-      }
+  // ★ 디버깅용 상태: 5초 타임아웃 체크
+  const [timeoutError, setTimeoutError] = useState(false);
 
-      setUser(authUser);
-
-      const { data: profileData, error: profileError } = await supabase
-        .from("users")
-        .select("*")
-        .eq("id", authUser.id)
-        .maybeSingle();
-
-      if (profileError) throw profileError;
-      
-      if (profileData) {
-        setProfile(profileData);
-        setNickname(profileData.nickname || "");
-      }
-    } catch (err) {
-      console.error("데이터 로딩 실패:", err);
-    } finally {
-      setLoading(false);
-    }
-  }, [supabase, router]);
-
-  // 2. 인증 상태 실시간 감지 (새로고침 시 세션 증발 방지)
+  // 1. 디버깅 로그 및 5초 타임아웃 설정
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_OUT") {
-        router.push("/login");
-      } else if (event === "SIGNED_IN" || event === "INITIAL_SESSION") {
-        fetchData();
-      }
+    // 콘솔에 현재 상태 출력 (디버깅용)
+    console.log("🔍 [ProfilePage Debug]", { 
+      authLoading, 
+      hasUser: !!user, 
+      userEmail: user?.email,
+      hasProfile: !!userProfile,
+      profileRole: userProfile?.role
     });
 
-    fetchData(); // 컴포넌트 마운트 시 초기 데이터 로드
+    let timer: NodeJS.Timeout;
+
+    // 로딩 중이라면 5초 타이머 시작
+    if (authLoading) {
+      timer = setTimeout(() => {
+        console.warn("⚠️ [ProfilePage] 로딩 시간 5초 초과! 강제 진단 모드 전환");
+        setTimeoutError(true);
+      }, 5000);
+    }
 
     return () => {
-      subscription.unsubscribe();
+      if (timer) clearTimeout(timer);
     };
-  }, [supabase, fetchData, router]);
+  }, [authLoading, user, userProfile]);
 
-  // 3. 교인 인증 로직 (무한 루프 방지 및 정확한 에러 핸들링)
-  const handleCodeVerify = async () => {
-    if (!code.trim()) {
-      alert("코드를 입력해주세요.");
+  // 2. 초기 데이터 세팅 및 리다이렉트 (무한 루프 방지를 위해 의존성 최소화)
+  useEffect(() => {
+    // 로딩이 끝났는데 유저가 없으면 로그인 페이지로
+    if (!authLoading && !user) {
+      console.log("⚠️ [ProfilePage] 인증되지 않은 사용자 -> 로그인 이동");
+      router.push("/login");
       return;
     }
 
+    // 유저 프로필이 있고 닉네임 상태가 비어있을 때만 동기화
+    if (userProfile?.nickname && nickname === "") {
+      console.log("✅ [ProfilePage] 프로필 닉네임 동기화:", userProfile.nickname);
+      setNickname(userProfile.nickname);
+    }
+  }, [authLoading, user, userProfile, router]); // nickname은 의존성에서 제외하여 루프 방지
+
+  // 3. 닉네임 수정
+  const handleUpdateNickname = async () => {
+    if (!nickname.trim()) return;
+    
+    // 30일 제한 체크
+    if (userProfile?.last_name_change) {
+      const lastChange = new Date(userProfile.last_name_change).getTime();
+      const thirtyDaysInMs = 30 * 24 * 60 * 60 * 1000;
+      if (Date.now() - lastChange < thirtyDaysInMs) {
+        alert("닉네임은 30일에 한 번만 변경할 수 있습니다.");
+        return;
+      }
+    }
+
+    setUpdating(true);
+    const { error } = await updateUserProfile({ 
+      nickname: nickname.trim(),
+      // last_name_change: new Date().toISOString() // DB 컬럼 있으면 주석 해제
+    });
+
+    if (error) {
+      alert("수정 실패: " + error.message);
+    } else {
+      setIsEditName(false);
+      alert("닉네임이 변경되었습니다.");
+    }
+    setUpdating(false);
+  };
+
+  // 4. 교인 인증
+  const handleCodeVerify = async () => {
+    if (!code.trim() || !user) return;
     setUpdating(true);
     try {
-      // 코드 존재 여부 확인
       const { data: codeData, error: fetchError } = await supabase
         .from("registration_codes")
         .select("*")
@@ -108,14 +114,12 @@ export default function ProfilePage() {
         .maybeSingle();
 
       if (fetchError) throw fetchError;
-
       if (!codeData) {
         alert("유효하지 않거나 이미 사용된 코드입니다.");
         setUpdating(false);
         return;
       }
 
-      // 코드 사용 처리 (이때 DB 트리거가 users 테이블의 role을 변경함)
       const { error: updateError } = await supabase
         .from("registration_codes")
         .update({ 
@@ -123,54 +127,85 @@ export default function ProfilePage() {
           used_by_user_id: user.id, 
           used_at: new Date().toISOString() 
         })
-        .eq("code", code.trim().toUpperCase());
+        .eq("id", codeData.id);
 
       if (updateError) throw updateError;
 
-      alert("🎉 인증이 완료되었습니다!");
+      // 강제 프로필 새로고침
+      await updateUserProfile({}); 
+      alert("🎉 인증 완료!");
       setShowVerifyInput(false);
       setCode("");
-      
-      // 즉시 최신 프로필 정보 반영
-      await fetchData();
-      
     } catch (err: any) {
-      console.error("인증 오류:", err.message);
-      alert("인증 처리 중 오류가 발생했습니다.");
+      console.error(err);
+      alert("오류 발생: " + err.message);
     } finally {
       setUpdating(false);
     }
   };
 
-  // 4. 로그아웃 로직 (확실한 세션 종료)
-  const handleLogout = async () => {
-    try {
-      setLoading(true);
-      await supabase.auth.signOut();
-      router.refresh(); // 페이지 상태 초기화
-      router.push("/login");
-    } catch (err) {
-      console.error("로그아웃 실패:", err);
-      alert("로그아웃 중 오류가 발생했습니다.");
+  // 5. 비밀번호 변경
+  const handleChangePassword = async () => {
+    if (password.length < 6) {
+      alert("비밀번호는 6자 이상이어야 합니다.");
+      return;
     }
+    setUpdating(true);
+    const { error } = await supabase.auth.updateUser({ password });
+    
+    if (error) {
+      alert("변경 실패: " + error.message);
+    } else {
+      await updateUserProfile({ 
+        // last_pw_change: new Date().toISOString() // DB 컬럼 있으면 주석 해제
+      });
+      alert("비밀번호가 변경되었습니다.");
+      setIsEditPw(false);
+      setPassword("");
+    }
+    setUpdating(false);
   };
 
-  // 쿨타임 계산기
-  const getDaysRemaining = (lastDate: string | null, cooldownDays: number) => {
-    if (!lastDate) return 0;
-    const diff = (new Date().getTime() - new Date(lastDate).getTime()) / (1000 * 3600 * 24);
-    const remaining = Math.ceil(cooldownDays - diff);
-    return remaining > 0 ? remaining : 0;
-  };
+  // ★ 로딩 화면 (타임아웃 시 진단 화면 표시)
+  if (authLoading) {
+    if (timeoutError) {
+      return (
+        <div className="min-h-screen flex flex-col items-center justify-center bg-slate-100 p-4 space-y-4">
+          <AlertTriangle className="w-12 h-12 text-red-500" />
+          <h2 className="text-xl font-bold text-slate-800">로딩 시간이 너무 오래 걸립니다.</h2>
+          <div className="bg-white p-4 rounded-lg shadow-sm text-sm text-slate-600 max-w-md w-full">
+            <p className="font-bold mb-2 text-red-600">진단 정보 (개발자용):</p>
+            <ul className="list-disc pl-5 mt-2 space-y-1">
+              <li><strong>Auth Loading:</strong> {authLoading ? "TRUE (멈춤)" : "FALSE"}</li>
+              <li><strong>User Logged In:</strong> {user ? "YES" : "NO"}</li>
+              <li><strong>Email:</strong> {user?.email || "N/A"}</li>
+              <li><strong>Profile Loaded:</strong> {userProfile ? "YES" : "NO"}</li>
+            </ul>
+            <p className="mt-4 text-xs text-gray-500">
+              * AuthContext에서 loading 상태가 false로 변하지 않고 있습니다. <br/>
+              * 미들웨어 설정이나 AuthProvider 초기화 로직을 확인해주세요.
+            </p>
+          </div>
+          <div className="flex gap-2 mt-4">
+             <Button variant="outline" onClick={() => window.location.reload()}>페이지 새로고침</Button>
+             <Button variant="destructive" onClick={async () => { await signOut(); router.push('/login'); }}>로그아웃 후 다시 시도</Button>
+          </div>
+        </div>
+      );
+    }
 
-  if (loading) return (
-    <div className="h-screen flex items-center justify-center bg-[#0057B7]">
-      <Loader2 className="w-12 h-12 animate-spin text-[#FFDD00]" />
-    </div>
-  );
+    return (
+      <div className="h-screen flex flex-col items-center justify-center bg-[#0057B7]">
+        <Loader2 className="w-12 h-12 animate-spin text-[#FFDD00]" />
+        <p className="text-white/80 mt-4 text-sm font-medium animate-pulse">
+          사용자 정보를 불러오는 중... (최대 5초)
+        </p>
+      </div>
+    );
+  }
 
-  const nameRemaining = getDaysRemaining(profile?.last_name_change, 30);
-  const pwRemaining = getDaysRemaining(profile?.last_pw_change, 30);
+  // 데이터 로딩은 끝났는데 유저가 없는 경우 (useEffect에서 리다이렉트 되겠지만, 찰나의 순간 방어)
+  if (!user) return null;
 
   return (
     <TooltipProvider>
@@ -182,20 +217,22 @@ export default function ProfilePage() {
             <div className="relative w-36 h-36 mx-auto mb-6">
               <div className="w-full h-full rounded-[56px] bg-gradient-to-tr from-[#FFDD00] to-[#FFE543] p-1 shadow-xl">
                 <div className="w-full h-full rounded-[52px] bg-white overflow-hidden flex items-center justify-center">
-                  {profile?.profile_picture_url ? (
-                    <img src={profile.profile_picture_url} className="w-full h-full object-cover" />
+                  {userProfile?.profile_picture_url ? (
+                    <img src={userProfile.profile_picture_url} className="w-full h-full object-cover" alt="Profile" />
                   ) : (
                     <User size={56} className="text-[#0057B7]/20" />
                   )}
                 </div>
               </div>
             </div>
-            <h2 className="text-4xl font-black text-[#0057B7] tracking-tighter italic uppercase mb-4">{profile?.nickname || "사용자"}</h2>
+            <h2 className="text-4xl font-black text-[#0057B7] tracking-tighter italic uppercase mb-4">
+              {userProfile?.nickname || user.email?.split('@')[0]}
+            </h2>
             <div className="flex flex-col items-center gap-4">
-              <Badge className={`px-6 py-2 rounded-2xl font-black uppercase shadow-md ${profile?.role === 'guest' ? 'bg-slate-100 text-slate-400' : 'bg-[#FFDD00] text-[#0057B7]'}`}>
-                {profile?.role === 'guest' ? '🚫 Unverified' : '✨ Verified Member'}
+              <Badge className={`px-6 py-2 rounded-2xl font-black uppercase shadow-md ${userProfile?.role === 'guest' ? 'bg-slate-100 text-slate-400' : 'bg-[#FFDD00] text-[#0057B7]'}`}>
+                {userProfile?.role === 'guest' ? '🚫 Unverified' : `✨ ${userProfile?.role?.toUpperCase()} Member`}
               </Badge>
-              {profile?.role === 'guest' && !showVerifyInput && (
+              {userProfile?.role === 'guest' && !showVerifyInput && (
                 <Button onClick={() => setShowVerifyInput(true)} className="bg-[#FFDD00] text-[#0057B7] hover:bg-[#0057B7] hover:text-white font-black rounded-2xl shadow-xl transition-all">
                   <Sparkles size={18} className="mr-2" /> START VERIFICATION
                 </Button>
@@ -211,7 +248,12 @@ export default function ProfilePage() {
                 <Button variant="ghost" size="icon" onClick={() => setShowVerifyInput(false)}><X /></Button>
               </div>
               <div className="flex flex-col gap-3">
-                <Input placeholder="CH-2025-XXXX" value={code} onChange={e => setCode(e.target.value)} className="h-14 rounded-2xl border-none text-xl font-black text-center text-[#0057B7]" />
+                <Input 
+                  placeholder="CH-2025-XXXX" 
+                  value={code} 
+                  onChange={e => setCode(e.target.value)} 
+                  className="h-14 rounded-2xl border-none text-xl font-black text-center text-[#0057B7] bg-white/90 placeholder:text-[#0057B7]/30" 
+                />
                 <Button onClick={handleCodeVerify} disabled={updating} className="h-14 rounded-2xl bg-[#0057B7] text-white font-black hover:bg-[#004494]">
                   {updating ? <Loader2 className="animate-spin" /> : "ACTIVATE NOW"}
                 </Button>
@@ -222,7 +264,7 @@ export default function ProfilePage() {
           {/* 정보 리스트 */}
           <Card className="rounded-[40px] border-none shadow-sm bg-white overflow-hidden ring-1 ring-slate-100">
             <CardContent className="p-0 divide-y divide-slate-50">
-              {/* 이름 수정 */}
+              {/* 닉네임 수정 */}
               <div className="p-8">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-5 flex-1">
@@ -230,34 +272,46 @@ export default function ProfilePage() {
                     <div className="flex-1">
                       <p className="text-[10px] font-black text-slate-300 uppercase mb-1">Nickname</p>
                       {isEditName ? (
-                        <div className="mt-2 space-y-2">
+                        <div className="mt-2 flex gap-2">
                           <Input value={nickname} onChange={e => setNickname(e.target.value)} className="h-10 font-black" />
-                          <div className="flex gap-2">
-                            <Button size="sm" onClick={() => {/* 업데이트 로직 */}} className="bg-[#0057B7]">SAVE</Button>
-                            <Button size="sm" variant="ghost" onClick={() => setIsEditName(false)}>CANCEL</Button>
-                          </div>
+                          <Button size="sm" onClick={handleUpdateNickname} disabled={updating} className="bg-[#0057B7]">SAVE</Button>
+                          <Button size="sm" variant="ghost" onClick={() => setIsEditName(false)}><X size={16} /></Button>
                         </div>
                       ) : (
-                        <p className="font-black text-slate-800 text-xl tracking-tight">{profile?.nickname}</p>
+                        <p className="font-black text-slate-800 text-xl tracking-tight">{nickname || userProfile?.nickname || "설정해주세요"}</p>
                       )}
                     </div>
                   </div>
-                  {!isEditName && <Button size="icon" variant="ghost" disabled={nameRemaining > 0} onClick={() => setIsEditName(true)} className="text-slate-200"><Edit2 size={18} /></Button>}
+                  {!isEditName && <Button size="icon" variant="ghost" onClick={() => setIsEditName(true)} className="text-slate-200"><Edit2 size={18} /></Button>}
                 </div>
               </div>
 
-              {/* 비밀번호 변경 */}
-              <div className="p-8">
-                <button onClick={() => setIsEditPw(!isEditPw)} disabled={pwRemaining > 0} className="w-full flex items-center justify-between">
+              {/* 비밀번호 변경 UI */}
+              <div className="p-8 space-y-4">
+                <button onClick={() => setIsEditPw(!isEditPw)} className="w-full flex items-center justify-between">
                   <div className="flex items-center gap-5">
                     <div className="w-14 h-14 rounded-2xl bg-[#FFDD00]/10 flex items-center justify-center text-[#CCB000]"><Key size={26} /></div>
                     <p className="font-black text-slate-700 text-xl">Change Password</p>
                   </div>
                   <ChevronRight size={20} className={`text-slate-300 transition-transform ${isEditPw ? 'rotate-90' : ''}`} />
                 </button>
+                {isEditPw && (
+                  <div className="pl-19 pt-2 flex flex-col gap-3 animate-in fade-in duration-300">
+                    <Input 
+                      type="password" 
+                      placeholder="New Password" 
+                      value={password} 
+                      onChange={e => setPassword(e.target.value)} 
+                      className="rounded-xl border-slate-100"
+                    />
+                    <Button onClick={handleChangePassword} disabled={updating} className="bg-[#FFDD00] text-[#0057B7] font-bold">
+                      {updating ? <Loader2 className="animate-spin" /> : "UPDATE PASSWORD"}
+                    </Button>
+                  </div>
+                )}
               </div>
 
-              {/* 이메일 */}
+              {/* 이메일 (읽기 전용) */}
               <div className="p-8 flex items-center gap-5 opacity-60">
                 <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-300"><Mail size={26} /></div>
                 <div>
@@ -269,7 +323,7 @@ export default function ProfilePage() {
           </Card>
 
           <div className="pt-6 flex justify-center">
-            <Button variant="ghost" onClick={handleLogout} className="text-slate-300 font-bold hover:text-[#0057B7]">
+            <Button variant="ghost" onClick={() => { signOut(); router.push('/login'); }} className="text-slate-300 font-bold hover:text-[#0057B7]">
               <LogOut size={18} className="mr-2" /> LOGOUT
             </Button>
           </div>
