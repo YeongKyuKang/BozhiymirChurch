@@ -1,0 +1,103 @@
+{
+  "home": {
+    "hero": {
+      "welcome_title": "Welcome to Church Bozhiy Mir (The Peace of God)",
+      "service_label": "Sunday Service",
+      "service_time": "3:30 PM – 5:00 PM",
+      "service_location": "Hotel Poloneza, Poloneza 85A, Warsaw",
+      "scripture_text": "“As they were talking about these things, Jesus himself stood among them, and said to them, ‘Peace to you!’”",
+      "scripture_reference": "Luke 24:36 (ESV)",
+      "cta_text": "Join Us"
+    },
+    "community_about": {
+      "section_label": "About Our Community",
+      "main_title": "A Family United by Faith and Love",
+      "paragraph_1": "Bozhiy Mir Church (Peace of God Church) is more than a place of worship—we're a diverse, loving family that spans cultures, languages, and backgrounds. Our community has grown stronger through welcoming Ukrainian families and children who have found refuge in Poland.",
+      "paragraph_2": "From our traditional Sunday services to our vibrant children's programs, every person who walks through our doors becomes part of something beautiful. We believe that God's love knows no borders, and our community reflects that truth every day.",
+      "scripture_text": "\"There is neither Jew nor Gentile, neither slave nor free, nor is there male and female, for you are all one in Christ Jesus.\"",
+      "scripture_reference": "– Galatians 3:28"
+    },
+    "community_highlights": {
+      "highlight1_title": "Welcoming Spirit",
+      "highlight1_description": "Every person is welcomed with open arms, regardless of background, language, or life circumstances.",
+      "highlight2_title": "Global Family",
+      "highlight2_description": "Our community represents multiple countries and cultures, creating a rich tapestry of faith and fellowship.",
+      "highlight3_title": "Caring Support",
+      "highlight3_description": "From practical needs to emotional support, our community rallies around each member with Christ's love."
+    },
+    "ministries": {
+      "title": "Our Ministries",
+      "ministry1_title": "Children’s Sunday School",
+      "ministry1_description": "Dedicated programs for children to learn and grow in faith through fun activities and biblical teachings.",
+      "ministry1_time": "Sunday 3:00 PM",
+      "ministry2_title": "Youth Meeting",
+      "ministry2_description": "Engaging events and small groups designed to empower young people in their spiritual journey and build lasting friendships.",
+      "ministry2_time": "Sunday 3:00 PM"
+    }
+  },
+
+  "nav": {
+    "about":"About",
+    "story":"Story",
+    "jesus":"Jesus",
+    "beliefs":"Beliefs",
+    "leadership":"Leadership",
+    "ukrainian":"Ukrainian",
+    "home": "Home",
+    "word": "Word",
+    "events": "Events",
+    "thanks": "Thanks",
+    "faith":"Faith",
+    "prayer": "Prayer",
+    "login": "Login",
+    "logout": "Logout",
+    "profile": "Profile",
+    "admin": "Dashboard",
+    "my_page": "My Page",
+    "join": "Join"
+  },
+
+  "footer": {
+    "description": "A welcoming community where families grow together in faith and fellowship.",
+    "quick_links": "Quick Links",
+    "links": {
+      "leadership": "Leadership",
+      "events": "Events",
+      "join": "Join Us",
+      "ukrainian_ministry": "Ukrainian Ministry"
+    },
+    "contact_title": "Contact Info",
+    "address_line1": "ul. Poloneza 85A,",
+    "address_line2": "02-826 Warszawa",
+    "Contact Info_ru": "For Russian and Ukrainian speakers: +48 797 880 603",
+    "Contact Info_ko": "For English and Korean speakers: +48 573 229 077",
+    "email": "kosciolbozypokoj@gmail.com",
+    "service_title": "Service Times",
+    "services": {
+      "main": {
+        "title": "Main Service",
+        "desc": "Sunday, worship begins at 3:30 PM"
+      },
+      "youth": {
+        "title": "Youth Meeting",
+        "desc": "Every Sunday before the main service at 3:00 PM"
+      },
+      "kids": {
+        "title": "Sunday School",
+        "desc": "For children ages 5–13, every Sunday at 3:00 PM"
+      },
+      "prayer": {
+        "title": "Prayer Evenings",
+        "desc": "Every Wednesday at 7:00 PM / Address: ul. Wyczółki 33 / Held alternately in Russian and Korean"
+      }
+    },
+    "copyright": "Bozhiymir Church. All Rights Reserved."
+  },
+
+  "about": {
+    "belief": {
+      "title": "The Apostles' Creed",
+      "content": "I believe in God, the Father Almighty,\nCreator of heaven and earth.\n\nAnd in Jesus Christ, His only Son, our Lord;\nwho was conceived by the Holy Spirit,\nborn of the Virgin Mary,\nsufferred under Pontius Pilate,\nwas crucified, died, and was buried;\nHe descended to the dead;\non the third day He rose again;\nHe ascended into heaven,\nand is seated at the right hand of God the Father Almighty;\nfrom there He will come to judge the living and the dead.\n\nI believe in the Holy Spirit,\nthe holy universal Church,\nthe communion of saints,\nthe forgiveness of sins,\nthe resurrection of the body,\nand the life everlasting.\nAmen."
+    }
+  }
+}

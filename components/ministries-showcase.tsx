@@ -1,128 +1,70 @@
-// components/ministries-showcase.tsx
 "use client";
 
 import * as React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Heart, Users, BookOpen } from "lucide-react";
-import EditableText from "@/components/editable-text";
-import { Database } from "@/lib/supabase"; // Database 타입 임포트
+import { useLanguage } from "@/contexts/language-context";
+import { ItemText } from "@radix-ui/react-select";
 
-interface MinistriesShowcaseProps {
-  initialContent: Record<string, any>; // initialContent prop 추가
-  isEditingPage: boolean;
-  onContentChange: (section: string, key: string, value: string) => void;
-}
+export default function MinistriesShowcase() {
+  const { t } = useLanguage();
 
-export default function MinistriesShowcase({ initialContent, isEditingPage, onContentChange }: MinistriesShowcaseProps) {
+  // 사역 아이템 설정 (아이콘과 번역 키 매핑)
+  const ministryItems = [
+    {
+      icon: Heart,
+      iconColor: "text-red-500",
+      titleKey: "home.ministries.ministry1_title",
+      descKey: "home.ministries.ministry1_description",
+      timeKey: "home.ministries.ministry1_time"
+    },
+    {
+      icon: Users,
+      iconColor: "text-blue-500",
+      titleKey: "home.ministries.ministry2_title",
+      descKey: "home.ministries.ministry2_description",
+      timeKey: "home.ministries.ministry2_time"
+    }
+  ];
+
   return (
-    <section className="py-16 px-4">
-      <div className="container mx-auto max-w-6xl">
-        <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 text-center mb-12 leading-tight">
-          <EditableText
-            page="home"
-            section="ministries"
-            contentKey="title"
-            initialValue={initialContent?.ministries?.title || "Our Ministries"} // 원래 영어 텍스트로 복원
-            isEditingPage={isEditingPage}
-            onContentChange={onContentChange}
-            tag="span"
-            className="text-3xl md:text-4xl font-extrabold leading-tight"
-          />
+    <section className="py-24 md:py-32 bg-white">
+      <div className="container mx-auto px-4 max-w-6xl">
+        
+        {/* 섹션 제목: JSON 연동 */}
+        <h2 className="text-3xl md:text-5xl font-black text-gray-900 text-center mb-16 leading-tight italic">
+          {t('home.ministries.title')}
         </h2>
-        <div className="grid md:grid-cols-3 gap-8 text-center">
-          <Card className="hover:shadow-lg transition-shadow duration-300">
-            <CardContent className="p-6">
-              <Heart className="h-16 w-16 text-red-500 mx-auto mb-4" />
-              <h3 className="text-xl font-bold text-gray-900 mb-2">
-                <EditableText
-                  page="home"
-                  section="ministries"
-                  contentKey="ministry1_title"
-                  initialValue={initialContent?.ministries?.ministry1_title || "Children's Ministry"} // 원래 영어 텍스트로 복원
-                  isEditingPage={isEditingPage}
-                  onContentChange={onContentChange}
-                  tag="span"
-                  className="text-xl font-bold"
-                />
-              </h3>
-              {/* 여기에 <p> 대신 <div>를 사용 */}
-              <div className="text-gray-600">
-                <EditableText
-                  page="home"
-                  section="ministries"
-                  contentKey="ministry1_description"
-                  initialValue={initialContent?.ministries?.ministry1_description || "Dedicated programs for children to learn and grow in faith through fun activities and biblical teachings."} // 원래 영어 텍스트로 복원
-                  isEditingPage={isEditingPage}
-                  onContentChange={onContentChange}
-                  tag="span"
-                  className="text-gray-600"
-                  isTextArea={true}
-                />
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="hover:shadow-lg transition-shadow duration-300">
-            <CardContent className="p-6">
-              <Users className="h-16 w-16 text-blue-500 mx-auto mb-4" />
-              <h3 className="text-xl font-bold text-gray-900 mb-2">
-                <EditableText
-                  page="home"
-                  section="ministries"
-                  contentKey="ministry2_title"
-                  initialValue={initialContent?.ministries?.ministry2_title || "Youth & Young Adults"} // 원래 영어 텍스트로 복원
-                  isEditingPage={isEditingPage}
-                  onContentChange={onContentChange}
-                  tag="span"
-                  className="text-xl font-bold"
-                />
-              </h3>
-              {/* 여기에 <p> 대신 <div>를 사용 */}
-              <div className="text-gray-600">
-                <EditableText
-                  page="home"
-                  section="ministries"
-                  contentKey="ministry2_description"
-                  initialValue={initialContent?.ministries?.ministry2_description || "Engaging events and small groups designed to empower young people in their spiritual journey and build lasting friendships."} // 원래 영어 텍스트로 복원
-                  isEditingPage={isEditingPage}
-                  onContentChange={onContentChange}
-                  tag="span"
-                  className="text-gray-600"
-                  isTextArea={true}
-                />
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="hover:shadow-lg transition-shadow duration-300">
-            <CardContent className="p-6">
-              <BookOpen className="h-16 w-16 text-green-500 mx-auto mb-4" />
-              <h3 className="text-xl font-bold text-gray-900 mb-2">
-                <EditableText
-                  page="home"
-                  section="ministries"
-                  contentKey="ministry3_title"
-                  initialValue={initialContent?.ministries?.ministry3_title || "Bible Study & Discipleship"} // 원래 영어 텍스트로 복원
-                  isEditingPage={isEditingPage}
-                  onContentChange={onContentChange}
-                  tag="span"
-                  className="text-xl font-bold"
-                />
-              </h3>
-              {/* 여기에 <p> 대신 <div>를 사용 */}
-              <div className="text-gray-600">
-                <EditableText
-                  page="home"
-                  section="ministries"
-                  contentKey="ministry3_description"
-                  initialValue={initialContent?.ministries?.ministry3_description || "Deepen your understanding of God's Word through our weekly Bible studies and discipleship programs for all ages."} // 원래 영어 텍스트로 복원
-                  isEditingPage={isEditingPage}
-                  onContentChange={onContentChange}
-                  tag="span"
-                  className="text-gray-600"
-                  isTextArea={true}
-                />
-              </div>
-            </CardContent>
-          </Card>
+
+        {/* 3열 카드 그리드 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 text-center">
+          {ministryItems.map((item, index) => (
+            <Card key={index} className="border-none shadow-none hover:shadow-xl transition-all duration-300 rounded-[32px] bg-[#F9FAFB] group">
+              <CardContent className="p-5 flex flex-col items-center">
+                
+                {/* 아이콘 영역 */}
+                <div className="mb-6 p-4 bg-white rounded-2xl shadow-sm transition-transform duration-300 group-hover:scale-110">
+                  <item.icon className={`h-16 w-16 ${item.iconColor}`} />
+                </div>
+
+                {/* 카드 제목: JSON 연동 */}
+                <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-4">
+                  {t(item.titleKey)}
+                </h3>
+
+                {/* 카드 설명: JSON 연동 */}
+                <div className="text-gray-600 text-base md:text-lg leading-relaxed">
+                  {t(item.descKey)}
+                </div>
+
+                <div className="p-2 text-gray-600 text-base font-black md:text-lg leading-relaxed">
+                  {t(item.timeKey)}
+                </div>
+
+
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </div>
     </section>

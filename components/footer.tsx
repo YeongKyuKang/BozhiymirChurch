@@ -7,20 +7,18 @@ import Image from 'next/image'
 
 export default function Footer() {
   const { t } = useLanguage()
-  const year = new Date().getFullYear()
 
-  // 하드코딩된 푸터 텍스트
-  const hardcodedFooterContent = {
-    FOOTER_WELCOME_COMMUNITY_DESC: 'A welcoming community where families grow together in faith and fellowship.',
-    SUNDAY_SERVICE_TIMES: 'Sunday: 10:00 ~ 18:30',
-  };
+  // 반복되는 서비스 목록 정의
+  const serviceKeys = ['main', 'youth', 'kids', 'prayer']
 
   return (
     <footer className="bg-gradient-to-r from-blue-900 to-blue-800 text-white py-12 border-t-4 border-yellow-500">
       <div className="container mx-auto px-4">
-        <div className="grid md:grid-cols-4 gap-8">
-          <div>
-            <div className="relative h-10 w-40 mb-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
+          
+          {/* 1. 교회 소개 */}
+          <div className="space-y-4">
+            <div className="relative h-12 w-48">
               <Image
                 src="/images/Bozhiy-Mir_LOGO.png"
                 alt="Bozhiymir Church Logo"
@@ -29,79 +27,82 @@ export default function Footer() {
                 unoptimized={true}
               />
             </div>
-            <p className="text-blue-200 text-base leading-relaxed">
-              {hardcodedFooterContent.FOOTER_WELCOME_COMMUNITY_DESC}
+            <p className="text-blue-100 text-sm md:text-base leading-relaxed">
+              {t('footer.description')}
             </p>
           </div>
 
+          {/* 2. 빠른 링크 */}
           <div>
-            <h4 className="font-bold text-lg mb-4 text-yellow-300">{t('QUICK_LINKS')}</h4>
-            <ul className="space-y-2">
-              <li>
-                <Link href="/leadership" className="text-blue-200 hover:text-yellow-300 transition-colors text-base">
-                  {t('LEADERSHIP')}
-                </Link>
-              </li>
-              <li>
-                <Link href="/events" className="text-blue-200 hover:text-yellow-300 transition-colors text-base">
-                  {t('EVENTS')}
-                </Link>
-              </li>
-              <li>
-                <Link href="/join" className="text-blue-200 hover:text-yellow-300 transition-colors text-base">
-                  {t('JOIN')}
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/ukrainian-ministry"
-                  className="text-blue-200 hover:text-yellow-300 transition-colors text-base"
-                >
-                  {t('UKRAINIAN_MINISTRY')}
-                </Link>
-              </li>
+            <h4 className="font-bold text-lg mb-6 text-yellow-300 border-b border-yellow-500/30 pb-2 inline-block">
+              {t('footer.quick_links')}
+            </h4>
+            <ul className="space-y-3">
+              {['leadership', 'events', 'join', 'ukrainian_ministry'].map((link) => (
+                <li key={link}>
+                  <Link href={`/${link}`} className="text-blue-200 hover:text-yellow-300 transition-colors text-base flex items-center gap-2">
+                    <span className="text-yellow-500 text-[10px]">▶</span> {t(`footer.links.${link}`)}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
+          {/* 3. 연락처 */}
           <div>
-            <h4 className="font-bold text-lg mb-4 text-yellow-300">{t('CONTACT_INFO')}</h4>
-            <div className="space-y-3">
+            <h4 className="font-bold text-lg mb-6 text-yellow-300 border-b border-yellow-500/30 pb-2 inline-block">
+              {t('footer.contact_title')}
+            </h4>
+            <div className="space-y-5">
               <div className="flex items-start text-blue-200">
                 <MapPin className="h-5 w-5 mr-3 mt-1 flex-shrink-0 text-yellow-300" />
-                <span className="text-base">
-                  Poloneza 87, 
-                  <br />
-                  02-826 Warszawa
+                <span className="text-sm md:text-base">
+                  {t('footer.address_line1')}<br />{t('footer.address_line2')}
                 </span>
               </div>
-              <div className="flex items-center text-blue-200">
-                <Phone className="h-5 w-5 mr-3 text-yellow-300" />
-                <span className="text-base">(503) 555-0123</span>
-              </div>
-              <div className="flex items-center text-blue-200">
-                <Mail className="h-5 w-5 mr-3 text-yellow-300" />
-                <span className="text-base">info@bozhiymirchurch.com</span>
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <h4 className="font-bold text-lg mb-4 text-yellow-300">{t('SERVICE_TIMES')}</h4>
-            <div className="space-y-2 text-blue-200">
-              <div className="flex items-start">
-                <Clock className="h-5 w-5 mr-3 mt-1 text-yellow-300" />
-                <div className="text-base">
-                  <p>{hardcodedFooterContent.SUNDAY_SERVICE_TIMES}</p>
+              <div className="flex items-start text-blue-200">
+                <Phone className="h-5 w-5 mr-3 mt-1 flex-shrink-0 text-yellow-300" />
+                <div className="text-xs md:text-sm space-y-1">
+                  <p>{t('footer.Contact Info_ru')}</p>
+                  <p>{t('footer.Contact Info_ko')}</p>
                 </div>
               </div>
+              <div className="flex items-center text-blue-200">
+                <Mail className="h-5 w-5 mr-3 flex-shrink-0 text-yellow-300" />
+                <span className="text-sm md:text-base break-all">{t('footer.email')}</span>
+              </div>
             </div>
           </div>
+
+          {/* 4. 상세 예배 시간 (Title / Desc 분리 버전) */}
+          <div>
+            <h4 className="font-bold text-lg mb-6 text-yellow-300 border-b border-yellow-500/30 pb-2 inline-block">
+              {t('footer.service_title')}
+            </h4>
+            <div className="space-y-5">
+              {serviceKeys.map((key) => (
+                <div key={key} className="flex items-start gap-3">
+                  <Clock className="h-4 w-4 mt-1 flex-shrink-0 text-yellow-400" />
+                  <div className="flex flex-col">
+                    <span className="text-white font-bold text-sm md:text-base">
+                      {t(`footer.services.${key}.title`)}
+                    </span>
+                    <span className="text-blue-200 text-xs md:text-sm leading-snug">
+                      {t(`footer.services.${key}.desc`)}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
         </div>
 
-        <div className="border-t border-blue-700 mt-8 pt-8 text-center text-blue-300">
-          <p className="text-base">&copy; {new Date().getFullYear()} {t('BOZHIYMIR_CHURCH_ALL_RIGHTS_RESERVED')}.</p>
+        {/* 저작권 */}
+        <div className="border-t border-blue-700/50 mt-12 pt-8 text-center text-blue-300 text-xs md:text-sm">
+          <p>&copy; {new Date().getFullYear()} {t('footer.copyright')}</p>
         </div>
       </div>
     </footer>
-  );
+  )
 }

@@ -1,51 +1,46 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClientForCache } from "@/lib/supabase/server";
 import { unstable_cache } from "next/cache";
+import { Database } from "@/lib/supabase";
 
-// DB 데이터를 컴포넌트에서 쓰기 편한 객체 형태로 변환하는 타입
-export type ContentMap = Record<string, Record<string, string>>;
+type ContentRow = Database['public']['Tables']['content']['Row'];
+type EventRow = Database['public']['Tables']['events']['Row'];
 
-/**
- * 특정 페이지의 텍스트 콘텐츠를 가져와서 객체로 변환합니다.
- * 예: content.hero.title
- */
-export async function getPageContent(pageName: string): Promise<ContentMap> {
+export async function getPageContent(pageName: string) {
   return unstable_cache(
     async () => {
-      const supabase = createClient();
+      const supabase = createClientForCache();
       const { data } = await supabase
         .from("content")
-        .select("section, key, value")
-        .eq("page", pageName);
+        .select("*")
+        .eq("page", pageName)
+        .returns<ContentRow[]>();
 
-      const contentMap: ContentMap = {};
-      data?.forEach((item) => {
-        if (!contentMap[item.section]) {
-          contentMap[item.section] = {};
-        }
-        contentMap[item.section][item.key] = item.value;
-      });
-
+      const contentMap: Record<string, Record<string, string>> = {};
+      if (data) {
+        data.forEach((item) => {
+          if (!contentMap[item.section]) contentMap[item.section] = {};
+          contentMap[item.section][item.key] = item.value;
+        });
+      }
       return contentMap;
     },
-    [`content-${pageName}`], 
-    { tags: [`content-${pageName}`], revalidate: 3600 } // 1시간 캐시
+    [`content-${pageName}`], // 캐시 키
+    { tags: [`content-${pageName}`], revalidate: 3600 }
   )();
 }
 
-/**
- * 최신 이벤트 목록 가져오기
- */
-export async function getUpcomingEvents(limit = 3) {
+export async function getUpcomingEvents(limit = 10) {
   return unstable_cache(
     async () => {
-      const supabase = createClient();
+      const supabase = createClientForCache();
       const today = new Date().toISOString().split("T")[0];
       const { data } = await supabase
         .from("events")
         .select("*")
         .gte("event_date", today)
         .order("event_date", { ascending: true })
-        .limit(limit);
+        .limit(limit)
+        .returns<EventRow[]>();
       return data || [];
     },
     ["upcoming-events"],

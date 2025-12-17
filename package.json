@@ -2,6 +2,22 @@
   "name": "my-v0-project",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
+  "description": "",
+  "homepage": "https://github.com/YeongKyuKang/BozhiymirChurch#readme",
+  "bugs": {
+    "url": "https://github.com/YeongKyuKang/BozhiymirChurch/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/YeongKyuKang/BozhiymirChurch.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib"
+  },
   "scripts": {
     "build": "next build",
     "dev": "next dev",
@@ -55,7 +71,7 @@
     "html2canvas": "latest",
     "input-otp": "latest",
     "lucide-react": "^0.454.0",
-    "next": "^14.2.35",
+    "next": "latest",
     "next-themes": "latest",
     "react": "^18.3.1",
     "react-day-picker": "latest",
