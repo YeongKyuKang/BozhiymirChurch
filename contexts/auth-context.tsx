@@ -137,21 +137,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return { error };
   };
 
-  const signOut = async () => {
-    // 로딩바 안 띄우고 즉시 탈출
-    try {
-      await supabase.auth.signOut();
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setSession(null);
-      setUser(null);
-      setUserProfile(null);
-      setLoading(false); 
-      router.replace('/'); 
-      router.refresh();
-    }
-  };
+const signOut = async () => {
+  try {
+    // 1. 서버에 로그아웃 알림 (결과 안 기다림)
+    supabase.auth.signOut();
+    
+    // 2. 브라우저 저장소 싹 비우기 (중요!)
+    localStorage.clear();
+    sessionStorage.clear();
+  } catch (e) {
+    // 무시
+  } finally {
+    // 3. React 상태 초기화
+    setSession(null);
+    setUser(null);
+    setUserProfile(null);
+    setLoading(false);
+
+    // 4. ★ 핵심: 페이지를 강제로 새로고침하며 이동 (헤더 상태 찌꺼기 제거됨)
+    window.location.href = '/'; 
+  }
+};
 
   const signUp = async (
     email: string,

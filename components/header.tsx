@@ -32,6 +32,7 @@ export default function Header() {
   const pathname = usePathname()
   const router = useRouter()
   
+  // userProfile도 가져와서 닉네임 표시에 사용
   const { user, userProfile, userRole, signOut } = useAuth()
   const { t, setLanguage, language } = useLanguage()
 
@@ -57,9 +58,10 @@ export default function Header() {
     { name: t('nav.prayer') || "PRAYER", href: "/prayer" },
   ]
 
+  // ★ 수정된 부분: 라우팅 이동 로직 삭제 ★
+  // auth-context에서 window.location.href로 이동시키므로 여기서는 호출만 합니다.
   const handleSignOut = async () => {
     await signOut()
-    router.push("/")
   }
 
   return (
@@ -114,7 +116,6 @@ export default function Header() {
                 </div>
               </div>
 
-              {/* ★ EVENTS 링크를 /events/1 로 수정 ★ */}
               <Link href="/events/1" className="text-white text-sm font-bold hover:text-yellow-400 transition-colors tracking-widest">
                 {t('nav.events') || "EVENTS"}
               </Link>
@@ -156,7 +157,6 @@ export default function Header() {
                 )}
               </div>
 
-              {/* ★ JOIN 링크도 /join/1 로 수정 (필요한 경우) ★ */}
               <Link href="/join/1" className="text-white text-sm font-bold hover:text-yellow-400 transition-colors tracking-widest">
                 {t('nav.join') || "JOIN"}
               </Link>
@@ -228,7 +228,6 @@ export default function Header() {
                     </AccordionContent>
                   </AccordionItem>
 
-                  {/* ★ 모바일 EVENTS 링크도 /events/1 로 수정 ★ */}
                   <Link href="/events/1" className="flex items-center h-14 text-white text-lg font-bold">EVENTS</Link>
 
                   <AccordionItem value="faith" className="border-none">
@@ -249,7 +248,6 @@ export default function Header() {
                   </AccordionItem>
                 </Accordion>
 
-                {/* ★ 모바일 JOIN 링크도 /join/1 로 수정 ★ */}
                 <Link href="/join/1" className="flex items-center h-14 text-white text-lg font-bold">JOIN</Link>
 
                 <div className="pt-6 space-y-4">
