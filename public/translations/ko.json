@@ -17,7 +17,8 @@
     "profile": "프로필",
     "admin": "관리자 대시보드",
     "my_page": "마이페이지",
-    "join": "함께하기"
+    "join": "함께하기",
+    "login_required": "로그인 후 접근가능합니다"
   },
   "home": {
     "hero": {
@@ -136,6 +137,71 @@
         "role": "교회 행정 간사",
         "bio": "교회 운영 및 공동체 협력을 지원하는 행정 전문가입니다."
       }
+    },
+
+    "register": {
+      "title": "우리 커뮤니티에 참여하세요",
+      "description": "보지미르 교회의 계정을 만듭니다",
+      "label_profile_picture": "프로필 사진 (선택 사항)",
+      "label_nickname": "닉네임",
+      "label_gender": "성별",
+      "label_email": "이메일",
+      "label_password": "비밀번호",
+      "label_confirm_password": "비밀번호 확인",
+      "placeholder_nickname": "원하는 닉네임을 입력하세요",
+      "placeholder_gender": "성별 선택",
+      "placeholder_email": "이메일을 입력하세요",
+      "placeholder_password": "비밀번호를 입력하세요",
+      "placeholder_confirm_password": "비밀번호를 다시 입력하세요",
+      "gender_male": "남성",
+      "gender_female": "여성",
+      "btn_create_account": "계정 만들기",
+      "btn_creating_account": "계정 생성 중...",
+      "text_upload_instruction": "업로드 버튼을 클릭하여 사진을 추가하세요",
+      "text_upload_limits": "(최대 5MB, JPG/PNG 전용)",
+      "text_nickname_hint": "다른 회원들에게 표시되는 이름입니다",
+      "text_already_have_account": "이미 계정이 있으신가요?",
+      "link_sign_in": "로그인",
+      "error_file_size": "파일 크기는 5MB 이하여야 합니다.",
+      "error_invalid_image": "유효한 이미지 파일을 선택해주세요.",
+      "error_compression": "이미지 압축에 실패했습니다.",
+      "error_nickname_required": "닉네임은 필수입니다.",
+      "error_nickname_length": "닉네임은 최소 2자 이상이어야 합니다.",
+      "error_gender_required": "성별을 선택해주세요.",
+      "error_password_match": "비밀번호가 일치하지 않습니다.",
+      "error_password_length": "비밀번호는 최소 6자 이상이어야 합니다.",
+      "success_registration": "회원가입이 성공했습니다!"
+    },
+
+    "login": {
+      "title": "로그인",
+      "description": "교회 계정으로 로그인하세요",
+      "label_email": "이메일",
+      "label_password": "비밀번호",
+      "placeholder_email": "이메일을 입력하세요",
+      "placeholder_password": "비밀번호를 입력하세요",
+      "btn_sign_in": "로그인",
+      "btn_signing_in": "로그인 중...",
+      "text_no_account": "계정이 없으신가요?",
+      "link_register": "회원가입"
+    },
+    "profile": {
+      "page_title": "마이페이지",
+      "loading": "불러오는 중...",
+      "default_nickname": "사용자",
+      "badge_verified": "인증됨",
+      "text_joined": "가입일:",
+      "verify_title": "교인 인증이 필요합니다",
+      "verify_description": "현재 '방문자' 권한입니다. 교회에서 발급받은 코드를 입력하시면\n감사 제목 작성 및 댓글 참여 권한이 부여됩니다.",
+      "placeholder_code": "인증 코드 입력",
+      "btn_verify": "인증하기",
+      "btn_verifying": "인증 중...",
+      "verified_status_title": "교인 인증 완료",
+      "verified_status_desc": "우리 교회의 정교인으로 활동 중입니다.",
+      "btn_logout": "로그아웃 하기",
+      "alert_enter_code": "인증 코드를 입력해주세요.",
+      "error_invalid_code": "유효하지 않거나 이미 사용된 코드입니다.",
+      "success_verify": "교인 인증이 완료되었습니다!"
     }
   }
 }

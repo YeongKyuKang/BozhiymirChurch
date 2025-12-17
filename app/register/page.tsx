@@ -25,7 +25,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Camera, Upload } from 'lucide-react'
 import { useAuth } from '@/contexts/auth-context'
-import { useLanguage } from '@/contexts/language-context' // 1. useLanguage 임포트
+import { useLanguage } from '@/contexts/language-context'
 import imageCompression from 'browser-image-compression'
 
 export default function RegisterPage() {
@@ -41,21 +41,19 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { signUp } = useAuth()
-  const { t } = useLanguage() // 2. t 함수 가져오기
+  const { t } = useLanguage()
   const router = useRouter()
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        // 3. 번역 키를 실제 영어 텍스트로 변경
-        setError(t('Profile picture must be less than 5MB')) 
+        setError(t('register.error_file_size')) 
         return
       }
 
       if (!file.type.startsWith('image/')) {
-         // 3. 번역 키를 실제 영어 텍스트로 변경
-        setError(t('Please select a valid image file'))
+        setError(t('register.error_invalid_image'))
         return
       }
 
@@ -76,8 +74,7 @@ export default function RegisterPage() {
         }
         reader.readAsDataURL(compressedFile)
       } catch (compressionError) {
-         // 3. 번역 키를 실제 영어 텍스트로 변경
-        setError(t('Failed to compress the image. Please try another file.'))
+        setError(t('register.error_compression'))
         console.error(compressionError)
       }
     }
@@ -89,38 +86,32 @@ export default function RegisterPage() {
     setError('')
     setSuccess('')
 
-    // Validation
     if (!nickname.trim()) {
-       // 3. 번역 키를 실제 영어 텍스트로 변경
-      setError(t('Nickname is required'))
+      setError(t('register.error_nickname_required'))
       setLoading(false)
       return
     }
 
     if (nickname.length < 2) {
-       // 3. 번역 키를 실제 영어 텍스트로 변경
-      setError(t('Nickname must be at least 2 characters long'))
+      setError(t('register.error_nickname_length'))
       setLoading(false)
       return
     }
 
     if (!gender) {
-       // 3. 번역 키를 실제 영어 텍스트로 변경
-      setError(t('Please select your gender'))
+      setError(t('register.error_gender_required'))
       setLoading(false)
       return
     }
 
     if (password !== confirmPassword) {
-       // 3. 번역 키를 실제 영어 텍스트로 변경
-      setError(t('Passwords do not match'))
+      setError(t('register.error_password_match'))
       setLoading(false)
       return
     }
 
     if (password.length < 6) {
-       // 3. 번역 키를 실제 영어 텍스트로 변경
-      setError(t('Password must be at least 6 characters long'))
+      setError(t('register.error_password_length'))
       setLoading(false)
       return
     }
@@ -128,11 +119,9 @@ export default function RegisterPage() {
     const { error: signUpError } = await signUp(email, password, nickname, gender)
 
     if (signUpError) {
-      // Supabase 오류 메시지 (영어)는 그대로 표시
       setError(signUpError.message)
     } else {
-       // 3. 번역 키를 실제 영어 텍스트로 변경
-      setSuccess(t('Registration successful! Please check your email to verify your account.'))
+      setSuccess(t('register.success_registration'))
       setTimeout(() => {
         router.push('/login')
       }, 3000)
@@ -157,9 +146,8 @@ export default function RegisterPage() {
           <div className="max-w-md mx-auto">
             <Card>
               <CardHeader className="text-center">
-                 {/* 3. 번역 키를 실제 영어 텍스트로 변경 */}
-                <CardTitle className="text-2xl font-bold text-gray-900">{t('Join Our Community')}</CardTitle>
-                <CardDescription>{t('Create your Bozhiymir Church account')}</CardDescription>
+                <CardTitle className="text-2xl font-bold text-gray-900">{t('register.title')}</CardTitle>
+                <CardDescription>{t('register.description')}</CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-4">
@@ -175,10 +163,8 @@ export default function RegisterPage() {
                     </Alert>
                   )}
 
-                  {/* Profile Picture Upload */}
                   <div className="space-y-2">
-                     {/* 3. 번역 키를 실제 영어 텍스트로 변경 */}
-                    <Label>{t('Profile Picture (Optional)')}</Label>
+                    <Label>{t('register.label_profile_picture')}</Label>
                     <div className="flex flex-col items-center space-y-4">
                       <div className="relative">
                         <Avatar className="w-24 h-24">
@@ -210,35 +196,30 @@ export default function RegisterPage() {
                         onChange={handleFileChange}
                         className="hidden"
                       />
-                      {/* 3. 번역 키를 실제 영어 텍스트로 변경 */}
                       <p className="text-xs text-gray-500 text-center">
-                        {t('Click the upload button to add a profile picture')}
+                        {t('register.text_upload_instruction')}
                         <br />
-                        {t('(Max 5MB, JPG/PNG only)')}
+                        {t('register.text_upload_limits')}
                       </p>
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                     {/* 3. 번역 키를 실제 영어 텍스트로 변경 */}
-                    <Label htmlFor="nickname">{t('Nickname')} *</Label>
+                    <Label htmlFor="nickname">{t('register.label_nickname')} *</Label>
                     <Input
                       id="nickname"
                       type="text"
                       value={nickname}
                       onChange={(e) => setNickname(e.target.value)}
                       required
-                       // 3. 번역 키를 실제 영어 텍스트로 변경
-                      placeholder={t('Enter your preferred nickname')}
+                      placeholder={t('register.placeholder_nickname')}
                       maxLength={50}
                     />
-                     {/* 3. 번역 키를 실제 영어 텍스트로 변경 */}
-                    <p className="text-xs text-gray-500">{t('This is how other members will see you')}</p>
+                    <p className="text-xs text-gray-500">{t('register.text_nickname_hint')}</p>
                   </div>
 
                   <div className="space-y-2">
-                     {/* 3. 번역 키를 실제 영어 텍스트로 변경 */}
-                    <Label htmlFor="gender">{t('Gender')} *</Label>
+                    <Label htmlFor="gender">{t('register.label_gender')} *</Label>
                     <Select
                       value={gender}
                       onValueChange={(value) =>
@@ -247,76 +228,64 @@ export default function RegisterPage() {
                       required
                     >
                       <SelectTrigger>
-                         {/* 3. 번역 키를 실제 영어 텍스트로 변경 */}
-                        <SelectValue placeholder={t('Select your gender')} />
+                        <SelectValue placeholder={t('register.placeholder_gender')} />
                       </SelectTrigger>
                       <SelectContent>
-                         {/* 3. 번역 키를 실제 영어 텍스트로 변경 */}
-                        <SelectItem value="male">{t('Male')}</SelectItem>
-                        <SelectItem value="female">{t('Female')}</SelectItem>
+                        <SelectItem value="male">{t('register.gender_male')}</SelectItem>
+                        <SelectItem value="female">{t('register.gender_female')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
-                  {/* Registration code 입력 필드 제거됨 */}
-
                   <div className="space-y-2">
-                     {/* 3. 번역 키를 실제 영어 텍스트로 변경 */}
-                    <Label htmlFor="email">{t('Email')} *</Label>
+                    <Label htmlFor="email">{t('register.label_email')} *</Label>
                     <Input
                       id="email"
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
-                       // 3. 번역 키를 실제 영어 텍스트로 변경
-                      placeholder={t('Enter your email')}
+                      placeholder={t('register.placeholder_email')}
                     />
                   </div>
 
                   <div className="space-y-2">
-                     {/* 3. 번역 키를 실제 영어 텍스트로 변경 */}
-                    <Label htmlFor="password">{t('Password')} *</Label>
+                    <Label htmlFor="password">{t('register.label_password')} *</Label>
                     <Input
                       id="password"
                       type="password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
-                       // 3. 번역 키를 실제 영어 텍스트로 변경
-                      placeholder={t('Enter your password')}
+                      placeholder={t('register.placeholder_password')}
                       minLength={6}
                     />
                   </div>
 
                   <div className="space-y-2">
-                     {/* 3. 번역 키를 실제 영어 텍스트로 변경 */}
-                    <Label htmlFor="confirmPassword">{t('Confirm Password')} *</Label>
+                    <Label htmlFor="confirmPassword">{t('register.label_confirm_password')} *</Label>
                     <Input
                       id="confirmPassword"
                       type="password"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       required
-                       // 3. 번역 키를 실제 영어 텍스트로 변경
-                      placeholder={t('Confirm your password')}
+                      placeholder={t('register.placeholder_confirm_password')}
                     />
                   </div>
-                   {/* 3. 번역 키를 실제 영어 텍스트로 변경 */}
                   <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? t('Creating Account...') : t('Create Account')}
+                    {loading ? t('register.btn_creating_account') : t('register.btn_create_account')}
                   </Button>
                 </form>
 
                 <div className="mt-6 text-center">
                   <p className="text-sm text-gray-600">
-                     {/* 3. 번역 키를 실제 영어 텍스트로 변경 */}
-                    {t('Already have an account?')}{' '}
+                    {t('register.text_already_have_account')}{' '}
                     <Link
                       href="/login"
                       className="text-blue-600 hover:text-blue-500 font-medium"
                     >
-                      {t('Sign in')}
+                      {t('register.link_sign_in')}
                     </Link>
                   </p>
                 </div>

@@ -1,32 +1,27 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
-import { createClient as createClientPrimitive } from "@supabase/supabase-js"; // supabase-js 직접 import
+import { createClient as createClientPrimitive } from "@supabase/supabase-js";
 import { Database } from "@/lib/supabase";
 
-// 1. 기존 함수: 로그인 정보가 필요한 서버 컴포넌트용 (그대로 유지)
-export function createClient() {
-  const cookieStore = cookies();
+// 1. 서버 컴포넌트/액션용 (Next.js 15 비동기 대응)
+export async function createClient() {
+  const cookieStore = await cookies(); // Next.js 15에서는 await 필수
 
   return createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value;
+        getAll() {
+          return cookieStore.getAll();
         },
-        set(name: string, value: string, options: CookieOptions) {
+        setAll(cookiesToSet) {
           try {
-            cookieStore.set({ name, value, ...options });
-          } catch (error) {
-            // 무시
-          }
-        },
-        remove(name: string, options: CookieOptions) {
-          try {
-            cookieStore.set({ name, value: "", ...options });
-          } catch (error) {
-            // 무시
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            );
+          } catch {
+            // 서버 컴포넌트에서 set 호출 시 발생하는 에러 무시
           }
         },
       },
@@ -34,9 +29,8 @@ export function createClient() {
   );
 }
 
-// 2. [신규 추가] 캐시용 함수: 쿠키 없이 데이터만 가져오는 클라이언트
+// 2. 캐시/데이터 전용 클라이언트 (동일 유지)
 export function createClientForCache() {
-  // 쿠키 접근 없이 순수하게 API 요청만 보내는 클라이언트를 생성합니다.
   return createClientPrimitive<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!

@@ -54,7 +54,8 @@
     "profile": "Profile",
     "admin": "Dashboard",
     "my_page": "My Page",
-    "join": "Join"
+    "join": "Join",
+    "login_required": "Login Required to Enter"
   },
 
   "footer": {
@@ -137,6 +138,72 @@
         "role": "Church Administrator",
         "bio": "Managing church operations and community coordination with excellence."
       }
+    },
+
+    "register": {
+      "title": "Join Our Community",
+      "description": "Create your Bozhiymir Church account",
+      "label_profile_picture": "Profile Picture (Optional)",
+      "label_nickname": "Nickname",
+      "label_gender": "Gender",
+      "label_email": "Email",
+      "label_password": "Password",
+      "label_confirm_password": "Confirm Password",
+      "placeholder_nickname": "Enter your preferred nickname",
+      "placeholder_gender": "Select your gender",
+      "placeholder_email": "Enter your email",
+      "placeholder_password": "Enter your password",
+      "placeholder_confirm_password": "Confirm your password",
+      "gender_male": "Male",
+      "gender_female": "Female",
+      "btn_create_account": "Create Account",
+      "btn_creating_account": "Creating Account...",
+      "text_upload_instruction": "Click the upload button to add a photo",
+      "text_upload_limits": "(Max 5MB, JPG/PNG only)",
+      "text_nickname_hint": "This is how other members will see you",
+      "text_already_have_account": "Already have an account?",
+      "link_sign_in": "Sign in",
+      "error_file_size": "File must be less than 5MB.",
+      "error_invalid_image": "Please select a valid image file.",
+      "error_compression": "Failed to compress the image.",
+      "error_nickname_required": "Nickname is required.",
+      "error_nickname_length": "Nickname must be at least 2 characters.",
+      "error_gender_required": "Please select your gender.",
+      "error_password_match": "Passwords do not match.",
+      "error_password_length": "Password must be at least 6 characters.",
+      "success_registration": "Registration successful!"
+    },
+
+    "login": {
+      "title": "Sign In",
+      "description": "Log in to your church account",
+      "label_email": "Email",
+      "label_password": "Password",
+      "placeholder_email": "Enter your email",
+      "placeholder_password": "Enter your password",
+      "btn_sign_in": "Sign In",
+      "btn_signing_in": "Signing In...",
+      "text_no_account": "Don't have an account?",
+      "link_register": "Register"
+    },
+    
+    "profile": {
+      "page_title": "My Profile",
+      "loading": "Loading...",
+      "default_nickname": "User",
+      "badge_verified": "Verified",
+      "text_joined": "Joined:",
+      "verify_title": "Verification Required",
+      "verify_description": "You currently have 'Guest' status. Enter the code issued by the church to grant permission for writing gratitude titles and comments.",
+      "placeholder_code": "Enter verification code",
+      "btn_verify": "Verify",
+      "btn_verifying": "Verifying...",
+      "verified_status_title": "Verification Complete",
+      "verified_status_desc": "You are now active as an official member of our church.",
+      "btn_logout": "Sign Out",
+      "alert_enter_code": "Please enter the verification code.",
+      "error_invalid_code": "Invalid or already used code.",
+      "success_verify": "Church member verification successful!"
     }
   }
 }

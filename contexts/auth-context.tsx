@@ -21,9 +21,9 @@ interface AuthContextType {
   session: AuthSession | null
   user: User | null
   userProfile: UserProfile | null
+  userRole: string | null // ★ userRole 타입 정의 추가
   loading: boolean
   error: string | null
-  // ★ 1. signIn 함수의 타입을 (email, password)를 받도록 수정 ★
   signIn: (
     email: string,
     password: string,
@@ -52,6 +52,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  // ★ userProfile에서 role만 추출하여 관리 (계산된 값)
+  const userRole = userProfile?.role ?? null
 
   useEffect(() => {
     const fetchSession = async () => {
@@ -83,7 +86,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setSession(session)
       setUser(session?.user ?? null)
 
-      if (event === 'SIGNED_IN' && session?.user) {
+      if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session?.user) {
         await fetchUserProfile(session.user.id)
       } else if (event === 'SIGNED_OUT') {
         setUserProfile(null)
@@ -116,15 +119,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } catch (error: any) {
       console.error('Error fetching user profile:', error)
       setError(error.message)
-      setUserProfile(null) // Reset profile on error
+      setUserProfile(null)
     }
   }
 
-  // ★ 2. signIn 함수가 (email, password)를 받도록 수정 ★
   const signIn = async (email: string, password: string) => {
     setLoading(true)
     setError(null)
-    // ★ 3. signInWithOtp에서 signInWithPassword로 로직 변경 ★
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -164,18 +165,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         },
       })
 
-      if (authError) {
-        throw authError
-      }
+      if (authError) throw authError
 
-      if (authData.user) {
-        return { data: authData, error: null }
-      } else {
-        return {
-          data: { user: null, session: null },
-          error: new Error('Sign up successful, but no user data returned.'),
-        }
-      }
+      return { data: authData, error: null }
     } catch (error: any) {
       setError(error.message)
       return {
@@ -208,13 +200,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         const { error: uploadError } = await supabase.storage
           .from('profile-pictures')
-          .upload(filePath, profilePictureFile, {
-            upsert: true,
-          })
+          .upload(filePath, profilePictureFile, { upsert: true })
 
-        if (uploadError) {
-          throw uploadError
-        }
+        if (uploadError) throw uploadError
 
         const { data: urlData } = supabase.storage
           .from('profile-pictures')
@@ -235,16 +223,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         .select()
         .single()
 
-      if (updateError) {
-        throw updateError
-      }
+      if (updateError) throw updateError
 
-      if (data) {
-        setUserProfile(data)
-      }
+      if (data) setUserProfile(data)
       return { error: null }
     } catch (error: any) {
-      console.error('Error updating profile:', error)
       setError(error.message)
       return { error }
     } finally {
@@ -256,6 +239,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     session,
     user,
     userProfile,
+    userRole, // ★ value 객체에 추가
     loading,
     error,
     signIn,

@@ -32,18 +32,15 @@ export default function Header() {
   const pathname = usePathname()
   const router = useRouter()
   
-  // AuthContext 데이터 (기존 파일의 변수명 userProfile, userRole 준수)
-  const { user, userProfile, userRole, signOut } = useAuth() as any
+  const { user, userProfile, userRole, signOut } = useAuth()
   const { t, setLanguage, language } = useLanguage()
 
-  // 스크롤 감지
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20)
     window.addEventListener("scroll", handleScroll)
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
 
-  // 페이지 이동 시 메뉴 닫기
   useEffect(() => setIsMenuOpen(false), [pathname])
 
   const aboutItems = [
@@ -117,11 +114,12 @@ export default function Header() {
                 </div>
               </div>
 
-              <Link href="/events" className="text-white text-sm font-bold hover:text-yellow-400 transition-colors tracking-widest">
+              {/* ★ EVENTS 링크를 /events/1 로 수정 ★ */}
+              <Link href="/events/1" className="text-white text-sm font-bold hover:text-yellow-400 transition-colors tracking-widest">
                 {t('nav.events') || "EVENTS"}
               </Link>
 
-              {/* Faith Dropdown (Auth Required) */}
+              {/* Faith Dropdown */}
               <div
                 className="relative group"
                 onMouseEnter={() => setIsFaithOpen(true)}
@@ -158,7 +156,8 @@ export default function Header() {
                 )}
               </div>
 
-              <Link href="/join" className="text-white text-sm font-bold hover:text-yellow-400 transition-colors tracking-widest">
+              {/* ★ JOIN 링크도 /join/1 로 수정 (필요한 경우) ★ */}
+              <Link href="/join/1" className="text-white text-sm font-bold hover:text-yellow-400 transition-colors tracking-widest">
                 {t('nav.join') || "JOIN"}
               </Link>
 
@@ -229,7 +228,8 @@ export default function Header() {
                     </AccordionContent>
                   </AccordionItem>
 
-                  <Link href="/events" className="flex items-center h-14 text-white text-lg font-bold">EVENTS</Link>
+                  {/* ★ 모바일 EVENTS 링크도 /events/1 로 수정 ★ */}
+                  <Link href="/events/1" className="flex items-center h-14 text-white text-lg font-bold">EVENTS</Link>
 
                   <AccordionItem value="faith" className="border-none">
                     <AccordionTrigger className={`text-lg font-bold py-3 hover:no-underline ${!user ? 'text-white/20' : 'text-white'}`}>
@@ -249,7 +249,8 @@ export default function Header() {
                   </AccordionItem>
                 </Accordion>
 
-                <Link href="/join" className="flex items-center h-14 text-white text-lg font-bold">JOIN</Link>
+                {/* ★ 모바일 JOIN 링크도 /join/1 로 수정 ★ */}
+                <Link href="/join/1" className="flex items-center h-14 text-white text-lg font-bold">JOIN</Link>
 
                 <div className="pt-6 space-y-4">
                   {user ? (

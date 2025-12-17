@@ -17,7 +17,8 @@
     "profile": "Профиль",
     "admin": "Панель управления",
     "my_page": "Моя страница",
-    "join": "Присоединиться"
+    "join": "Присоединиться",
+    "login_required": "Доступ возможен после авторизации."
   },
   "home": {
     "hero": {
@@ -136,6 +137,70 @@
         "role": "Администратор церкви",
         "bio": "Управление церковными операциями и координация общины."
       }
+    },
+    "register": {
+      "title": "Присоединяйтесь к нам",
+      "description": "Создайте аккаунт Bozhiymir Church",
+      "label_profile_picture": "Фото профиля (опционально)",
+      "label_nickname": "Никнейм",
+      "label_gender": "Пол",
+      "label_email": "Электронная почта",
+      "label_password": "Пароль",
+      "label_confirm_password": "Подтвердите пароль",
+      "placeholder_nickname": "Введите ваш никнейм",
+      "placeholder_gender": "Выберите пол",
+      "placeholder_email": "Введите ваш email",
+      "placeholder_password": "Введите ваш пароль",
+      "placeholder_confirm_password": "Подтвердите пароль",
+      "gender_male": "Мужской",
+      "gender_female": "Женский",
+      "btn_create_account": "Создать аккаунт",
+      "btn_creating_account": "Создание аккаунта...",
+      "text_upload_instruction": "Нажмите кнопку загрузки для фото",
+      "text_upload_limits": "(Макс 5МБ, JPG/PNG)",
+      "text_nickname_hint": "Так вас будут видеть другие участники",
+      "text_already_have_account": "Уже есть аккаунт?",
+      "link_sign_in": "Войти",
+      "error_file_size": "Файл должен быть меньше 5МБ.",
+      "error_invalid_image": "Выберите корректное изображение.",
+      "error_compression": "Ошибка при сжатии изображения.",
+      "error_nickname_required": "Никнейм обязателен.",
+      "error_nickname_length": "Минимум 2 символа.",
+      "error_gender_required": "Выберите ваш пол.",
+      "error_password_match": "Пароли не совпадают.",
+      "error_password_length": "Пароль минимум 6 символов.",
+      "success_registration": "Регистрация успешна!"
+    },
+
+    "login": {
+      "title": "Войти",
+      "description": "Войдите в свой церковный аккаунт",
+      "label_email": "Электронная почта",
+      "label_password": "Пароль",
+      "placeholder_email": "Введите ваш email",
+      "placeholder_password": "Введите ваш пароль",
+      "btn_sign_in": "Войти",
+      "btn_signing_in": "Вход...",
+      "text_no_account": "Нет аккаунта?",
+      "link_register": "Регистрация"
+    },
+    "profile": {
+      "page_title": "Мой профиль",
+      "loading": "Загрузка...",
+      "default_nickname": "Пользователь",
+      "badge_verified": "Подтвержден",
+      "text_joined": "Присоединился:",
+      "verify_title": "Требуется верификация",
+      "verify_description": "На данный момент у вас статус 'Гость'. Введите код, выданный церковью, чтобы получить разрешение на написание благодарностей и комментариев.",
+      "placeholder_code": "Введите код верификации",
+      "btn_verify": "Подтвердить",
+      "btn_verifying": "Проверка...",
+      "verified_status_title": "Верификация завершена",
+      "verified_status_desc": "Вы являетесь официальным членом нашей церкви.",
+      "btn_logout": "Выйти из системы",
+      "alert_enter_code": "Пожалуйста, введите код верификации.",
+      "error_invalid_code": "Неверный или уже использованный код.",
+      "success_verify": "Верификация члена церкви прошла успешно!"
     }
   }
 }
