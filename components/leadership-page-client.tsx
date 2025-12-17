@@ -1,67 +1,102 @@
-import { Card, CardContent } from "@/components/ui/card";
-import { Mail, Phone } from "lucide-react";
-import Image from "next/image";
+"use client"
 
-interface LeadershipPageClientProps {
-  initialContent: Record<string, any>;
-}
+import { useLanguage } from "@/contexts/language-context"
+import Image from "next/image"
 
-export default function LeadershipPageClient({ initialContent }: LeadershipPageClientProps) {
-  const content = initialContent;
+export default function LeadershipPageClient() {
+  const { t } = useLanguage()
 
   const leaders = [
-    { key: "leader_michael", name: content?.leader_michael?.name, role: content?.leader_michael?.role, img: content?.leader_michael?.image },
-    { key: "leader_sarah", name: content?.leader_sarah?.name, role: content?.leader_sarah?.role, img: content?.leader_sarah?.image },
-    { key: "leader_james", name: content?.leader_james?.name, role: content?.leader_james?.role, img: content?.leader_james?.image },
-    { key: "leader_maria", name: content?.leader_maria?.name, role: content?.leader_maria?.role, img: content?.leader_maria?.image },
-  ];
+    { 
+      id: "peter", 
+      key: "leader1", 
+      image: "/images/leaders/peter.jpg",
+      showImage: true 
+    },
+    { 
+      id: "vyacheslav", 
+      key: "leader2", 
+      image: "/images/bozhiymir.png", // 로고 경로 사용
+      showImage: false 
+    },
+    { 
+      id: "diana", 
+      key: "leader3", 
+      image: "/images/leaders/diana.jpg",
+      showImage: true 
+    }
+  ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-yellow-50 pt-16">
-      <div className="bg-gradient-to-r from-blue-700 to-blue-800 text-white h-[25vh] flex items-center justify-center border-b-4 border-yellow-500">
+    <div className="min-h-screen bg-slate-50 pt-16">
+      {/* 히어로 섹션 */}
+      <div className="bg-[#0F172A] text-white py-24 border-b-4 border-yellow-500">
         <div className="container mx-auto px-4 text-center">
-          <div className="mb-2"><span className="text-3xl md:text-4xl">👥</span></div>
-          <h1 className="text-2xl md:text-3xl lg:text-3xl font-extrabold mb-3">
-            {content?.hero?.title_part1} <span className="text-yellow-500">{content?.hero?.title_part2}</span>
+          <h1 className="text-4xl md:text-5xl font-black mb-6 italic tracking-tight">
+            {t('about.leadership.title')}
           </h1>
-          <p className="text-sm md:text-base text-blue-200 max-w-4xl mx-auto">
-            {content?.hero?.description}
+          <p className="text-slate-400 max-w-2xl mx-auto text-lg md:text-xl font-light leading-relaxed">
+            {t('about.leadership.description')}
           </p>
         </div>
       </div>
 
-      <section className="py-8 bg-white">
-        <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-          {leaders.map((leader, index) => (
-            <Card key={index} className="hover:shadow-lg transition-all duration-300 transform hover:scale-105 overflow-hidden border border-gray-200 shadow-md">
-              <CardContent className="p-4">
-                <div className="relative h-48 md:h-56 bg-gray-50 mb-4">
-                  <Image
-                    src={leader.img || "/placeholder.svg"}
-                    alt={leader.name || "Leader"}
-                    fill
-                    className="object-cover"
-                  />
-                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-blue-900/90 to-transparent p-4">
-                    <h3 className="text-xl md:text-2xl font-bold text-white mb-1">{leader.name}</h3>
-                    <p className="text-base text-yellow-500 font-semibold">{leader.role}</p>
-                  </div>
+      {/* 리더십 프로필 리스트 */}
+      <section className="py-24">
+        <div className="container mx-auto px-4 max-w-6xl">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 lg:gap-16">
+            {leaders.map((leader) => (
+              <div 
+                key={leader.id} 
+                className="group flex flex-col items-center text-center"
+              >
+                {/* 사진/로고 영역 */}
+                <div className="relative w-48 h-48 md:w-56 md:h-56 mb-8 rounded-[60px] bg-white shadow-xl shadow-slate-200 overflow-hidden border-8 border-white transition-all duration-500 group-hover:scale-105">
+                  
+                  {leader.showImage ? (
+                    /* 사진 공개 대상 (사진 준비 전까지는 로고/텍스트 처리) */
+                    <div className="w-full h-full flex items-center justify-center bg-slate-50 text-slate-300 italic text-xs">
+                      {/* 사진을 받으면 아래 주석 해제 */}
+                      {/* <Image src={leader.image} alt={t(`about.leadership.${leader.key}.name`)} fill className="object-cover" /> */}
+                      Photo Coming Soon
+                    </div>
+                  ) : (
+                    /* 사진 비공개 대상: 교회 로고를 중앙에 예쁘게 배치 */
+                    <div className="w-full h-full p-8 flex items-center justify-center bg-gradient-to-br from-blue-50 to-white">
+                      <div className="relative w-full h-full opacity-40 group-hover:opacity-100 transition-opacity duration-500">
+                        <Image 
+                          src="/images/Bozhiymir_LOGO.png" 
+                          alt="Bozhiymir Church Logo"
+                          fill
+                          className="object-contain grayscale group-hover:grayscale-0 transition-all duration-500"
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <div className="space-y-1">
-                  <div className="flex items-center text-gray-700 text-sm">
-                    <Mail className="h-4 w-4 text-blue-700 mr-2" />
-                    <span>{content?.[leader.key]?.email}</span>
+
+                {/* 텍스트 영역 */}
+                <div className="space-y-4 px-4">
+                  <div>
+                    <span className="text-blue-600 font-black text-xs uppercase tracking-[0.2em] block mb-2">
+                      {t('about.leadership.' + leader.key + '.role')}
+                    </span>
+                    <h3 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
+                      {t('about.leadership.' + leader.key + '.name')}
+                    </h3>
                   </div>
-                  <div className="flex items-center text-gray-700 text-sm">
-                    <Phone className="h-4 w-4 text-blue-700 mr-2" />
-                    <span>{content?.[leader.key]?.phone}</span>
-                  </div>
+
+                  <div className="w-10 h-1 bg-yellow-400 mx-auto rounded-full" />
+
+                  <p className="text-slate-600 text-sm md:text-base leading-relaxed font-medium">
+                    {t('about.leadership.' + leader.key + '.bio')}
+                  </p>
                 </div>
-              </CardContent>
-            </Card>
-          ))}
+              </div>
+            ))}
+          </div>
         </div>
       </section>
     </div>
-  );
+  )
 }

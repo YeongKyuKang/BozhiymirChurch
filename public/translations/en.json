@@ -38,7 +38,7 @@
 
   "nav": {
     "about":"About",
-    "story":"Story",
+    "story":"Our Ministry Journey",
     "jesus":"Jesus",
     "beliefs":"Beliefs",
     "leadership":"Leadership",
@@ -98,6 +98,45 @@
     "belief": {
       "title": "The Apostles' Creed",
       "content": "I believe in God, the Father Almighty,\nCreator of heaven and earth.\n\nAnd in Jesus Christ, His only Son, our Lord;\nwho was conceived by the Holy Spirit,\nborn of the Virgin Mary,\nsufferred under Pontius Pilate,\nwas crucified, died, and was buried;\nHe descended to the dead;\non the third day He rose again;\nHe ascended into heaven,\nand is seated at the right hand of God the Father Almighty;\nfrom there He will come to judge the living and the dead.\n\nI believe in the Holy Spirit,\nthe holy universal Church,\nthe communion of saints,\nthe forgiveness of sins,\nthe resurrection of the body,\nand the life everlasting.\nAmen."
+    },
+    "story": {
+      "main": {
+        "title": "Our Ministry Journey",
+        "description": "Bozhiymir Church is dedicated to serving those in need, following the calling to be the hands and feet of Christ."
+      },
+      "timeline": {
+        "section_title": "Timeline of Service",
+        "item1_title": "17.07.2022",
+        "item1_description": "Church founded",
+        "item2_title": "June 2022 – Dec 2024",
+        "item2_description": "Ministry in refugee centers (Global Expo)",
+        "item3_title": "July 2022 – April 2024",
+        "item3_description": "Ministry to single mothers at the “Dom Matki” center",
+        "item4_title": "April 2023 – Aug 2025",
+        "item4_description": "Ministry to more than 100 Ukrainian orphaned children in the town of Ossa",
+        "item5_title": "Sept 2024 – Present",
+        "item5_description": "Ministry to more than 80 Ukrainian orphaned children in the city of Łódź"
+      }
+    },
+
+    "leadership": {
+      "title": "Church Leadership",
+      "description": "Guided by faith and dedicated to serving our community with love and grace.",
+      "leader1": {
+        "name": "Pastor Peter Choi",
+        "role": "Senior Pastor & Founder",
+        "bio": "Missionary of the “Onnuri” Church (“All nations”). Senior Pastor and Founder of the Church “Peace of God” in Warsaw since 2022."
+      },
+      "leader2": {
+        "name": "Pastor Vyacheslav Dolgikh",
+        "role": "Preacher",
+        "bio": "Dedicated preacher sharing the Word of God with our community."
+      },
+      "leader3": {
+        "name": "Diana Tartichnaya",
+        "role": "Church Administrator",
+        "bio": "Managing church operations and community coordination with excellence."
+      }
     }
   }
 }
