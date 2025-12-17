@@ -1,5 +1,4 @@
 // lib/supabase.ts
-import { createClient } from "@supabase/supabase-js"
 import { createBrowserClient } from "@supabase/ssr"
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -7,7 +6,17 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
 export const supabase = createBrowserClient(
   supabaseUrl,
-  supabaseAnonKey
+  supabaseAnonKey,
+  {
+    auth: {
+      // 1. 토큰 자동 갱신 활성화
+      autoRefreshToken: true,
+      // 2. 백그라운드 탭에서도 갱신 유지
+      detectSessionInUrl: true,
+      // 3. 세션 지속성 설정 (localStorage가 아닌 쿠키 사용 권장하지만 기본값 유지)
+      persistSession: true,
+    }
+  }
 )
 
 export type Database = {

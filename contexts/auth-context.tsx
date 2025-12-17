@@ -10,6 +10,7 @@ import {
 import { supabase } from '@/lib/supabase';
 import { AuthSession, User, Session } from '@supabase/supabase-js';
 import { Database } from '@/lib/supabase';
+import { useRouter } from 'next/navigation';
 
 type UserProfile = Database['public']['Tables']['users']['Row'];
 
@@ -47,104 +48,109 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<AuthSession | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  const router = useRouter();
 
+  // 1. 초기화 로직
   useEffect(() => {
     let mounted = true;
 
-    // 1. 초기 세션 가져오기 (타임아웃 적용으로 무한 대기 방지)
     const initializeAuth = async () => {
       try {
-        // 3초 안에 응답 없으면 강제 종료 (Next.js 15 호환성 이슈 방어)
-        const sessionPromise = supabase.auth.getSession();
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Session fetch timeout')), 3000)
-        );
+        // 현재 세션 가져오기
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
 
-        const result: any = await Promise.race([sessionPromise, timeoutPromise]);
-        const initialSession = result.data?.session;
-
-        if (mounted && initialSession) {
-          setSession(initialSession);
-          setUser(initialSession.user);
-          await fetchUserProfile(initialSession.user.id);
-        }
-      } catch (err: any) {
-        console.warn('⚠️ Session init warning:', err.message);
-      } finally {
         if (mounted) {
-          // 여기서 로딩을 꺼줌
-          setLoading(false);
+          if (currentSession) {
+            setSession(currentSession);
+            setUser(currentSession.user);
+            await fetchUserProfile(currentSession.user.id);
+          }
         }
+      } catch (err) {
+        console.error('Auth init error:', err);
+      } finally {
+        // ★ 핵심: 성공하든 실패하든 로딩은 무조건 끈다.
+        if (mounted) setLoading(false);
       }
     };
 
     initializeAuth();
 
-    // 2. 인증 상태 변경 감지 (이것만으로도 로딩 해제 가능하도록 수정)
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
+    // 2. 이벤트 리스너
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
       if (!mounted) return;
 
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
 
       if (currentSession?.user) {
-        // 로그인/세션복구/토큰갱신 시 프로필 로드
-        if (['SIGNED_IN', 'TOKEN_REFRESHED', 'INITIAL_SESSION'].includes(event)) {
+        if (['SIGNED_IN', 'TOKEN_REFRESHED', 'INITIAL_SESSION', 'USER_UPDATED'].includes(event)) {
           await fetchUserProfile(currentSession.user.id);
         }
       } else if (event === 'SIGNED_OUT') {
-        setUserProfile(null);
         setSession(null);
         setUser(null);
+        setUserProfile(null);
       }
-
-      // ★ 핵심 수정: 이벤트가 발생했다는 것은 초기화가 되었다는 뜻이므로 로딩 해제
+      
+      // ★ 이중 안전장치: 이벤트가 발생하면 로딩 종료
       setLoading(false);
     });
 
+    // ★ 3. 최후의 안전장치: 3초가 지나도 로딩 중이면 강제로 끈다.
+    // (네트워크가 꼬여서 아무 응답이 없을 때 무한 로딩 방지)
+    const safetyTimer = setTimeout(() => {
+      if (loading) {
+        console.warn('⚠️ Force stopping loading spinner');
+        setLoading(false);
+      }
+    }, 3000);
+
     return () => {
       mounted = false;
+      clearTimeout(safetyTimer);
       subscription.unsubscribe();
     };
   }, []);
 
   const fetchUserProfile = async (userId: string) => {
     try {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('users')
         .select('*')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
 
-      if (data) {
-        setUserProfile(data);
-      }
-    } catch (error: any) {
-      // 에러가 나도 로딩은 멈추지 않도록 로그만 출력
-      console.error('Error fetching user profile:', error);
+      if (data) setUserProfile(data);
+    } catch (error) {
+      console.error(error);
     }
   };
 
   const signIn = async (email: string, password: string) => {
     setLoading(true);
-    setError(null);
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) setLoading(false);
     return { error };
   };
 
   const signOut = async () => {
-    setLoading(true);
-    await supabase.auth.signOut();
-    setLoading(false);
+    // 로딩바 안 띄우고 즉시 탈출
+    try {
+      await supabase.auth.signOut();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setSession(null);
+      setUser(null);
+      setUserProfile(null);
+      setLoading(false); 
+      router.replace('/'); 
+      router.refresh();
+    }
   };
 
   const signUp = async (
@@ -154,28 +160,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     gender: 'male' | 'female'
   ) => {
     setLoading(true);
-    setError(null);
-
     try {
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          data: {
-            nickname,
-            gender,
-          },
+          data: { nickname, gender },
         },
       });
-
-      if (authError) throw authError;
-      return { data: authData, error: null };
+      if (error) throw error;
+      return { data, error: null };
     } catch (error: any) {
-      setError(error.message);
-      return {
-        data: { user: null, session: null },
-        error: error as Error,
-      };
+      return { data: { user: null, session: null }, error };
     } finally {
       setLoading(false);
     }
@@ -185,7 +181,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     updates: Partial<UserProfile>,
     profilePictureFile?: File
   ) => {
-    setError(null);
     if (!user) return { error: new Error('No user logged in') };
 
     try {
@@ -195,17 +190,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const fileExt = profilePictureFile.name.split('.').pop();
         const fileName = `${user.id}.${fileExt}`;
         const filePath = `${user.id}/${fileName}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from('profile-pictures')
-          .upload(filePath, profilePictureFile, { upsert: true });
-
+        const { error: uploadError } = await supabase.storage.from('profile-pictures').upload(filePath, profilePictureFile, { upsert: true });
         if (uploadError) throw uploadError;
-
-        const { data: urlData } = supabase.storage
-          .from('profile-pictures')
-          .getPublicUrl(filePath);
-
+        const { data: urlData } = supabase.storage.from('profile-pictures').getPublicUrl(filePath);
         profile_picture_url = urlData.publicUrl;
       }
 
@@ -214,22 +201,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       delete (finalUpdates as any).created_at;
       delete (finalUpdates as any).email;
 
-      const { data, error: updateError } = await supabase
-        .from('users')
-        .update(finalUpdates)
-        .eq('id', user.id)
-        .select()
-        .single();
-
-      if (updateError) throw updateError;
-
-      if (data) {
-        setUserProfile(data);
-      }
+      const { data, error } = await supabase.from('users').update(finalUpdates).eq('id', user.id).select().single();
+      if (error) throw error;
+      if (data) setUserProfile(data);
       return { error: null };
     } catch (error: any) {
-      console.error('Error updating profile:', error);
-      setError(error.message);
       return { error };
     }
   };

@@ -138,8 +138,8 @@
         "role": "Church Administrator",
         "bio": "Managing church operations and community coordination with excellence."
       }
-    },
-
+    }
+  },
     "register": {
       "title": "Join Our Community",
       "description": "Create your Bozhiymir Church account",
@@ -205,5 +205,4 @@
       "error_invalid_code": "Invalid or already used code.",
       "success_verify": "Church member verification successful!"
     }
-  }
 }
