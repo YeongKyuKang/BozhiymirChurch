@@ -2,7 +2,6 @@
   "name": "my-v0-project",
   "version": "0.1.0",
   "private": true,
-  "type": "module",
   "description": "",
   "homepage": "https://github.com/YeongKyuKang/BozhiymirChurch#readme",
   "bugs": {
@@ -14,6 +13,7 @@
   },
   "license": "ISC",
   "author": "",
+  "type": "module",
   "main": "index.js",
   "directories": {
     "lib": "lib"

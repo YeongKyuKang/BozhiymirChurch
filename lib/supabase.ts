@@ -3,13 +3,7 @@ import { createBrowserClient } from "@supabase/ssr"
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
-export const supabase = createBrowserClient(
-  supabaseUrl,
-  supabaseAnonKey,
-  // ★ 설정을 비워두면 @supabase/ssr이 알아서 가장 좋은 방법(쿠키)을 선택합니다.
-  // persistSession, autoRefreshToken 등의 옵션을 여기서 강제하지 마세요.
-  {}
-)
+export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey)
 
 export type Database = {
   public: {
@@ -47,14 +41,14 @@ export type Database = {
         Row: {
           id: string
           email: string
-          role: "admin" | "user" | "child" | "guest" 
+          role: "admin" | "user" | "child" | "guest"
           nickname: string | null
-          gender: "male" | "female"| null
+          gender: "male" | "female" | null
           profile_picture_url: string | null
           created_at: string
           updated_at: string
           can_comment: boolean
-          
+
           last_name_change: string | null
           last_pw_change: string | null
           last_pic_change: string | null
@@ -66,7 +60,7 @@ export type Database = {
           email: string
           role?: "admin" | "user" | "child" | "guest"
           nickname?: string | null
-          gender?: "male" | "female"| null
+          gender?: "male" | "female" | null
           profile_picture_url?: string | null
           created_at?: string
           updated_at?: string
@@ -140,14 +134,14 @@ export type Database = {
           updated_at?: string
         }
       }
-      contact_forms: { 
+      contact_forms: {
         Row: {
           id: string
           first_name: string
           last_name: string
           email: string
           phone: string | null
-          interests: string[] | Record<string, boolean> | null 
+          interests: string[] | Record<string, boolean> | null
           message: string | null
           is_read: boolean
           created_at: string
@@ -162,7 +156,7 @@ export type Database = {
           last_name: string
           email: string
           phone?: string | null
-          interests?: string[] | Record<string, boolean> | null 
+          interests?: string[] | Record<string, boolean> | null
           message?: string | null
           is_read?: boolean
           created_at?: string
@@ -177,7 +171,7 @@ export type Database = {
           last_name?: string
           email?: string
           phone?: string | null
-          interests?: string[] | Record<string, boolean> | null 
+          interests?: string[] | Record<string, boolean> | null
           message?: string | null
           is_read?: boolean
           created_at?: string
@@ -192,12 +186,12 @@ export type Database = {
           id: string
           title: string
           content: string
-          word_date: string 
+          word_date: string
           author_id: string
           author_nickname: string
           created_at: string
           updated_at: string
-          image_url: string | null 
+          image_url: string | null
         }
         Insert: {
           id?: string
@@ -377,116 +371,110 @@ export type Database = {
   }
   storage: {
     Buckets: {
-      'word-backgrounds': { 
+      "word-backgrounds": {
         Objects: {
           Row: {
-            bucket_id: string;
-            created_at: string;
-            id: string;
-            last_accessed_at: string;
-            name: string;
-            owner: string | null;
-            path_tokens: string[];
-            updated_at: string;
-          };
+            bucket_id: string
+            created_at: string
+            id: string
+            last_accessed_at: string
+            name: string
+            owner: string | null
+            path_tokens: string[]
+            updated_at: string
+          }
           Insert: {
-            bucket_id: string;
-            created_at?: string;
-            id?: string;
-            last_accessed_at?: string;
-            name: string;
-            owner?: string | null;
-            path_tokens?: string[];
-            updated_at?: string;
-          };
+            bucket_id: string
+            created_at?: string
+            id?: string
+            last_accessed_at?: string
+            name: string
+            owner?: string | null
+            path_tokens?: string[]
+            updated_at?: string
+          }
           Update: {
-            bucket_id?: string;
-            created_at?: string;
-            id?: string;
-            last_accessed_at?: string;
-            name?: string;
-            owner?: string | null;
-            path_tokens?: string[];
-            updated_at?: string;
-          };
-        };
-      };
-      'profile-pictures': {
+            bucket_id?: string
+            created_at?: string
+            id?: string
+            last_accessed_at?: string
+            name?: string
+            owner?: string | null
+            path_tokens?: string[]
+            updated_at?: string
+          }
+        }
+      }
+      "profile-pictures": {
         Objects: {
           Row: {
-            bucket_id: string;
-            created_at: string;
-            id: string;
-            last_accessed_at: string;
-            name: string;
-            owner: string | null;
-            path_tokens: string[];
-            updated_at: string;
-          };
+            bucket_id: string
+            created_at: string
+            id: string
+            last_accessed_at: string
+            name: string
+            owner: string | null
+            path_tokens: string[]
+            updated_at: string
+          }
           Insert: {
-            bucket_id: string;
-            created_at?: string;
-            id?: string;
-            last_accessed_at?: string;
-            name: string;
-            owner?: string | null;
-            path_tokens?: string[];
-            updated_at?: string;
-          };
+            bucket_id: string
+            created_at?: string
+            id?: string
+            last_accessed_at?: string
+            name: string
+            owner?: string | null
+            path_tokens?: string[]
+            updated_at?: string
+          }
           Update: {
-            bucket_id?: string;
-            created_at?: string;
-            id?: string;
-            last_accessed_at?: string;
-            name?: string;
-            owner?: string | null;
-            path_tokens?: string[];
-            updated_at?: string;
-          };
-        };
-      };
-      'event-banners': {
+            bucket_id?: string
+            created_at?: string
+            id?: string
+            last_accessed_at?: string
+            name?: string
+            owner?: string | null
+            path_tokens?: string[]
+            updated_at?: string
+          }
+        }
+      }
+      "event-banners": {
         Objects: {
           Row: {
-            bucket_id: string;
-            created_at: string;
-            id: string;
-            last_accessed_at: string;
-            name: string;
-            owner: string | null;
-            path_tokens: string[];
-            updated_at: string;
-          };
+            bucket_id: string
+            created_at: string
+            id: string
+            last_accessed_at: string
+            name: string
+            owner: string | null
+            path_tokens: string[]
+            updated_at: string
+          }
           Insert: {
-            bucket_id: string;
-            created_at?: string;
-            id?: string;
-            last_accessed_at?: string;
-            name: string;
-            owner?: string | null;
-            path_tokens?: string[];
-            updated_at?: string;
-          };
+            bucket_id: string
+            created_at?: string
+            id?: string
+            last_accessed_at?: string
+            name: string
+            owner?: string | null
+            path_tokens?: string[]
+            updated_at?: string
+          }
           Update: {
-            bucket_id?: string;
-            created_at?: string;
-            id?: string;
-            last_accessed_at?: string;
-            name?: string;
-            owner?: string | null;
-            path_tokens?: string[];
-            updated_at?: string;
-          };
-        };
-      };
-    };
-  };
+            bucket_id?: string
+            created_at?: string
+            id?: string
+            last_accessed_at?: string
+            name?: string
+            owner?: string | null
+            path_tokens?: string[]
+            updated_at?: string
+          }
+        }
+      }
+    }
+  }
 }
 
-export type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: Json | undefined }
-  | Json[]
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]

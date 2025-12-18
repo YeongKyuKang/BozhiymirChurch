@@ -11,6 +11,7 @@ const inter = Inter({ subsets: ['latin'] });
 export const metadata: Metadata = {
   title: 'Bozhiymir Church',
   description: 'Welcome to Bozhiymir Church',
+    generator: 'v0.app'
 };
 
 export default function RootLayout({
