@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Menu, X, ChevronDown, User, LogOut, Settings, Globe, LayoutDashboard } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
-import { usePathname, useRouter } from "next/navigation"
+import { usePathname } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
 import { useLanguage } from "@/contexts/language-context"
 import {
@@ -30,10 +30,9 @@ export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false)
   
   const pathname = usePathname()
-  const router = useRouter()
   
-  // userProfile도 가져와서 닉네임 표시에 사용
-  const { user, userProfile, userRole, signOut } = useAuth()
+  // ★ 수정됨: userProfile 제거, user 객체 하나만 사용
+  const { user, signOut } = useAuth()
   const { t, setLanguage, language } = useLanguage()
 
   useEffect(() => {
@@ -58,11 +57,12 @@ export default function Header() {
     { name: t('nav.prayer') || "PRAYER", href: "/prayer" },
   ]
 
-  // ★ 수정된 부분: 라우팅 이동 로직 삭제 ★
-  // auth-context에서 window.location.href로 이동시키므로 여기서는 호출만 합니다.
   const handleSignOut = async () => {
     await signOut()
   }
+
+  // user 객체에서 role 확인
+  const isAdmin = user?.role === 'admin';
 
   return (
     <TooltipProvider>
@@ -181,12 +181,13 @@ export default function Header() {
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" className="text-white bg-white/10 hover:bg-white/20 rounded-full px-4">
                         <User className="h-4 w-4 mr-2" />
-                        <span className="text-xs font-bold">{userProfile?.nickname || user.email?.split('@')[0]}</span>
+                        {/* ★ 수정됨: user.nickname 직접 사용 */}
+                        <span className="text-xs font-bold">{user.nickname || user.email?.split('@')[0]}</span>
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-56 bg-white rounded-xl shadow-2xl">
                       <DropdownMenuItem asChild><Link href="/profile"><Settings className="mr-2 h-4 w-4"/>Profile Settings</Link></DropdownMenuItem>
-                      {userRole === "admin" && (
+                      {isAdmin && (
                         <DropdownMenuItem asChild><Link href="/admin" className="text-blue-600 font-bold"><LayoutDashboard className="mr-2 h-4 w-4"/>Admin Panel</Link></DropdownMenuItem>
                       )}
                       <DropdownMenuSeparator />
@@ -255,10 +256,12 @@ export default function Header() {
                     <div className="bg-white/5 rounded-2xl p-4 flex items-center justify-between">
                       <div className="flex items-center">
                         <div className="h-10 w-10 bg-yellow-500 rounded-full flex items-center justify-center text-blue-900 font-bold mr-3">
-                          {userProfile?.nickname?.charAt(0) || "U"}
+                          {/* ★ 수정됨: user.nickname 직접 사용 */}
+                          {user.nickname?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase()}
                         </div>
                         <div>
-                          <p className="text-white font-bold">{userProfile?.nickname || "User"}</p>
+                          {/* ★ 수정됨: user.nickname 직접 사용 */}
+                          <p className="text-white font-bold">{user.nickname || user.email}</p>
                           <Link href="/profile" className="text-xs text-white/50 underline">Edit Profile</Link>
                         </div>
                       </div>

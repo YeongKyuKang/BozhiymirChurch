@@ -116,7 +116,7 @@ export default function RegisterPage() {
       return
     }
 
-    const { error: signUpError } = await signUp(email, password, nickname, gender)
+    const { error: signUpError } = await signUp(email, password, nickname, gender, profilePicture)
 
     if (signUpError) {
       setError(signUpError.message)
