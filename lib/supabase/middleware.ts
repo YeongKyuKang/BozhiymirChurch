@@ -1,43 +1,54 @@
-// lib/supabase/middleware.ts
-import { createServerClient } from '@supabase/ssr'
-import { NextResponse, type NextRequest } from 'next/server'
+import { createServerClient } from "@supabase/ssr";
+import { NextResponse, type NextRequest } from "next/server";
 
 export async function updateSession(request: NextRequest) {
-  // 1. 초기 응답 객체 생성
+  // [DEBUG] 미들웨어 시작 로그
+  console.log(`[Middleware] Processing request: ${request.nextUrl.pathname}`);
+  
   let supabaseResponse = NextResponse.next({
     request,
-  })
+  });
 
-  // 2. Supabase 클라이언트 생성
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
         getAll() {
-          return request.cookies.getAll()
+          return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
-          // ★★★ 핵심: 쿠키를 request와 response 양쪽에 모두 설정해야 함 ★★★
-          cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
+          // [DEBUG] 쿠키 설정 로그
+          console.log(`[Middleware] Setting cookies: ${cookiesToSet.map(c => c.name).join(', ')}`);
+          
+          cookiesToSet.forEach(({ name, value, options }) =>
+            request.cookies.set(name, value)
+          );
           
           supabaseResponse = NextResponse.next({
             request,
-          })
+          });
           
           cookiesToSet.forEach(({ name, value, options }) =>
             supabaseResponse.cookies.set(name, value, options)
-          )
+          );
         },
       },
     }
-  )
+  );
 
-  // 3. 토큰 갱신 (여기서 setAll이 호출되어 supabaseResponse에 새 쿠키가 심어짐)
+  // IMPORTANT: getUser를 호출하여 세션을 검증하고 쿠키를 갱신합니다.
   const {
     data: { user },
-  } = await supabase.auth.getUser()
+    error,
+  } = await supabase.auth.getUser();
 
-  // 4. ★★★ 중요: 반드시 쿠키가 갱신된 supabaseResponse를 반환해야 함 ★★★
-  return supabaseResponse
+  // [DEBUG] 유저 상태 로그
+  if (error) {
+    console.log(`[Middleware] getUser error or no session: ${error.message}`);
+  } else {
+    console.log(`[Middleware] User authenticated: ${user?.id}`);
+  }
+
+  return supabaseResponse;
 }
