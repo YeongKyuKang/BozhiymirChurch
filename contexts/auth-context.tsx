@@ -11,6 +11,7 @@ import { supabase } from '@/lib/supabase';
 import { AuthSession, User, Session } from '@supabase/supabase-js';
 import { Database } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
+import { signOutAction } from '@/app/actions/auth'; 
 
 type UserProfile = Database['public']['Tables']['users']['Row'];
 
@@ -50,106 +51,128 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   const router = useRouter();
 
-  // 1. 초기화 로직
+  // 프로필 가져오기 (에러가 나도 로딩은 멈추지 않도록 설계)
+  const fetchUserProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', userId)
+        .maybeSingle();
+
+      if (data) {
+        setUserProfile(data);
+      } else if (error) {
+        console.error('Error fetching profile:', error.message);
+      }
+    } catch (err) {
+      console.error('Unexpected error fetching profile:', err);
+    }
+  };
+
   useEffect(() => {
     let mounted = true;
 
+    // ★ 안전 장치: 3초 후 강제 로딩 해제 (무한 로딩 방지)
+    const safetyTimer = setTimeout(() => {
+      if (loading) {
+        console.warn('[AuthContext] Loading timed out (Safety Timer).');
+        setLoading(false);
+      }
+    }, 3000);
+
     const initializeAuth = async () => {
       try {
-        // 현재 세션 가져오기
+        console.log('[Auth] Initializing...');
+        
+        // ★ 핵심 수정: getUser 대신 getSession 사용 (속도 빠름, 로딩 지연 방지)
+        // 클라이언트 사이드에서는 getSession으로 충분합니다.
         const { data: { session: currentSession } } = await supabase.auth.getSession();
 
         if (mounted) {
           if (currentSession) {
+            console.log('[Auth] Session found:', currentSession.user.id);
             setSession(currentSession);
             setUser(currentSession.user);
+            
+            // 프로필 가져오기
             await fetchUserProfile(currentSession.user.id);
+          } else {
+            console.log('[Auth] No session found.');
+            setSession(null);
+            setUser(null);
+            setUserProfile(null);
           }
         }
       } catch (err) {
-        console.error('Auth init error:', err);
+        console.error('[Auth] Init Error:', err);
       } finally {
-        // ★ 핵심: 성공하든 실패하든 로딩은 무조건 끈다.
-        if (mounted) setLoading(false);
+        if (mounted) {
+          console.log('[Auth] Init finished.');
+          setLoading(false); 
+          clearTimeout(safetyTimer); // 정상 완료되면 타이머 해제
+        }
       }
     };
 
     initializeAuth();
 
-    // 2. 이벤트 리스너
+    // 상태 변경 감지
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
+      console.log(`[Auth] State Change: ${event}`);
       if (!mounted) return;
 
-      setSession(currentSession);
-      setUser(currentSession?.user ?? null);
-
       if (currentSession?.user) {
-        if (['SIGNED_IN', 'TOKEN_REFRESHED', 'INITIAL_SESSION', 'USER_UPDATED'].includes(event)) {
+        setSession(currentSession);
+        setUser(currentSession.user);
+        
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
           await fetchUserProfile(currentSession.user.id);
         }
       } else if (event === 'SIGNED_OUT') {
         setSession(null);
         setUser(null);
         setUserProfile(null);
+        router.refresh();
       }
       
-      // ★ 이중 안전장치: 이벤트가 발생하면 로딩 종료
       setLoading(false);
     });
-
-    // ★ 3. 최후의 안전장치: 3초가 지나도 로딩 중이면 강제로 끈다.
-    // (네트워크가 꼬여서 아무 응답이 없을 때 무한 로딩 방지)
-    const safetyTimer = setTimeout(() => {
-      if (loading) {
-        console.warn('⚠️ Force stopping loading spinner');
-        setLoading(false);
-      }
-    }, 3000);
 
     return () => {
       mounted = false;
       clearTimeout(safetyTimer);
       subscription.unsubscribe();
     };
-  }, []);
-
-  const fetchUserProfile = async (userId: string) => {
-    try {
-      const { data } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', userId)
-        .maybeSingle();
-
-      if (data) setUserProfile(data);
-    } catch (error) {
-      console.error(error);
-    }
-  };
+  }, [router]);
 
   const signIn = async (email: string, password: string) => {
     setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) setLoading(false);
+    if (error) {
+      setLoading(false);
+    } else {
+      router.refresh();
+    }
     return { error };
   };
 
   const signOut = async () => {
-    // 로딩바 안 띄우고 즉시 탈출
     try {
-      await supabase.auth.signOut();
-    } catch (e) {
-      console.error(e);
-    } finally {
+      setLoading(true);
+      // 클라이언트 상태 정리
       setSession(null);
       setUser(null);
       setUserProfile(null);
-      setLoading(false); 
-      router.replace('/'); 
-      router.refresh();
+      
+      // 서버 액션 호출 (쿠키 삭제 + 리다이렉트)
+      await signOutAction();
+    } catch (e) {
+      console.error(e);
+      setLoading(false);
     }
   };
 
@@ -192,8 +215,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const filePath = `${user.id}/${fileName}`;
         const { error: uploadError } = await supabase.storage.from('profile-pictures').upload(filePath, profilePictureFile, { upsert: true });
         if (uploadError) throw uploadError;
+        
         const { data: urlData } = supabase.storage.from('profile-pictures').getPublicUrl(filePath);
-        profile_picture_url = urlData.publicUrl;
+        profile_picture_url = `${urlData.publicUrl}?t=${new Date().getTime()}`;
       }
 
       const finalUpdates = { ...updates, profile_picture_url };
@@ -203,7 +227,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       const { data, error } = await supabase.from('users').update(finalUpdates).eq('id', user.id).select().single();
       if (error) throw error;
-      if (data) setUserProfile(data);
+      if (data) {
+        setUserProfile(data);
+        router.refresh(); 
+      }
       return { error: null };
     } catch (error: any) {
       return { error };

@@ -1,4 +1,3 @@
-// lib/supabase.ts
 import { createBrowserClient } from "@supabase/ssr"
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -7,16 +6,9 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 export const supabase = createBrowserClient(
   supabaseUrl,
   supabaseAnonKey,
-  {
-    auth: {
-      // 1. 토큰 자동 갱신 활성화
-      autoRefreshToken: true,
-      // 2. 백그라운드 탭에서도 갱신 유지
-      detectSessionInUrl: true,
-      // 3. 세션 지속성 설정 (localStorage가 아닌 쿠키 사용 권장하지만 기본값 유지)
-      persistSession: true,
-    }
-  }
+  // ★ 설정을 비워두면 @supabase/ssr이 알아서 가장 좋은 방법(쿠키)을 선택합니다.
+  // persistSession, autoRefreshToken 등의 옵션을 여기서 강제하지 마세요.
+  {}
 )
 
 export type Database = {
@@ -55,7 +47,7 @@ export type Database = {
         Row: {
           id: string
           email: string
-          role: "admin" | "user" | "child" | "guest" // 'guest' 추가
+          role: "admin" | "user" | "child" | "guest" 
           nickname: string | null
           gender: "male" | "female"| null
           profile_picture_url: string | null
@@ -63,7 +55,6 @@ export type Database = {
           updated_at: string
           can_comment: boolean
           
-          // ★ 추가된 컬럼들 (Row) ★
           last_name_change: string | null
           last_pw_change: string | null
           last_pic_change: string | null
@@ -81,7 +72,6 @@ export type Database = {
           updated_at?: string
           can_comment?: boolean
 
-          // ★ 추가된 컬럼들 (Insert) ★
           last_name_change?: string | null
           last_pw_change?: string | null
           last_pic_change?: string | null
@@ -99,7 +89,6 @@ export type Database = {
           updated_at?: string
           can_comment?: boolean
 
-          // ★ 추가된 컬럼들 (Update) ★
           last_name_change?: string | null
           last_pw_change?: string | null
           last_pic_change?: string | null
@@ -343,7 +332,6 @@ export type Database = {
           created_at?: string
         }
       }
-      // ★ registration_codes 테이블 추가 ★
       registration_codes: {
         Row: {
           id: string
