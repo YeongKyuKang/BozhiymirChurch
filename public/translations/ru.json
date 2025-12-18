@@ -202,5 +202,30 @@
       "alert_enter_code": "Пожалуйста, введите код верификации.",
       "error_invalid_code": "Неверный или уже использованный код.",
       "success_verify": "Верификация члена церкви прошла успешно!"
-    }
+    },
+    "thanks": {
+    "title": "ДОСКА БЛАГОДАРНОСТИ",
+    "description": "Пространство для обмена Божьей благодатью и свидетельствами. Пожалуйста, поделитесь своей историей.",
+    "filter_all": "Все категории",
+    "category_answered_prayer": "Ответ на молитву",
+    "category_personal_testimony": "Личное свидетельство",
+    "category_church_support": "Поддержка общины",
+    "category_blessing": "Благословение дня",
+    "placeholder_category": "Выберите категорию",
+    "btn_date": "Выберите дату",
+    "btn_write": "ПОДЕЛИТЬСЯ",
+    "modal_title": "Поделиться благодарностью",
+    "modal_description": "Поделитесь с общиной благодатью, которую дал вам Бог.",
+    "label_category": "Категория",
+    "label_title": "Заголовок",
+    "label_content": "Содержание",
+    "placeholder_title": "Введите заголовок вашего свидетельства",
+    "placeholder_content": "Подробно опишите полученную благодать",
+    "btn_submit": "ОПУБЛИКОВАТЬ",
+    "btn_load_more": "ЗАГРУЗИТЬ ЕЩЕ",
+    "cat_answered_prayer": "Ответ на молитву",
+    "cat_personal_testimony": "Личное свидетельство",
+    "cat_church_support": "Поддержка общины",
+    "cat_blessing": "Благословение дня"
+  }
 }

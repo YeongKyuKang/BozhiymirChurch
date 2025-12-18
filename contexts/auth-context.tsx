@@ -1,262 +1,171 @@
-'use client';
+"use client";
 
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  ReactNode,
-} from 'react';
-import { supabase } from '@/lib/supabase';
-import { AuthSession, User, Session } from '@supabase/supabase-js';
-import { Database } from '@/lib/supabase';
-import { useRouter } from 'next/navigation';
-import { signOutAction } from '@/app/actions/auth'; 
+import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { supabase } from "@/lib/supabase";
+import { User, Session } from "@supabase/supabase-js";
 
-type UserProfile = Database['public']['Tables']['users']['Row'];
-
-type SignUpResponseData =
-  | { user: User | null; session: Session | null }
-  | { user: null; session: null };
+interface UserProfile {
+  id: string;
+  email: string;
+  role: "admin" | "user" | "child";
+  nickname: string | null;
+  gender: "male" | "female" | null;
+  profile_picture_url: string | null;
+  created_at: string;
+  updated_at: string;
+  can_comment: boolean;
+}
 
 interface AuthContextType {
-  session: AuthSession | null;
   user: User | null;
+  session: Session | null;
   userProfile: UserProfile | null;
-  userRole: UserProfile['role'] | null | undefined;
+  userRole: "admin" | "user" | "child" | null;
   loading: boolean;
-  error: string | null;
-  signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
+  signIn: (email: string, password?: string) => Promise<{ data: any; error: any }>;
+  signInWithPassword: (email: string, password: string) => Promise<{ data: any; error: any }>;
+  signUp: (email: string, password: string, nickname: string, gender: string, code: string) => Promise<{ error: any | null }>;
   signOut: () => Promise<void>;
-  signUp: (
-    email: string,
-    password: string,
-    nickname: string,
-    gender: 'male' | 'female'
-  ) => Promise<{
-    data: SignUpResponseData;
-    error: Error | null;
-  }>;
-  updateUserProfile: (
-    updates: Partial<UserProfile>,
-    profilePictureFile?: File
-  ) => Promise<{ error: Error | null }>;
+  updateUserProfile: (profileData: Partial<UserProfile>) => Promise<{ data?: any; error: any | null }>;
+  updatePassword: (newPassword: string) => Promise<{ error: any | null }>;
+  verifyRegistrationCode: (code: string) => Promise<{ data?: any; error: any | null }>;
+  uploadProfilePicture: (file: File) => Promise<{ error: any; url?: string }>;
+  fetchUserProfile: (userId?: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [session, setSession] = useState<AuthSession | null>(null);
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [userRole, setUserRole] = useState<"admin" | "user" | "child" | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  const router = useRouter();
-
-  // 프로필 가져오기 (에러가 나도 로딩은 멈추지 않도록 설계)
-  const fetchUserProfile = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', userId)
-        .maybeSingle();
-
-      if (data) {
-        setUserProfile(data);
-      } else if (error) {
-        console.error('Error fetching profile:', error.message);
-      }
-    } catch (err) {
-      console.error('Unexpected error fetching profile:', err);
-    }
+  // 날짜 차이 계산 함수 (단위: 일)
+  const getDaysSince = (dateString: string | null) => {
+    if (!dateString) return 999; // 기록 없으면 통과
+    const lastDate = new Date(dateString);
+    const now = new Date();
+    const diff = now.getTime() - lastDate.getTime();
+    return diff / (1000 * 60 * 60 * 24);
   };
 
+  const fetchUserProfile = useCallback(async (userId?: string) => {
+    const idToFetch = userId || user?.id;
+    if (!idToFetch) return;
+    try {
+      const { data, error } = await supabase.from("users").select("*").eq("id", idToFetch).single();
+      if (data) {
+        setUserProfile(data as UserProfile);
+        setUserRole(data.role);
+      }
+    } catch (error) { console.error(error); }
+  }, [user?.id]);
+
   useEffect(() => {
-    let mounted = true;
-
-    // ★ 안전 장치: 3초 후 강제 로딩 해제 (무한 로딩 방지)
-    const safetyTimer = setTimeout(() => {
-      if (loading) {
-        console.warn('[AuthContext] Loading timed out (Safety Timer).');
-        setLoading(false);
-      }
-    }, 3000);
-
     const initializeAuth = async () => {
-      try {
-        console.log('[Auth] Initializing...');
-        
-        // ★ 핵심 수정: getUser 대신 getSession 사용 (속도 빠름, 로딩 지연 방지)
-        // 클라이언트 사이드에서는 getSession으로 충분합니다.
-        const { data: { session: currentSession } } = await supabase.auth.getSession();
-
-        if (mounted) {
-          if (currentSession) {
-            console.log('[Auth] Session found:', currentSession.user.id);
-            setSession(currentSession);
-            setUser(currentSession.user);
-            
-            // 프로필 가져오기
-            await fetchUserProfile(currentSession.user.id);
-          } else {
-            console.log('[Auth] No session found.');
-            setSession(null);
-            setUser(null);
-            setUserProfile(null);
-          }
-        }
-      } catch (err) {
-        console.error('[Auth] Init Error:', err);
-      } finally {
-        if (mounted) {
-          console.log('[Auth] Init finished.');
-          setLoading(false); 
-          clearTimeout(safetyTimer); // 정상 완료되면 타이머 해제
-        }
+      const { data: { session: initialSession } } = await supabase.auth.getSession();
+      if (initialSession) {
+        setSession(initialSession);
+        setUser(initialSession.user);
+        await fetchUserProfile(initialSession.user.id);
       }
-    };
-
-    initializeAuth();
-
-    // 상태 변경 감지
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
-      console.log(`[Auth] State Change: ${event}`);
-      if (!mounted) return;
-
-      if (currentSession?.user) {
+      setLoading(false);
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
         setSession(currentSession);
-        setUser(currentSession.user);
-        
-        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
-          await fetchUserProfile(currentSession.user.id);
-        }
-      } else if (event === 'SIGNED_OUT') {
-        setSession(null);
-        setUser(null);
-        setUserProfile(null);
-        router.refresh();
-      }
-      
-      setLoading(false);
-    });
-
-    return () => {
-      mounted = false;
-      clearTimeout(safetyTimer);
-      subscription.unsubscribe();
+        setUser(currentSession?.user ?? null);
+        if (currentSession?.user) await fetchUserProfile(currentSession.user.id);
+        else { setUserProfile(null); setUserRole(null); }
+        setLoading(false);
+      });
+      return () => subscription.unsubscribe();
     };
-  }, [router]);
+    initializeAuth();
+  }, [fetchUserProfile]);
 
-  const signIn = async (email: string, password: string) => {
-    setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) {
-      setLoading(false);
-    } else {
-      router.refresh();
+  const signInWithPassword = async (email: string, password: string) => {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    return { data, error };
+  };
+
+  const signIn = async (email: string, password?: string) => {
+    if (password) return await signInWithPassword(email, password);
+    const { data, error } = await supabase.auth.signInWithOtp({ email });
+    return { data, error };
+  };
+
+  const signUp = async (email: string, password: string, nickname: string, gender: string, code: string) => {
+    const { data: codeData, error: codeError } = await supabase.from('registration_codes').select('*').eq('code', code).eq('is_used', false).single();
+    if (codeError || !codeData) return { error: { message: '유효하지 않은 코드입니다.' } };
+    const { data, error } = await supabase.auth.signUp({ email, password });
+    if (error) return { error };
+    if (data.user) {
+      await supabase.from("users").update({ nickname, gender, role: codeData.role, can_comment: codeData.role === 'admin' }).eq("id", data.user.id);
+      await supabase.from('registration_codes').update({ is_used: true, used_by_user_id: data.user.id, used_at: new Date().toISOString() }).eq('code', code);
+    }
+    return { error: null };
+  };
+
+  const updateUserProfile = async (profileData: Partial<UserProfile>) => {
+    if (!user || !userProfile) return { error: new Error("로그인이 필요합니다.") };
+    
+    // 한 달(30일) 제한 로직
+    if (getDaysSince(userProfile.updated_at) < 30) {
+      return { error: { message: `프로필 정보는 한 달에 한 번만 변경 가능합니다. (남은 일수: ${Math.ceil(30 - getDaysSince(userProfile.updated_at))}일)` } };
+    }
+
+    const { data, error } = await supabase.from("users").update({ ...profileData, updated_at: new Date().toISOString() }).eq("id", user.id);
+    if (!error) await fetchUserProfile(user.id);
+    return { data, error };
+  };
+
+  const updatePassword = async (newPassword: string) => {
+    if (!user || !userProfile) return { error: new Error("로그인이 필요합니다.") };
+    
+    // 비밀번호 역시 한 달 제한
+    if (getDaysSince(userProfile.updated_at) < 30) {
+      return { error: { message: "비밀번호는 한 달에 한 번만 변경 가능합니다." } };
+    }
+
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (!error) {
+      await supabase.from("users").update({ updated_at: new Date().toISOString() }).eq("id", user.id);
+      await fetchUserProfile(user.id);
     }
     return { error };
   };
 
-  const signOut = async () => {
-    try {
-      setLoading(true);
-      // 클라이언트 상태 정리
-      setSession(null);
-      setUser(null);
-      setUserProfile(null);
-      
-      // 서버 액션 호출 (쿠키 삭제 + 리다이렉트)
-      await signOutAction();
-    } catch (e) {
-      console.error(e);
-      setLoading(false);
+  const verifyRegistrationCode = async (code: string) => {
+    const { data, error } = await supabase.from('registration_codes').select('*').eq('code', code).eq('is_used', false).single();
+    if (error || !data) return { error: { message: "유효하지 않거나 이미 사용된 코드입니다." } };
+    
+    // 코드 검증 성공 시 역할 업데이트
+    const { error: upError } = await supabase.from("users").update({ role: data.role }).eq("id", user?.id);
+    if (!upError) {
+      await supabase.from('registration_codes').update({ is_used: true, used_by_user_id: user?.id, used_at: new Date().toISOString() }).eq('code', code);
+      await fetchUserProfile(user?.id);
     }
+    return { data, error: upError };
   };
 
-  const signUp = async (
-    email: string,
-    password: string,
-    nickname: string,
-    gender: 'male' | 'female'
-  ) => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: { nickname, gender },
-        },
-      });
-      if (error) throw error;
-      return { data, error: null };
-    } catch (error: any) {
-      return { data: { user: null, session: null }, error };
-    } finally {
-      setLoading(false);
-    }
+  const uploadProfilePicture = async (file: File) => {
+    if (!user) return { error: new Error("로그인이 필요합니다.") };
+    const filePath = `${user.id}/${Math.random()}.${file.name.split(".").pop()}`;
+    const { error: upError } = await supabase.storage.from("profile-pictures").upload(filePath, file);
+    if (upError) return { error: upError };
+    const { data } = supabase.storage.from("profile-pictures").getPublicUrl(filePath);
+    return await updateUserProfile({ profile_picture_url: data.publicUrl });
   };
 
-  const updateUserProfile = async (
-    updates: Partial<UserProfile>,
-    profilePictureFile?: File
-  ) => {
-    if (!user) return { error: new Error('No user logged in') };
+  const signOut = async () => { await supabase.auth.signOut(); setUser(null); setUserProfile(null); };
 
-    try {
-      let profile_picture_url = updates.profile_picture_url;
-
-      if (profilePictureFile) {
-        const fileExt = profilePictureFile.name.split('.').pop();
-        const fileName = `${user.id}.${fileExt}`;
-        const filePath = `${user.id}/${fileName}`;
-        const { error: uploadError } = await supabase.storage.from('profile-pictures').upload(filePath, profilePictureFile, { upsert: true });
-        if (uploadError) throw uploadError;
-        
-        const { data: urlData } = supabase.storage.from('profile-pictures').getPublicUrl(filePath);
-        profile_picture_url = `${urlData.publicUrl}?t=${new Date().getTime()}`;
-      }
-
-      const finalUpdates = { ...updates, profile_picture_url };
-      delete (finalUpdates as any).id;
-      delete (finalUpdates as any).created_at;
-      delete (finalUpdates as any).email;
-
-      const { data, error } = await supabase.from('users').update(finalUpdates).eq('id', user.id).select().single();
-      if (error) throw error;
-      if (data) {
-        setUserProfile(data);
-        router.refresh(); 
-      }
-      return { error: null };
-    } catch (error: any) {
-      return { error };
-    }
-  };
-
-  const value: AuthContextType = {
-    session,
-    user,
-    userProfile,
-    userRole: userProfile?.role,
-    loading,
-    error,
-    signIn,
-    signOut,
-    signUp,
-    updateUserProfile,
-  };
-
+  const value = { user, session, userProfile, userRole, loading, signIn, signInWithPassword, signUp, signOut, updateUserProfile, updatePassword, verifyRegistrationCode, uploadProfilePicture, fetchUserProfile };
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
+  if (context === undefined) throw new Error("useAuth must be used within AuthProvider");
   return context;
 };

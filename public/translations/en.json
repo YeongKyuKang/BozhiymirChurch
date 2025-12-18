@@ -204,5 +204,30 @@
       "alert_enter_code": "Please enter the verification code.",
       "error_invalid_code": "Invalid or already used code.",
       "success_verify": "Church member verification successful!"
-    }
+    },
+    "thanks": {
+    "title": "GRATITUDE BOARD",
+    "description": "A space to share the grace and testimonies received from God. Please share your story.",
+    "filter_all": "All Categories",
+    "category_answered_prayer": "Answered Prayer",
+    "category_personal_testimony": "Personal Testimony",
+    "category_church_support": "Church Support",
+    "category_blessing": "Daily Blessing",
+    "placeholder_category": "Select Category",
+    "btn_date": "Select Date",
+    "btn_write": "SHARE TESTIMONY",
+    "modal_title": "Share Gratitude",
+    "modal_description": "Share the grace God has given you with the community.",
+    "label_category": "Category",
+    "label_title": "Title",
+    "label_content": "Content",
+    "placeholder_title": "Enter a title for your testimony",
+    "placeholder_content": "Describe the grace you received in detail",
+    "btn_submit": "POST NOW",
+    "btn_load_more": "LOAD MORE TESTIMONIES",
+    "cat_answered_prayer": "Answered Prayer",
+    "cat_personal_testimony": "Personal Testimony",
+    "cat_church_support": "Church Support",
+    "cat_blessing": "Daily Blessing"
+  }
 }

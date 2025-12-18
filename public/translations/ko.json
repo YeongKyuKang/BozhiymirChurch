@@ -202,5 +202,31 @@
       "alert_enter_code": "인증 코드를 입력해주세요.",
       "error_invalid_code": "유효하지 않거나 이미 사용된 코드입니다.",
       "success_verify": "교인 인증이 완료되었습니다!"
-    }
+    },
+
+  "thanks": {
+    "title": "감사 게시판",
+    "description": "하나님께 받은 은혜와 간증을 나누는 공간입니다.",
+    "filter_all": "모든 게시물",
+    "category_answered_prayer": "응답받은 기도",
+    "category_personal_testimony": "개인 간증",
+    "category_church_support": "공동체 지원",
+    "category_blessing": "일상의 축복",
+    "placeholder_category": "카테고리 선택",
+    "btn_date": "날짜 선택",
+    "btn_write": "간증 나누기",
+    "modal_title": "감사 나눔",
+    "modal_description": "하나님께서 주신 은혜를 공동체와 나누어 보세요.",
+    "label_category": "카테고리",
+    "label_title": "제목",
+    "label_content": "내용",
+    "placeholder_title": "제목을 입력하세요",
+    "placeholder_content": "받은 은혜를 설명해주세요",
+    "btn_submit": "지금 게시하기",
+    "btn_load_more": "더 많은 간증 보기",
+    "cat_answered_prayer": "응답받은 기도",
+    "cat_personal_testimony": "개인 간증",
+    "cat_church_support": "공동체 지원",
+    "cat_blessing": "일상의 축복"
+  }
 }
