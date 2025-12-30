@@ -1,48 +1,48 @@
-import { supabase } from "@/lib/supabase";
-import WordPageClient from "@/components/word-page-client";
+import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import WordPageClient from "@/components/word-page-client";
 
-// 1시간마다 페이지 재생성 (캐싱)
-export const revalidate = 3600;
+export const dynamic = "force-dynamic";
 
-async function getInitialData() {
-  // 1. 페이지 공통 콘텐츠 가져오기
-  const { data: contentData } = await supabase
-    .from("content")
-    .select("*")
-    .eq("page", "word");
+export default async function WordPage() {
+  const cookieStore = await cookies();
 
-  const initialContent = contentData?.reduce((acc: any, item) => {
-    if (!acc[item.section]) acc[item.section] = {};
-    acc[item.section][item.key] = item.value;
-    return acc;
-  }, {}) || {};
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            );
+          } catch {
+            // 서버 컴포넌트에서 쿠키 설정 에러 무시
+          }
+        },
+      },
+    }
+  );
 
-  // 2. 말씀 포스트 가져오기 (초기 데이터)
-  const { data: initialWordPosts } = await supabase
+  // 1. 말씀 포스트 데이터 가져오기
+  const { data: wordPosts, error } = await supabase
     .from("word_posts")
-    .select(`
-      *,
-      likes:word_reactions(user_id)
-    `)
-    .eq("word_reactions.reaction_type", "like")
+    .select("*")
     .order("word_date", { ascending: false });
 
-  return { initialContent, initialWordPosts: initialWordPosts || [] };
-}
-
-export default async function WordPage({
-  searchParams,
-}: {
-  searchParams?: Record<string, string | string[]>;
-}) {
-  // 서버에서 데이터 직접 페칭
-  const { initialContent, initialWordPosts } = await getInitialData();
+  if (error) {
+    console.error("Error fetching word posts:", error);
+  }
 
   return (
-    <WordPageClient 
-      initialContent={initialContent} 
-      initialWordPosts={initialWordPosts} 
-    />
+    <>
+      <WordPageClient 
+        initialPosts={wordPosts || []} 
+      />
+    </>
   );
 }
