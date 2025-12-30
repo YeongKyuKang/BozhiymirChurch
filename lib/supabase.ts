@@ -8,6 +8,35 @@ export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey)
 export type Database = {
   public: {
     Tables: {
+      // ▼▼▼ [새로 추가된 부분] admin_settings 테이블 정의 ▼▼▼
+      admin_settings: {
+        Row: {
+          id: number
+          delete_password_hash: string | null
+          password_set_date: string | null
+          password_history_hashes: string[] | null // 배열 타입 주의
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          delete_password_hash?: string | null
+          password_set_date?: string | null
+          password_history_hashes?: string[] | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          delete_password_hash?: string | null
+          password_set_date?: string | null
+          password_history_hashes?: string[] | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      // ▲▲▲ [추가 완료] ▲▲▲
+
       content: {
         Row: {
           id: string
