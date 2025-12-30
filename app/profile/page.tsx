@@ -4,6 +4,7 @@ import type React from "react"
 
 import { useState, useEffect, useRef } from "react"
 import { useAuth } from "@/contexts/auth-context"
+import { useLanguage } from "@/contexts/language-context" // [추가] 언어 컨텍스트
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -28,6 +29,7 @@ import { updatePasswordAction, registerCodeAction } from "@/app/actions/auth"
 
 export default function ProfilePage() {
   const { user, updateProfile, updateProfilePicture } = useAuth()
+  const { t } = useLanguage() // [추가] t 함수 사용
   const { toast } = useToast()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -69,7 +71,11 @@ export default function ProfilePage() {
     if (!file) return
 
     if (!file.type.startsWith("image/")) {
-      toast({ title: "Invalid file", description: "Please select an image file.", variant: "destructive" })
+      toast({ 
+        title: t('register.error_invalid_image') || "Invalid file", 
+        description: t('register.error_invalid_image') || "Please select an image file.", 
+        variant: "destructive" 
+      })
       return
     }
 
@@ -82,10 +88,17 @@ export default function ProfilePage() {
       const { error } = await updateProfilePicture(compressedFile)
 
       if (error) throw error
-      toast({ title: "Success", description: "Profile picture updated." })
+      toast({ 
+        title: t('profile.alert.success_update') || "Success", 
+        description: "Profile picture updated." 
+      })
     } catch (error: any) {
       console.error(error)
-      toast({ title: "Error", description: error.message || "Failed to update picture.", variant: "destructive" })
+      toast({ 
+        title: t('common.error') || "Error", 
+        description: error.message || "Failed to update picture.", 
+        variant: "destructive" 
+      })
     } finally {
       setIsCompressing(false)
       setIsLoading(false)
@@ -105,10 +118,17 @@ export default function ProfilePage() {
 
       if (error) throw error
 
-      toast({ title: "Success", description: "Nickname updated successfully." })
+      toast({ 
+        title: t('profile.alert.success_update') || "Success", 
+        description: "Nickname updated successfully." 
+      })
       setIsEditingNickname(false)
     } catch (error: any) {
-      toast({ title: "Error", description: error.message || "Failed to update profile.", variant: "destructive" })
+      toast({ 
+        title: t('common.error') || "Error", 
+        description: error.message || "Failed to update profile.", 
+        variant: "destructive" 
+      })
     } finally {
       setIsLoading(false)
       setIsConfirmNicknameOpen(false)
@@ -120,17 +140,25 @@ export default function ProfilePage() {
     const passwordRegex = /^(?=.*[!@#$%^&*(),.?":{}|<>]).{8,}$/
 
     if (!newPassword || !confirmPassword) {
-      toast({ title: "Error", description: "Please fill in all fields.", variant: "destructive" })
+      toast({ 
+        title: t('common.error') || "Error", 
+        description: "Please fill in all fields.", 
+        variant: "destructive" 
+      })
       return
     }
     if (newPassword !== confirmPassword) {
-      toast({ title: "Error", description: "Passwords do not match.", variant: "destructive" })
+      toast({ 
+        title: t('common.error') || "Error", 
+        description: t('register.error_password_match') || "Passwords do not match.", 
+        variant: "destructive" 
+      })
       return
     }
     if (!passwordRegex.test(newPassword)) {
       toast({
         title: "Weak Password",
-        description: "Min. 8 chars with at least 1 special character.",
+        description: t('register.error_password_length') || "Min. 8 chars with at least 1 special character.",
         variant: "destructive",
       })
       return
@@ -151,15 +179,16 @@ export default function ProfilePage() {
 
         let errorMessage = result.error
 
-        if (errorMessage.includes("New password should be different")) {
-          errorMessage = "새 비밀번호는 현재 비밀번호와 달라야 합니다."
-        } else if (errorMessage.includes("Password should be at least")) {
-          errorMessage = "비밀번호는 최소 8자 이상이어야 합니다."
+        // 서버 에러 메시지를 클라이언트 다국어로 변환 시도
+        if (errorMessage.includes("different")) {
+             errorMessage = t('profile.error_password_different') || "New password should be different.";
+        } else if (errorMessage.includes("least")) {
+             errorMessage = t('register.error_password_length') || "Password too short.";
         }
 
         console.log("[v0] Password update failed:", errorMessage)
         toast({
-          title: "Error",
+          title: t('common.error') || "Error",
           description: errorMessage,
           variant: "destructive",
         })
@@ -169,8 +198,8 @@ export default function ProfilePage() {
       console.log("[v0] Password update completed successfully")
 
       toast({
-        title: "Success",
-        description: "비밀번호가 성공적으로 변경되었습니다.",
+        title: t('profile.alert.success_update') || "Success",
+        description: "Password updated successfully.",
       })
 
       setNewPassword("")
@@ -179,7 +208,7 @@ export default function ProfilePage() {
     } catch (error: any) {
       console.error("[v0] Unexpected error in password update:", error)
       toast({
-        title: "Error",
+        title: t('common.error') || "Error",
         description: error.message || "Failed to update password.",
         variant: "destructive",
       })
@@ -193,8 +222,8 @@ export default function ProfilePage() {
   const handleRegisterCode = async () => {
     if (!regCode.trim()) {
       toast({
-        title: "Error",
-        description: "코드를 입력해주세요.",
+        title: t('common.error') || "Error",
+        description: t('profile.alert_enter_code') || "Please enter the code.",
         variant: "destructive",
       })
       return
@@ -202,8 +231,8 @@ export default function ProfilePage() {
 
     if (!user?.id) {
       toast({
-        title: "Error",
-        description: "로그인이 필요합니다.",
+        title: t('common.error') || "Error",
+        description: t('common.login_required') || "Login required.",
         variant: "destructive",
       })
       return
@@ -220,14 +249,14 @@ export default function ProfilePage() {
         console.log("[v0] Code registration error:", result.error)
         toast({
           title: "Failed",
-          description: result.error,
+          description: t('profile.error_invalid_code') || result.error,
           variant: "destructive",
         })
       } else {
         console.log("[v0] Code registered successfully")
         toast({
           title: "Welcome!",
-          description: "회원 등급이 업그레이드되었습니다.",
+          description: t('profile.success_verify') || "Upgrade successful.",
         })
         setRegCode("")
         // Refresh the page to update user role
@@ -236,7 +265,7 @@ export default function ProfilePage() {
     } catch (error: any) {
       console.error("[v0] Unexpected error during code registration:", error)
       toast({
-        title: "Error",
+        title: t('common.error') || "Error",
         description: error.message || "Unexpected error occurred.",
         variant: "destructive",
       })
@@ -282,7 +311,7 @@ export default function ProfilePage() {
           </div>
 
           <h1 className="text-3xl md:text-4xl font-black italic tracking-tight mb-2">
-            {user.nickname || "My Profile"}
+            {user.nickname || t('profile.default_nickname') || "My Profile"}
           </h1>
           <div className="flex justify-center items-center gap-2">
             <Badge variant="secondary" className="bg-yellow-400 text-blue-900 hover:bg-yellow-500 font-bold px-3 py-1">
@@ -302,21 +331,22 @@ export default function ProfilePage() {
                 <User size={24} />
               </div>
               <div>
-                <CardTitle className="text-xl font-bold text-slate-900">Basic Information</CardTitle>
-                <CardDescription>Manage your display name and security details.</CardDescription>
+                {/* [수정] 다국어 적용 */}
+                <CardTitle className="text-xl font-bold text-slate-900">{t('profile.settings_title') || "Basic Information"}</CardTitle>
+                <CardDescription>{t('profile.settings_desc') || "Manage your display name and security details."}</CardDescription>
               </div>
             </div>
           </CardHeader>
           <CardContent className="px-8 pb-8 space-y-8">
             {/* Nickname Section */}
             <div className="space-y-2">
-              <Label className="font-bold text-slate-700">Nickname</Label>
+              <Label className="font-bold text-slate-700">{t('register.label_nickname') || "Nickname"}</Label>
               <div className="flex gap-3">
                 <Input
                   value={nickname}
                   onChange={(e) => setNickname(e.target.value)}
                   disabled={!isEditingNickname || isLoading}
-                  placeholder="Enter nickname"
+                  placeholder={t('register.placeholder_nickname') || "Enter nickname"}
                   className={`h-12 rounded-xl border-slate-200 focus:bg-white transition-all ${isEditingNickname ? "bg-white border-blue-400 ring-2 ring-blue-100" : "bg-slate-50"}`}
                 />
 
@@ -326,7 +356,7 @@ export default function ProfilePage() {
                     disabled={!canEditNickname}
                     className="h-12 w-24 rounded-xl bg-slate-900 hover:bg-slate-800 font-bold shadow-md shrink-0"
                   >
-                    <Edit2 className="h-4 w-4 mr-1" /> 변경
+                    <Edit2 className="h-4 w-4 mr-1" /> {t('common.edit') || "Edit"}
                   </Button>
                 ) : (
                   <div className="flex gap-2 shrink-0">
@@ -340,7 +370,7 @@ export default function ProfilePage() {
                       ) : (
                         <Save className="h-4 w-4 mr-1" />
                       )}
-                      저장
+                      {t('common.save') || "Save"}
                     </Button>
                     <Button
                       onClick={() => {
@@ -360,9 +390,10 @@ export default function ProfilePage() {
                 <div className="flex items-center gap-2 mt-2 text-xs font-medium text-amber-600 bg-amber-50 p-3 rounded-lg border border-amber-100">
                   <AlertCircle className="h-4 w-4" />
                   <span>
-                    닉네임은 30일에 한 번만 변경할 수 있습니다.
+                    {/* [수정] 30일 제한 메시지 다국어 처리 필요 (일단 기본 텍스트 유지하되 포맷팅만) */}
+                    {t('profile.limit_30days_nickname') || "You can change your nickname once every 30 days."}
                     <br />
-                    <strong>{format(nextAvailableNickDate, "yyyy년 MM월 dd일")}</strong> 이후 변경 가능합니다.
+                    <strong>{format(nextAvailableNickDate, "yyyy-MM-dd")}</strong> {t('profile.limit_available_after') || "available after."}
                   </span>
                 </div>
               )}
@@ -370,20 +401,20 @@ export default function ProfilePage() {
 
             {/* Gender Section */}
             <div className="space-y-2">
-              <Label className="font-bold text-slate-700">Gender</Label>
+              <Label className="font-bold text-slate-700">{t('register.label_gender') || "Gender"}</Label>
               <Input
-                value={user.gender ? (user.gender === "male" ? "Male" : "Female") : "Not Set"}
+                value={user.gender ? (user.gender === "male" ? t('register.gender_male') || "Male" : t('register.gender_female') || "Female") : "Not Set"}
                 disabled
                 className="h-12 rounded-xl border-slate-200 bg-slate-100 text-slate-500 font-medium cursor-not-allowed"
               />
-              <p className="text-xs text-slate-400 pl-1">* 성별은 가입 후 변경할 수 없습니다.</p>
+              <p className="text-xs text-slate-400 pl-1">*{t('profile.gender_locked') || "Gender cannot be changed."}</p>
             </div>
 
             <div className="h-px bg-slate-100 my-6" />
 
             {/* Password Section */}
             <div className="space-y-2">
-              <Label className="font-bold text-slate-700">Password</Label>
+              <Label className="font-bold text-slate-700">{t('register.label_password') || "Password"}</Label>
 
               {!isEditingPassword ? (
                 <div className="flex gap-3">
@@ -397,29 +428,29 @@ export default function ProfilePage() {
                     disabled={!canEditPassword}
                     className="h-12 w-24 rounded-xl bg-slate-900 hover:bg-slate-800 font-bold shadow-md shrink-0"
                   >
-                    <Edit2 className="h-4 w-4 mr-1" /> 변경
+                    <Edit2 className="h-4 w-4 mr-1" /> {t('common.edit') || "Edit"}
                   </Button>
                 </div>
               ) : (
                 <div className="p-6 bg-slate-50 rounded-2xl border border-slate-200 space-y-4 animate-in slide-in-from-top-2 duration-200">
                   <div className="space-y-2">
-                    <Label className="text-sm font-semibold text-slate-600">New Password</Label>
+                    <Label className="text-sm font-semibold text-slate-600">{t('profile.new_password') || "New Password"}</Label>
                     <Input
                       type="password"
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
-                      placeholder="Min. 8 chars"
+                      placeholder={t('register.placeholder_password') || "Min. 8 chars"}
                       disabled={isLoading}
                       className="h-11 rounded-xl bg-white border-slate-200 focus:ring-blue-500"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-sm font-semibold text-slate-600">Confirm Password</Label>
+                    <Label className="text-sm font-semibold text-slate-600">{t('register.label_confirm_password') || "Confirm Password"}</Label>
                     <Input
                       type="password"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      placeholder="Confirm new password"
+                      placeholder={t('register.placeholder_confirm_password') || "Confirm new password"}
                       disabled={isLoading}
                       className="h-11 rounded-xl bg-white border-slate-200 focus:ring-blue-500"
                     />
@@ -435,7 +466,7 @@ export default function ProfilePage() {
                       disabled={isLoading}
                       className="h-10 px-4 rounded-xl border-slate-200 hover:bg-white text-slate-600"
                     >
-                      취소
+                      {t('common.cancel') || "Cancel"}
                     </Button>
                     <Button
                       onClick={handlePasswordSubmit}
@@ -447,7 +478,7 @@ export default function ProfilePage() {
                       ) : (
                         <Save className="h-4 w-4 mr-2" />
                       )}
-                      저장
+                      {t('common.save') || "Save"}
                     </Button>
                   </div>
                 </div>
@@ -457,9 +488,9 @@ export default function ProfilePage() {
                 <div className="flex items-center gap-2 mt-2 text-xs font-medium text-amber-600 bg-amber-50 p-3 rounded-lg border border-amber-100">
                   <AlertCircle className="h-4 w-4" />
                   <span>
-                    비밀번호는 30일에 한 번만 변경할 수 있습니다.
+                    {t('profile.limit_30days_password') || "Password can be changed once every 30 days."}
                     <br />
-                    <strong>{format(nextAvailablePwDate, "yyyy년 MM월 dd일")}</strong> 이후 변경 가능합니다.
+                    <strong>{format(nextAvailablePwDate, "yyyy-MM-dd")}</strong> {t('profile.limit_available_after') || "available after."}
                   </span>
                 </div>
               )}
@@ -473,10 +504,10 @@ export default function ProfilePage() {
             <CardHeader className="px-8 pt-8 pb-2">
               <div className="flex items-center gap-3 text-blue-700">
                 <ShieldAlert className="h-6 w-6" />
-                <CardTitle className="text-xl font-bold">Upgrade Account</CardTitle>
+                <CardTitle className="text-xl font-bold">{t('profile.verify_title') || "Upgrade Account"}</CardTitle>
               </div>
               <CardDescription className="text-blue-600/80">
-                Enter your registration code to unlock full member features.
+                {t('profile.verify_description') || "Enter your registration code."}
               </CardDescription>
             </CardHeader>
             <CardContent className="px-8 pb-8">
@@ -484,7 +515,7 @@ export default function ProfilePage() {
                 <Input
                   value={regCode}
                   onChange={(e) => setRegCode(e.target.value)}
-                  placeholder="e.g. MEMBER-2025"
+                  placeholder={t('profile.placeholder_code') || "e.g. MEMBER-2025"}
                   disabled={isLoading}
                   className="h-12 rounded-xl border-blue-200 bg-white focus:ring-blue-500"
                 />
@@ -494,7 +525,7 @@ export default function ProfilePage() {
                   className="h-12 px-6 rounded-xl bg-blue-600 hover:bg-blue-700 font-bold shadow-md"
                 >
                   {isLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
-                  Verify
+                  {t('profile.btn_verify') || "Verify"}
                 </Button>
               </div>
             </CardContent>
@@ -506,16 +537,14 @@ export default function ProfilePage() {
       <AlertDialog open={isConfirmNicknameOpen} onOpenChange={setIsConfirmNicknameOpen}>
         <AlertDialogContent className="rounded-2xl">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-xl font-bold text-slate-900">닉네임을 변경하시겠습니까?</AlertDialogTitle>
+            <AlertDialogTitle className="text-xl font-bold text-slate-900">{t('profile.modal_nickname_title') || "Change Nickname?"}</AlertDialogTitle>
             <AlertDialogDescription className="text-slate-600">
-              닉네임을 변경하면 <strong>30일 동안 다시 변경할 수 없습니다.</strong>
-              <br />
-              신중하게 결정해 주세요.
+              {t('profile.modal_nickname_desc') || "You cannot change it again for 30 days."}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className="rounded-lg" disabled={isLoading}>
-              취소
+              {t('common.cancel') || "Cancel"}
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={executeUpdateNickname}
@@ -523,7 +552,7 @@ export default function ProfilePage() {
               className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold"
             >
               {isLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
-              변경하기
+              {t('common.change') || "Change"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -534,17 +563,15 @@ export default function ProfilePage() {
         <AlertDialogContent className="rounded-2xl">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-xl font-bold text-slate-900">
-              비밀번호를 변경하시겠습니까?
+              {t('profile.modal_password_title') || "Change Password?"}
             </AlertDialogTitle>
             <AlertDialogDescription className="text-slate-600">
-              비밀번호를 변경하면 <strong>30일 동안 다시 변경할 수 없습니다.</strong>
-              <br />
-              보안을 위해 신중하게 결정해 주세요.
+              {t('profile.modal_password_desc') || "You cannot change it again for 30 days."}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className="rounded-lg" disabled={isLoading}>
-              취소
+              {t('common.cancel') || "Cancel"}
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={executeUpdatePassword}
@@ -552,7 +579,7 @@ export default function ProfilePage() {
               className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold"
             >
               {isLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
-              변경하기
+              {t('common.change') || "Change"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

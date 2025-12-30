@@ -4,6 +4,8 @@
     "save": "저장",
     "cancel": "취소",
     "delete": "삭제",
+    "edit": "변경",
+    "change": "변경하기",
     "confirm_delete": "정말 삭제하시겠습니까?",
     "login_required": "로그인이 필요합니다.",
     "error": "오류가 발생했습니다",
@@ -171,7 +173,7 @@
     "text_already_have_account": "이미 계정이 있으신가요?",
     "link_sign_in": "로그인",
     "error_file_size": "파일 크기는 5MB 이하여야 합니다.",
-    "error_invalid_image": "유효한 이미지 파일을 선택해주세요.",
+    "error_invalid_image": "이미지 파일만 업로드 가능합니다.",
     "error_compression": "이미지 압축에 실패했습니다.",
     "error_nickname_required": "닉네임은 필수입니다.",
     "error_nickname_length": "닉네임은 최소 2글자 이상이어야 합니다.",
@@ -198,17 +200,32 @@
     "default_nickname": "사용자",
     "badge_verified": "인증됨",
     "text_joined": "가입일:",
-    "verify_title": "교인 인증 필요",
-    "verify_description": "현재 '손님(Guest)' 상태입니다. 감사 나눔이나 댓글 작성을 위해 교회에서 발급받은 인증 코드를 입력해주세요.",
-    "placeholder_code": "인증 코드 입력",
+    "btn_logout": "로그아웃",
+    "settings_title": "기본 정보",
+    "settings_desc": "닉네임 및 보안 설정을 관리합니다.",
+    "gender_locked": "성별은 가입 후 변경할 수 없습니다.",
+    "new_password": "새 비밀번호",
+    "limit_30days_nickname": "닉네임은 30일에 한 번만 변경할 수 있습니다.",
+    "limit_30days_password": "비밀번호는 30일에 한 번만 변경할 수 있습니다.",
+    "limit_available_after": "이후 변경 가능합니다.",
+    "verify_title": "계정 업그레이드",
+    "verify_description": "교회에서 발급받은 가입 코드를 입력하여 정회원 기능을 잠금 해제하세요.",
+    "placeholder_code": "예: MEMBER-2025",
     "btn_verify": "인증하기",
     "btn_verifying": "인증 중...",
     "verified_status_title": "인증 완료",
     "verified_status_desc": "정식 교인으로 인증되었습니다. 모든 기능을 자유롭게 이용하실 수 있습니다.",
-    "btn_logout": "로그아웃",
-    "alert_enter_code": "인증 코드를 입력해주세요.",
-    "error_invalid_code": "유효하지 않거나 이미 사용된 코드입니다.",
-    "success_verify": "교인 인증이 완료되었습니다!"
+    "alert_enter_code": "코드를 입력해주세요.",
+    "error_invalid_code": "유효하지 않은 코드입니다.",
+    "success_verify": "등급이 업그레이드되었습니다!",
+    "error_password_different": "새 비밀번호는 현재 비밀번호와 달라야 합니다.",
+    "modal_nickname_title": "닉네임을 변경하시겠습니까?",
+    "modal_nickname_desc": "변경 후 30일 동안 다시 변경할 수 없습니다.",
+    "modal_password_title": "비밀번호를 변경하시겠습니까?",
+    "modal_password_desc": "보안을 위해 변경 후 30일 동안 제한됩니다.",
+    "alert": {
+      "success_update": "성공적으로 업데이트되었습니다."
+    }
   },
   "ministry": {
     "ukrainian": {
@@ -289,7 +306,15 @@
       "desc": "매일 공급해주시는 하나님의 말씀으로 하루를 시작하세요."
     },
     "list": {
-      "empty": "등록된 말씀이 없습니다."
+      "empty": "등록된 말씀이 없습니다.",
+      "empty_date": "선택한 날짜에 말씀이 없습니다.",
+      "select_date": "달력에서 다른 날짜를 선택해주세요."
+    },
+    "button": {
+      "download": "이미지 저장"
+    },
+    "calendar": {
+      "title": "말씀 달력"
     }
   },
   "prayer": {
@@ -348,6 +373,7 @@
     "button": {
       "share": "감사 나누기"
     },
+    "filter_all": "전체 보기",
     "category": {
       "grace": "은혜",
       "daily": "일상",
@@ -356,7 +382,7 @@
     },
     "modal": {
       "title": "감사 제목 나누기",
-      "desc": "삶 속에서 경험한 하나님의 은혜를 나눠주세요.",
+      "desc": "삶 속에서 경험한 하나님의 은혜를 성도들과 나눠주세요.",
       "label": {
         "category": "카테고리",
         "title": "제목",
@@ -371,10 +397,94 @@
       }
     },
     "alert": {
-      "success": "감사 나눔이 등록되었습니다."
+      "required_fields": "제목과 내용을 모두 입력해주세요.",
+      "success": "감사 나눔이 등록되었습니다.",
+      "daily_limit": "하루에 3번까지만 감사 나눔을 작성할 수 있습니다. 내일 다시 나누어 주세요! 🙏"
     },
     "list": {
       "empty": "등록된 감사 나눔이 없습니다."
+    }
+  },
+  "admin": {
+    "header": { "title": "관리자 콘솔" },
+    "common": {
+      "refresh": "새로고침",
+      "uploading": "업로드 중..."
+    },
+    "tabs": {
+      "overview": "오버뷰",
+      "users": "유저 관리",
+      "contents": "콘텐츠 관리",
+      "words": "말씀 카드",
+      "events": "이벤트 관리"
+    },
+    "stats": {
+      "users": { "title": "전체 교인", "desc": "현재 등록된 활성 계정" },
+      "words": { "title": "등록된 말씀 카드", "desc": "누적 말씀 카드 수" },
+      "events": { "title": "예정된 이벤트", "desc": "진행 중 또는 예정된 행사" }
+    },
+    "recent_users": {
+      "title": "최근 가입 유저",
+      "desc": "가장 최근에 가입한 성도 명단입니다.",
+      "no_name": "이름 없음"
+    },
+    "quick_actions": {
+      "title": "빠른 작업",
+      "write_word": "말씀 카드 쓰기",
+      "add_event": "이벤트 등록"
+    },
+    "contents": {
+      "word": {
+        "recent_list_title": "최근 등록된 말씀 (삭제)",
+        "recent_list_empty": "목록 없음",
+        "card_title": "말씀 카드 작성",
+        "card_desc": "매일의 묵상을 업로드합니다.",
+        "section_title": "오늘의 말씀",
+        "submit_button": "말씀 발행",
+        "label": {
+          "image": "배경 이미지",
+          "title": "성경 구절 (제목)",
+          "date": "날짜",
+          "content": "본문 내용"
+        },
+        "placeholder": {
+          "title": "예: 시편 23:1",
+          "content": "말씀 본문을 입력하세요..."
+        },
+        "preview": {
+          "title_placeholder": "구절 입력",
+          "content_placeholder": "본문 내용이 여기에 표시됩니다.",
+          "mobile_label": "모바일 미리보기 (9:16)",
+          "no_image": "이미지 없음"
+        }
+      },
+      "event": {
+        "card_title": "이벤트 등록",
+        "card_desc": "교회 행사를 공지합니다.",
+        "section_title": "새 이벤트",
+        "submit_button": "이벤트 등록",
+        "upload_hint": "클릭하여 이미지 업로드",
+        "label": {
+          "poster": "이벤트 포스터",
+          "title": "행사명",
+          "date": "일시",
+          "location": "장소",
+          "description": "상세 설명",
+          "start_date": "시작일",
+          "end_date": "종료일 (선택)"
+        },
+        "placeholder": {
+          "title": "예: 여름 성경 학교",
+          "location": "본당",
+          "description": "행사 상세 내용..."
+        }
+      }
+    },
+    "alert": {
+      "duplicate_date": "이미 해당 일에 제작된 말씀카드가 있습니다.",
+      "success": "성공적으로 등록되었습니다.",
+      "error": "등록 실패",
+      "upload_error": "이미지 업로드 실패"
     }
   }
 }

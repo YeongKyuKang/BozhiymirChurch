@@ -1,15 +1,22 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useLanguage } from "@/contexts/language-context";
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import * as React from "react";
+import { useState, useEffect, useMemo } from "react";
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { useAuth } from "@/contexts/auth-context";
+import { useLanguage } from "@/contexts/language-context"; 
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Heart, Share2, BookOpen } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
-import { ko, enUS, ru } from "date-fns/locale"; // 로케일 추가
+import { ko, enUS, ru } from "date-fns/locale"; 
+import { cn } from "@/lib/utils";
+import {
+  Calendar as CalendarIcon, Download, Heart, Loader2
+} from "lucide-react";
+import html2canvas from 'html2canvas';
 
+// WordPost 타입 정의
 interface WordPost {
   id: string;
   title: string;
@@ -17,8 +24,10 @@ interface WordPost {
   word_date: string;
   author_id: string;
   author_nickname: string;
-  image_url: string | null;
   created_at: string;
+  image_url?: string | null;
+  likes?: { user_id: string }[]; 
+  imageContainerRef?: React.RefObject<HTMLDivElement>;
 }
 
 interface WordPageClientProps {
@@ -26,15 +35,31 @@ interface WordPageClientProps {
 }
 
 export default function WordPageClient({ initialPosts }: WordPageClientProps) {
+  const { user } = useAuth();
   const { t, language } = useLanguage();
-  const [posts] = useState<WordPost[]>(initialPosts || []);
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const [wordPosts] = useState<WordPost[]>(
+    initialPosts.map(post => ({
+      ...post,
+      imageContainerRef: React.createRef<HTMLDivElement>()
+    }))
+  );
+
+  const initialDateFromParams = searchParams.get('date');
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(
+    initialDateFromParams ? new Date(initialDateFromParams) : new Date()
+  );
+  
+  const [isDownloading, setIsDownloading] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
-  // 날짜 포맷용 로케일 선택
   const getDateLocale = () => {
     switch (language) {
       case 'en': return enUS;
@@ -43,101 +68,181 @@ export default function WordPageClient({ initialPosts }: WordPageClientProps) {
     }
   };
 
+  const currentWordPost = useMemo(() => {
+    if (!selectedDate) return null;
+    const formattedSelectedDate = format(selectedDate, 'yyyy-MM-dd');
+    return wordPosts.find(post => format(new Date(post.word_date), 'yyyy-MM-dd') === formattedSelectedDate) || null;
+  }, [selectedDate, wordPosts]);
+
+  const handleDateSelect = (date: Date | undefined) => {
+    setSelectedDate(date);
+    const dateString = date ? format(date, 'yyyy-MM-dd') : '';
+    const params = new URLSearchParams(searchParams.toString());
+    if (dateString) params.set('date', dateString);
+    else params.delete('date');
+    router.push(`${pathname}?${params.toString()}`);
+  };
+
+  const handleLike = async () => {
+    if (!user) {
+      alert(t('common.login_required'));
+      return;
+    }
+    alert("준비 중입니다."); 
+  };
+
+  const handleDownload = async (post: WordPost) => {
+    if (!post.imageContainerRef?.current) return;
+    setIsDownloading(true);
+    try {
+      const canvas = await html2canvas(post.imageContainerRef.current, { 
+        useCORS: true, 
+        scale: 3, 
+        backgroundColor: "#ffffff",
+        logging: false
+      });
+      const link = document.createElement('a');
+      link.href = canvas.toDataURL('image/png');
+      link.download = `word_${post.word_date}.png`;
+      link.click();
+    } catch (e) {
+      console.error(e);
+      alert(t('common.error'));
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
   if (!isMounted) return null;
 
   return (
-    <div className="min-h-screen bg-slate-50/50 pt-16">
-      {/* 1. Hero Section */}
-      <div className="bg-gradient-to-r from-indigo-900 via-blue-800 to-blue-900 text-white py-20">
+    <div className="min-h-screen bg-slate-50 pt-16">
+      
+      {/* Hero Section */}
+      <div className="bg-[#0F172A] text-white py-10 border-b-4 border-yellow-500">
         <div className="container mx-auto px-4 text-center">
-          <div className="inline-flex items-center justify-center p-3 bg-white/10 rounded-full mb-6 backdrop-blur-sm">
-            <BookOpen className="w-8 h-8 text-yellow-300" />
+          <div className="mb-2 animate-bounce">
+            <span className="text-3xl md:text-4xl">📖</span>
           </div>
-          <h1 className="text-3xl md:text-4xl font-extrabold mb-4 tracking-tight">
+          <h1 className="text-3xl md:text-4xl font-black mb-2 italic tracking-tight">
             {t('word.hero.title')}
           </h1>
-          <p className="text-blue-100 max-w-2xl mx-auto text-lg leading-relaxed font-light">
+          <p className="text-slate-400 max-w-2xl mx-auto text-sm md:text-base font-light leading-relaxed">
             {t('word.hero.desc')}
           </p>
         </div>
       </div>
 
-      {/* 2. Main Feed Grid */}
-      <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {posts.map((post) => (
-            <Card 
-              key={post.id} 
-              className="group overflow-hidden border-0 shadow-md hover:shadow-xl transition-all duration-300 flex flex-col h-full bg-white"
-            >
-              {/* 카드 이미지 영역 */}
-              <div className="relative h-48 overflow-hidden bg-gray-200">
-                {post.image_url ? (
-                  <img 
-                    src={post.image_url} 
-                    alt={post.title} 
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center">
-                    <BookOpen className="w-12 h-12 text-blue-300 opacity-50" />
+      {/* Main Content */}
+      <section className="py-12 md:py-16">
+        <div className="container mx-auto px-4 max-w-6xl">
+          
+          {/* [수정] Grid 대신 Flexbox 사용으로 중앙 정렬 및 간격 좁힘 */}
+          <div className="flex flex-col lg:flex-row justify-center gap-10 items-start">
+            
+            {/* 왼쪽: 말씀 카드 영역 (모바일 9:16 비율) */}
+            <div className="w-full max-w-xs flex-shrink-0">
+              {!currentWordPost ? (
+                <div className="text-center py-24 bg-white rounded-[32px] border border-dashed border-slate-200 shadow-sm w-full">
+                  <div className="bg-slate-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                    <CalendarIcon className="w-8 h-8 text-slate-400" />
                   </div>
-                )}
-                <div className="absolute top-4 left-4">
-                  <Badge className="bg-white/90 text-blue-900 hover:bg-white font-bold backdrop-blur-sm shadow-sm">
-                    {format(new Date(post.word_date), "MMM d", { locale: getDateLocale() })}
-                  </Badge>
+                  <p className="text-slate-500 text-lg font-medium">{t('word.list.empty_date')}</p>
+                  <p className="text-slate-400 text-sm mt-2">{t('word.list.select_date')}</p>
                 </div>
-              </div>
+              ) : (
+                <div className="flex flex-col gap-4 w-full">
+                  <Card className="rounded-[32px] border-none shadow-xl shadow-slate-200 bg-white overflow-hidden">
+                    
+                    {/* 캡처 대상: 9:16 고정 */}
+                    <div ref={currentWordPost.imageContainerRef} className="bg-white relative w-full aspect-[9/16] overflow-hidden">
+                        
+                        {/* 배경 이미지 */}
+                        {currentWordPost.image_url ? (
+                            <>
+                                <div 
+                                    className="absolute inset-0 w-full h-full bg-cover bg-center transition-transform hover:scale-105 duration-700"
+                                    style={{ backgroundImage: `url(${currentWordPost.image_url})` }}
+                                />
+                                <div className="absolute inset-0 bg-black/40" />
+                            </>
+                        ) : (
+                            <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-slate-900" />
+                        )}
+                        
+                        {/* 텍스트 콘텐츠 */}
+                        <div className="absolute inset-0 z-10 p-6 flex flex-col justify-center items-center text-center text-white h-full">
+                            <div className="flex-1 flex flex-col justify-center">
+                                <h2 className="text-xl md:text-2xl font-black mb-4 leading-tight drop-shadow-xl">
+                                    {currentWordPost.title}
+                                </h2>
+                                <p className="text-sm md:text-base text-white/95 leading-relaxed font-medium whitespace-pre-wrap drop-shadow-lg font-serif">
+                                    {currentWordPost.content}
+                                </p>
+                            </div>
+                            
+                            <div className="mt-auto pt-4 border-t border-white/30 w-full">
+                                <p className="text-xs font-bold tracking-widest uppercase opacity-90">
+                                    {format(new Date(currentWordPost.word_date), 'yyyy.MM.dd')}
+                                </p>
+                                <p className="text-[10px] opacity-70 mt-1 tracking-wide">Bozhiymir Church Daily Word</p>
+                            </div>
+                        </div>
+                    </div>
 
-              {/* 카드 헤더 (작성자 정보) */}
-              <CardHeader className="pb-2 pt-4 px-6 flex flex-row items-center gap-3">
-                <Avatar className="h-8 w-8 border border-gray-100">
-                   <AvatarFallback className="bg-blue-50 text-blue-700 text-xs font-bold">
-                     {post.author_nickname?.slice(0, 2)}
-                   </AvatarFallback>
-                </Avatar>
-                <div className="flex flex-col">
-                  <span className="text-xs font-bold text-gray-700">{post.author_nickname}</span>
-                  <span className="text-[10px] text-gray-400">
-                    {format(new Date(post.created_at), "yyyy.MM.dd")}
-                  </span>
+                    {/* 카드 푸터 */}
+                    <CardFooter className="px-5 py-3 bg-slate-50 border-t border-slate-100 flex justify-between items-center">
+                        <Button variant="ghost" size="sm" onClick={handleLike} className="text-slate-500 hover:text-red-500 hover:bg-red-50 rounded-full gap-1.5 px-3">
+                            <Heart className={cn("h-4 w-4")} />
+                            <span className="text-xs font-bold">{t('common.amen')}</span>
+                        </Button>
+                        <Button 
+                            variant="default" 
+                            size="sm" 
+                            onClick={() => handleDownload(currentWordPost)}
+                            disabled={isDownloading}
+                            className="rounded-full bg-slate-900 hover:bg-slate-800 text-white px-4 shadow-lg shadow-slate-200 h-8"
+                        >
+                            {isDownloading ? <Loader2 className="h-3 w-3 animate-spin mr-1.5"/> : <Download className="h-3 w-3 mr-1.5" />}
+                            <span className="font-bold text-[10px]">{t('word.button.download')}</span>
+                        </Button>
+                    </CardFooter>
+                  </Card>
                 </div>
-              </CardHeader>
+              )}
+            </div>
 
-              {/* 카드 본문 */}
-              <CardContent className="px-6 pb-6 flex-grow">
-                <h3 className="text-xl font-bold text-gray-900 mb-3 line-clamp-1 group-hover:text-blue-700 transition-colors">
-                  {post.title}
-                </h3>
-                <p className="text-sm text-gray-600 leading-relaxed line-clamp-4 whitespace-pre-line">
-                  {post.content}
-                </p>
-              </CardContent>
+            {/* 오른쪽: 달력 영역 */}
+            {/* [수정] 카드와 균형을 맞추기 위해 max-w를 설정하고 sticky 적용 */}
+            <div className="w-full max-w-[320px] flex flex-col gap-6 sticky top-24 flex-shrink-0">
+              <Card className="rounded-[24px] border-none shadow-lg shadow-slate-100 bg-white p-6">
+                <CardHeader className="p-0 mb-4 border-b border-slate-50 pb-4">
+                    <CardTitle className="flex items-center text-lg font-bold text-slate-800">
+                        <CalendarIcon className="h-5 w-5 mr-2 text-blue-600" />
+                        {t('word.calendar.title')}
+                    </CardTitle>
+                </CardHeader>
+                <div className="flex justify-center">
+                    <Calendar 
+                        mode="single" 
+                        selected={selectedDate} 
+                        onSelect={handleDateSelect}
+                        className="p-0 w-full"
+                        classNames={{
+                            head_cell: "text-slate-400 font-normal text-[0.8rem]",
+                            cell: "h-9 w-9 text-center text-sm p-0 relative [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
+                            day: "h-9 w-9 p-0 font-normal aria-selected:opacity-100 hover:bg-slate-100 rounded-full",
+                            day_selected: "bg-blue-600 text-white hover:bg-blue-600 hover:text-white focus:bg-blue-600 focus:text-white rounded-full shadow-md shadow-blue-200",
+                            day_today: "bg-slate-100 text-slate-900 font-bold",
+                        }}
+                    />
+                </div>
+              </Card>
+            </div>
 
-              {/* 카드 푸터 (액션 버튼) */}
-              <CardFooter className="px-6 py-4 bg-gray-50/50 border-t border-gray-100 flex justify-between items-center">
-                <Button variant="ghost" size="sm" className="text-gray-500 hover:text-red-500 hover:bg-red-50 gap-2">
-                  <Heart className="w-4 h-4" />
-                  <span className="text-xs font-medium">{t('common.amen')}</span>
-                </Button>
-                <Button variant="ghost" size="sm" className="text-gray-500 hover:text-blue-600 hover:bg-blue-50">
-                  <Share2 className="w-4 h-4" />
-                </Button>
-              </CardFooter>
-            </Card>
-          ))}
+          </div>
         </div>
-        
-        {posts.length === 0 && (
-           <div className="text-center py-20">
-             <div className="bg-gray-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-               <BookOpen className="w-8 h-8 text-gray-400" />
-             </div>
-             <p className="text-gray-500">{t('word.list.empty')}</p>
-           </div>
-        )}
-      </div>
+      </section>
     </div>
   );
 }

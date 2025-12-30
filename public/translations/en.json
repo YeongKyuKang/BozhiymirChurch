@@ -4,6 +4,8 @@
     "save": "Save",
     "cancel": "Cancel",
     "delete": "Delete",
+    "edit": "Edit",
+    "change": "Change",
     "confirm_delete": "Are you sure you want to delete this?",
     "login_required": "Login required.",
     "error": "An error occurred",
@@ -171,13 +173,13 @@
     "text_already_have_account": "Already have an account?",
     "link_sign_in": "Sign in",
     "error_file_size": "File must be less than 5MB.",
-    "error_invalid_image": "Please select a valid image file.",
+    "error_invalid_image": "Only image files are allowed.",
     "error_compression": "Failed to compress the image.",
     "error_nickname_required": "Nickname is required.",
     "error_nickname_length": "Nickname must be at least 2 characters.",
     "error_gender_required": "Please select your gender.",
     "error_password_match": "Passwords do not match.",
-    "error_password_length": "Password must be at least 6 characters.",
+    "error_password_length": "Password is too short.",
     "success_registration": "Registration successful!"
   },
   "login": {
@@ -198,17 +200,32 @@
     "default_nickname": "User",
     "badge_verified": "Verified",
     "text_joined": "Joined:",
-    "verify_title": "Verification Required",
-    "verify_description": "You currently have 'Guest' status. Enter the code issued by the church to grant permission for writing gratitude titles and comments.",
-    "placeholder_code": "Enter verification code",
+    "btn_logout": "Sign Out",
+    "settings_title": "Basic Information",
+    "settings_desc": "Manage your display name and security details.",
+    "gender_locked": "Gender cannot be changed after registration.",
+    "new_password": "New Password",
+    "limit_30days_nickname": "You can change your nickname once every 30 days.",
+    "limit_30days_password": "You can change your password once every 30 days.",
+    "limit_available_after": "available after.",
+    "verify_title": "Upgrade Account",
+    "verify_description": "Enter your registration code to unlock full member features.",
+    "placeholder_code": "e.g. MEMBER-2025",
     "btn_verify": "Verify",
     "btn_verifying": "Verifying...",
     "verified_status_title": "Verification Complete",
     "verified_status_desc": "You are now active as an official member of our church.",
-    "btn_logout": "Sign Out",
-    "alert_enter_code": "Please enter the verification code.",
-    "error_invalid_code": "Invalid or already used code.",
-    "success_verify": "Church member verification successful!"
+    "alert_enter_code": "Please enter the code.",
+    "error_invalid_code": "Invalid code.",
+    "success_verify": "Account upgraded successfully!",
+    "error_password_different": "New password must be different from the current one.",
+    "modal_nickname_title": "Change Nickname?",
+    "modal_nickname_desc": "You cannot change it again for 30 days.",
+    "modal_password_title": "Change Password?",
+    "modal_password_desc": "For security, you cannot change it again for 30 days.",
+    "alert": {
+      "success_update": "Updated successfully."
+    }
   },
   "ministry": {
     "ukrainian": {
@@ -289,7 +306,15 @@
       "desc": "Start your day with God's word provided daily."
     },
     "list": {
-      "empty": "No posts available."
+      "empty": "No posts available.",
+      "empty_date": "No word for this date.",
+      "select_date": "Please select another date from the calendar."
+    },
+    "button": {
+      "download": "Save Image"
+    },
+    "calendar": {
+      "title": "Calendar"
     }
   },
   "prayer": {
@@ -342,12 +367,13 @@
   },
   "thanks": {
     "hero": {
-      "title": "Thanksgiving",
+      "title": "Sharing Gratitude",
       "desc": "Give thanks in all circumstances; for this is God's will for you in Christ Jesus. (1 Thess 5:18)"
     },
     "button": {
-      "share": "Share Thanks"
+      "share": "Share Gratitude"
     },
+    "filter_all": "All Posts",
     "category": {
       "grace": "Grace",
       "daily": "Daily Life",
@@ -355,26 +381,110 @@
       "church": "Church"
     },
     "modal": {
-      "title": "Share Thanksgiving",
-      "desc": "Please share the grace of God you experienced.",
+      "title": "Share Your Gratitude",
+      "desc": "Please share the grace and blessings you have experienced.",
       "label": {
         "category": "Category",
         "title": "Title",
         "content": "Content"
       },
       "placeholder": {
-        "title": "Enter title",
-        "content": "Enter details"
+        "title": "Enter a title",
+        "content": "Share your story of gratitude..."
       },
       "button": {
-        "submit": "Share"
+        "submit": "Post"
       }
     },
     "alert": {
-      "success": "Thanksgiving post submitted."
+      "required_fields": "Please fill in both title and content.",
+      "daily_limit": "You can only share gratitude 3 times a day. Please share again tomorrow! 🙏",
+      "success": "Your gratitude post has been shared."
     },
     "list": {
-      "empty": "No posts found."
+      "empty": "No posts yet. Be the first to share!"
+    }
+  },
+  "admin": {
+    "header": { "title": "Admin Console" },
+    "common": {
+      "refresh": "Refresh",
+      "uploading": "Uploading..."
+    },
+    "tabs": {
+    "overview": "Overview",
+    "users": "Users",
+    "contents": "Content",
+    "words": "Words",
+    "events": "Events"
+    },
+    "stats": {
+      "users": { "title": "Total Users", "desc": "Active accounts" },
+      "words": { "title": "Word Posts", "desc": "Total accumulated posts" },
+      "events": { "title": "Events", "desc": "Upcoming or ongoing events" }
+    },
+    "recent_users": {
+      "title": "Recent Users",
+      "desc": "List of recently joined members.",
+      "no_name": "No Name"
+    },
+    "quick_actions": {
+      "title": "Quick Actions",
+      "write_word": "New Word Post",
+      "add_event": "Add Event"
+    },
+    "contents": {
+      "word": {
+        "recent_list_title": "Recent Posts (Delete)",
+        "recent_list_empty": "No posts",
+        "card_title": "Write Word Card",
+        "card_desc": "Upload daily meditation.",
+        "section_title": "Daily Word",
+        "submit_button": "Publish Word",
+        "label": {
+          "image": "Background Image",
+          "title": "Scripture (Title)",
+          "date": "Date",
+          "content": "Content"
+        },
+        "placeholder": {
+          "title": "Ex: Psalm 23:1",
+          "content": "Enter the scripture content..."
+        },
+        "preview": {
+          "title_placeholder": "Scripture",
+          "content_placeholder": "Content will appear here.",
+          "mobile_label": "Mobile Preview (9:16)",
+          "no_image": "No Image"
+        }
+      },
+      "event": {
+        "card_title": "Add Event",
+        "card_desc": "Announce church events.",
+        "section_title": "New Event",
+        "submit_button": "Register Event",
+        "upload_hint": "Click to upload image",
+        "label": {
+          "poster": "Event Poster",
+          "title": "Event Name",
+          "date": "Date",
+          "location": "Location",
+          "description": "Description",
+          "start_date": "Start Date",
+          "end_date": "End Date (Optional)"
+        },
+        "placeholder": {
+          "title": "Ex: Summer Bible School",
+          "location": "Main Hall",
+          "description": "Event details..."
+        }
+      }
+    },
+    "alert": {
+      "duplicate_date": "A word card for this date already exists.",
+      "success": "Registered successfully.",
+      "error": "Registration failed",
+      "upload_error": "Image upload failed"
     }
   }
 }
