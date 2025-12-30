@@ -38,7 +38,7 @@ export default function Footer() {
               {t('footer.quick_links')}
             </h4>
             <ul className="space-y-3">
-              {['leadership', 'events', 'join', 'ukrainian_ministry'].map((link) => (
+              {['leadership', 'events', 'ukrainian-ministry'].map((link) => (
                 <li key={link}>
                   <Link href={`/${link}`} className="text-blue-200 hover:text-yellow-300 transition-colors text-base flex items-center gap-2">
                     <span className="text-yellow-500 text-[10px]">▶</span> {t(`footer.links.${link}`)}
