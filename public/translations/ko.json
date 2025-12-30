@@ -10,7 +10,9 @@
     "login_required": "로그인이 필요합니다.",
     "error": "오류가 발생했습니다",
     "like": "좋아요",
-    "comment": "댓글"
+    "sad": "슬퍼요",
+    "pray": "기도해요",
+    "back": "뒤로가기"
   },
   "nav": {
     "home": "홈",
@@ -398,8 +400,8 @@
     },
     "alert": {
       "required_fields": "제목과 내용을 모두 입력해주세요.",
-      "success": "감사 나눔이 등록되었습니다.",
-      "daily_limit": "하루에 3번까지만 감사 나눔을 작성할 수 있습니다. 내일 다시 나누어 주세요! 🙏"
+      "daily_limit": "하루에 3번까지만 감사 나눔을 작성할 수 있습니다. 내일 다시 나누어 주세요! 🙏",
+      "success": "감사 나눔이 등록되었습니다."
     },
     "list": {
       "empty": "등록된 감사 나눔이 없습니다."
@@ -441,6 +443,9 @@
         "card_desc": "매일의 묵상을 업로드합니다.",
         "section_title": "오늘의 말씀",
         "submit_button": "말씀 발행",
+        "edit_title": "말씀 카드 수정",
+        "edit_desc": "오늘의 말씀을 수정합니다.",
+        "update_button": "수정 완료",
         "label": {
           "image": "배경 이미지",
           "title": "성경 구절 (제목)",
@@ -463,6 +468,9 @@
         "card_desc": "교회 행사를 공지합니다.",
         "section_title": "새 이벤트",
         "submit_button": "이벤트 등록",
+        "edit_title": "이벤트 수정",
+        "edit_desc": "이벤트 내용을 수정합니다.",
+        "update_button": "이벤트 수정 완료",
         "upload_hint": "클릭하여 이미지 업로드",
         "label": {
           "poster": "이벤트 포스터",
@@ -483,6 +491,7 @@
     "alert": {
       "duplicate_date": "이미 해당 일에 제작된 말씀카드가 있습니다.",
       "success": "성공적으로 등록되었습니다.",
+      "success_update": "성공적으로 수정되었습니다.",
       "error": "등록 실패",
       "upload_error": "이미지 업로드 실패"
     }

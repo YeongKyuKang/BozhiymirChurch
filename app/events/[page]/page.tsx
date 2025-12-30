@@ -2,9 +2,12 @@ import { supabase } from "@/lib/supabase";
 import EventsPageClient from "@/components/events-page-client";
 import { notFound } from "next/navigation";
 
-const ITEMS_PER_PAGE = 4;
+const ITEMS_PER_PAGE = 6;
 
-// 빌드 시점에 모든 페이지 번호를 정적으로 생성 (Edge Request 절감)
+export const revalidate = 60; // 1분 캐싱
+export const dynamicParams = true;
+
+// 정적 경로 생성 (선택 사항)
 export async function generateStaticParams() {
   const { count } = await supabase.from("events").select("*", { count: 'exact', head: true });
   const totalPages = Math.ceil((count || 0) / ITEMS_PER_PAGE) || 1;
@@ -14,56 +17,33 @@ export async function generateStaticParams() {
   }));
 }
 
-// 수동 재검증 전까지 영구 캐싱
-export const revalidate = false;
-export const dynamicParams = true;
-
-async function getPaginatedEvents(page: number) {
-  const from = (page - 1) * ITEMS_PER_PAGE;
-  const to = from + ITEMS_PER_PAGE - 1;
-
-  const [contentRes, eventsRes] = await Promise.all([
-    supabase.from("content").select("*").eq("page", "events"),
-    supabase.from("events")
-      .select("*", { count: 'exact' })
-      .order("event_date", { ascending: true })
-      .range(from, to)
-  ]);
-
-  const initialContent = contentRes.data?.reduce((acc: any, item: any) => {
-    if (!acc[item.section]) acc[item.section] = {};
-    acc[item.section][item.key] = item.value;
-    return acc;
-  }, {}) || {};
-
-  return { 
-    initialContent, 
-    events: eventsRes.data || [],
-    totalCount: eventsRes.count || 0,
-    currentPage: page
-  };
-}
-
 export default async function EventsPaginationPage({ 
   params 
 }: { 
   params: Promise<{ page: string }> 
 }) {
-  const { page } = await params;
-  const pageNumber = parseInt(page);
+  const resolvedParams = await params;
+  const pageNumber = parseInt(resolvedParams.page);
   
   if (isNaN(pageNumber) || pageNumber < 1) notFound();
 
-  const { initialContent, events, totalCount, currentPage } = await getPaginatedEvents(pageNumber);
+  const from = (pageNumber - 1) * ITEMS_PER_PAGE;
+  const to = from + ITEMS_PER_PAGE - 1;
 
-  if (events.length === 0 && pageNumber > 1) notFound();
+  // [수정] start_date 기준으로 정렬
+  const { data: events, count } = await supabase
+    .from("events")
+    .select("*", { count: 'exact' })
+    .order("start_date", { ascending: true }) 
+    .range(from, to);
+
+  if ((!events || events.length === 0) && pageNumber > 1) notFound();
 
   return (
     <EventsPageClient 
-      initialContent={initialContent} 
-      events={events} 
-      totalCount={totalCount}
-      currentPage={currentPage}
+      events={events || []} 
+      totalCount={count || 0}
+      currentPage={pageNumber}
       itemsPerPage={ITEMS_PER_PAGE}
     />
   );

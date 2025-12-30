@@ -10,7 +10,9 @@
     "login_required": "Login required.",
     "error": "An error occurred",
     "like": "Like",
-    "comment": "Comment"
+    "sad": "Sad",
+    "pray": "Pray",
+    "back": "Back"
   },
   "nav": {
     "home": "Home",
@@ -412,11 +414,11 @@
       "uploading": "Uploading..."
     },
     "tabs": {
-    "overview": "Overview",
-    "users": "Users",
-    "contents": "Content",
-    "words": "Words",
-    "events": "Events"
+      "overview": "Overview",
+      "users": "Users",
+      "contents": "Content",
+      "words": "Words",
+      "events": "Events"
     },
     "stats": {
       "users": { "title": "Total Users", "desc": "Active accounts" },
@@ -441,6 +443,9 @@
         "card_desc": "Upload daily meditation.",
         "section_title": "Daily Word",
         "submit_button": "Publish Word",
+        "edit_title": "Edit Word Card",
+        "edit_desc": "Modify the daily word content here.",
+        "update_button": "Update",
         "label": {
           "image": "Background Image",
           "title": "Scripture (Title)",
@@ -463,6 +468,9 @@
         "card_desc": "Announce church events.",
         "section_title": "New Event",
         "submit_button": "Register Event",
+        "edit_title": "Edit Event",
+        "edit_desc": "Modify event details.",
+        "update_button": "Update Event",
         "upload_hint": "Click to upload image",
         "label": {
           "poster": "Event Poster",
@@ -483,6 +491,7 @@
     "alert": {
       "duplicate_date": "A word card for this date already exists.",
       "success": "Registered successfully.",
+      "success_update": "Updated successfully.",
       "error": "Registration failed",
       "upload_error": "Image upload failed"
     }

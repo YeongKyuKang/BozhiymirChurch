@@ -9,9 +9,12 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { 
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter 
+} from "@/components/ui/dialog"; 
+import { 
   LayoutDashboard, Users, Calendar, 
   Image as ImageIcon, Loader2, 
-  Save, Activity, BookOpen, Trash2, RefreshCw, Smartphone, Edit2, X
+  Save, Activity, BookOpen, Trash2, RefreshCw, Smartphone, Edit2, X, PlusCircle
 } from "lucide-react";
 import { format } from "date-fns";
 import { ko, enUS, ru } from "date-fns/locale"; 
@@ -40,17 +43,19 @@ export default function AdminDashboard() {
   
   const [usersData, setUsersData] = useState<any[]>([]);
   const [recentWords, setRecentWords] = useState<any[]>([]);
-  const [eventsList, setEventsList] = useState<any[]>([]); // 이벤트 목록
+  const [eventsList, setEventsList] = useState<any[]>([]); 
 
   const [isImageUploading, setIsImageUploading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // 말씀 카드 데이터
+  // [말씀 카드] 생성 데이터
   const [wordData, setWordData] = useState({ title: "", content: "", date: format(new Date(), "yyyy-MM-dd"), imageUrl: "" });
-  
-  // 이벤트 데이터 & 수정 상태
+  // [말씀 카드] 수정 상태
+  const [isEditWordOpen, setIsEditWordOpen] = useState(false);
+  const [editingWord, setEditingWord] = useState<{ id: string, title: string, content: string, date: string, imageUrl: string } | null>(null);
+
+  // [이벤트] 생성 데이터
   const [eventData, setEventData] = useState({ 
-    id: "", // 수정 시 필요
     title: "", 
     description: "", 
     startDate: format(new Date(), "yyyy-MM-dd"), 
@@ -58,7 +63,12 @@ export default function AdminDashboard() {
     location: "", 
     imageUrl: "" 
   });
-  const [isEditingEvent, setIsEditingEvent] = useState(false);
+  // [이벤트] 수정 상태
+  const [isEditEventOpen, setIsEditEventOpen] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<{ 
+    id: string, title: string, description: string, startDate: string, endDate: string, location: string, imageUrl: string 
+  } | null>(null);
+
 
   const getDateLocale = () => {
     switch (language) {
@@ -71,15 +81,11 @@ export default function AdminDashboard() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     
-    // 통계 데이터
     const { data: users, count: userCount } = await supabase.from("users").select("*", { count: 'exact' }).order("created_at", { ascending: false });
     const { count: eventCount } = await supabase.from("events").select("*", { count: 'exact', head: true });
     const { count: wordCount } = await supabase.from("word_posts").select("*", { count: 'exact', head: true });
 
-    // 말씀 목록 (최근 5개)
     const { data: words } = await supabase.from("word_posts").select("*").order("word_date", { ascending: false }).limit(5);
-
-    // [추가] 이벤트 전체 목록
     const { data: events } = await supabase.from("events").select("*").order("start_date", { ascending: false });
 
     setUsersData(users || []);
@@ -99,14 +105,16 @@ export default function AdminDashboard() {
     fetchData();
   }, [fetchData]);
 
-  const handleImageUpload = async (file: File, target: 'word' | 'event') => {
+  // 통합 이미지 업로드 핸들러
+  const handleImageUpload = async (file: File, target: 'word' | 'edit-word' | 'event' | 'edit-event') => {
     if (!file) return;
     setIsImageUploading(true);
     
     try {
       const fileExt = file.name.split('.').pop();
-      const fileName = `${target}_${Date.now()}.${fileExt}`;
-      const bucket = target === 'word' ? 'word-backgrounds' : 'event-banners'; 
+      const isEvent = target.includes('event');
+      const bucket = isEvent ? 'event-banners' : 'word-backgrounds';
+      const fileName = `${isEvent ? 'event' : 'word'}_${Date.now()}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from(bucket) 
@@ -119,7 +127,9 @@ export default function AdminDashboard() {
         .getPublicUrl(fileName);
 
       if (target === 'word') setWordData({ ...wordData, imageUrl: publicUrl });
-      else setEventData({ ...eventData, imageUrl: publicUrl });
+      else if (target === 'edit-word' && editingWord) setEditingWord({ ...editingWord, imageUrl: publicUrl });
+      else if (target === 'event') setEventData({ ...eventData, imageUrl: publicUrl });
+      else if (target === 'edit-event' && editingEvent) setEditingEvent({ ...editingEvent, imageUrl: publicUrl });
 
     } catch (error: any) {
       alert(t('admin.alert.upload_error') + ": " + error.message);
@@ -128,110 +138,63 @@ export default function AdminDashboard() {
     }
   };
 
-  // 말씀 카드 생성
+  // --- 말씀 카드 로직 ---
+
   const handleCreateWord = async () => {
     if (!user) return alert(t('common.login_required')); 
     setIsSubmitting(true);
-
     try {
-        const payload = {
+        const { error } = await supabase.from("word_posts").insert([{
           title: wordData.title,
           content: wordData.content,
           word_date: wordData.date,
           image_url: wordData.imageUrl,
           author_id: user.id,
           author_nickname: userProfile?.nickname || user.email?.split('@')[0] || "Admin"
-        };
+        }]);
 
-        const { error } = await supabase.from("word_posts").insert([payload]);
-
-        if (error) {
-          if (error.code === '23505') alert(t('admin.alert.duplicate_date'));
-          else alert(t('admin.alert.error') + ": " + error.message);
-        } else {
-          alert(t('admin.alert.success'));
-          setWordData({ title: "", content: "", date: format(new Date(), "yyyy-MM-dd"), imageUrl: "" });
-          fetchData(); 
-        }
-    } catch (err) {
-        console.error(err);
+        if (error) throw error;
+        alert(t('admin.alert.success'));
+        setWordData({ title: "", content: "", date: format(new Date(), "yyyy-MM-dd"), imageUrl: "" });
+        fetchData(); 
+    } catch (err: any) {
+        alert(t('admin.alert.error') + ": " + err.message);
     } finally {
         setIsSubmitting(false);
     }
   };
 
-  // 이벤트 생성 및 수정
-  const handleSaveEvent = async () => {
-    if (!user) return alert(t('common.login_required')); 
-    setIsSubmitting(true);
-
-    try {
-        const payload = {
-          title: eventData.title,
-          description: eventData.description,
-          start_date: eventData.startDate,
-          end_date: eventData.endDate ? eventData.endDate : eventData.startDate,
-          location: eventData.location,
-          image_url: eventData.imageUrl
-        };
-
-        let error;
-
-        if (isEditingEvent && eventData.id) {
-            // 수정 (Update)
-            const { error: updateError } = await supabase
-                .from("events")
-                .update(payload)
-                .eq("id", eventData.id);
-            error = updateError;
-        } else {
-            // 생성 (Insert)
-            const { error: insertError } = await supabase
-                .from("events")
-                .insert([payload]);
-            error = insertError;
-        }
-
-        if (error) {
-          alert(t('admin.alert.error') + ": " + error.message);
-        } else {
-          alert(isEditingEvent ? "이벤트가 수정되었습니다." : t('admin.alert.success'));
-          resetEventForm();
-          fetchData(); 
-        }
-    } catch (err) {
-        console.error(err);
-    } finally {
-        setIsSubmitting(false);
-    }
-  };
-
-  const resetEventForm = () => {
-    setEventData({ 
-        id: "",
-        title: "", 
-        description: "", 
-        startDate: format(new Date(), "yyyy-MM-dd"), 
-        endDate: "", 
-        location: "", 
-        imageUrl: "" 
+  const openEditWordModal = (post: any) => {
+    setEditingWord({
+      id: post.id,
+      title: post.title,
+      content: post.content,
+      date: post.word_date,
+      imageUrl: post.image_url || ""
     });
-    setIsEditingEvent(false);
+    setIsEditWordOpen(true);
   };
 
-  const handleEditEventClick = (event: any) => {
-      setEventData({
-          id: event.id,
-          title: event.title,
-          description: event.description || "",
-          startDate: event.start_date,
-          endDate: event.end_date || "",
-          location: event.location || "",
-          imageUrl: event.image_url || ""
-      });
-      setIsEditingEvent(true);
-      // 폼이 있는 상단으로 스크롤 이동
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+  const handleUpdateWord = async () => {
+    if (!user || !editingWord) return;
+    setIsSubmitting(true);
+    try {
+      const { error } = await supabase.from("word_posts").update({
+          title: editingWord.title,
+          content: editingWord.content,
+          word_date: editingWord.date,
+          image_url: editingWord.imageUrl
+        }).eq("id", editingWord.id);
+
+      if (error) throw error;
+      alert(t('admin.alert.success_update'));
+      setIsEditWordOpen(false);
+      fetchData();
+    } catch (error: any) {
+      alert(t('admin.alert.error') + ": " + error.message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleDeleteWord = async (id: string) => {
@@ -240,8 +203,69 @@ export default function AdminDashboard() {
     if (!error) {
       alert(t('common.delete') + "되었습니다.");
       fetchData();
-    } else {
-      alert(t('admin.alert.error') + ": " + error.message);
+    }
+  };
+
+  // --- 이벤트 로직 ---
+
+  const handleCreateEvent = async () => {
+    if (!user) return alert(t('common.login_required')); 
+    setIsSubmitting(true);
+    try {
+        const { error } = await supabase.from("events").insert([{
+          title: eventData.title,
+          description: eventData.description,
+          start_date: eventData.startDate,
+          end_date: eventData.endDate ? eventData.endDate : eventData.startDate,
+          location: eventData.location,
+          image_url: eventData.imageUrl
+        }]);
+
+        if (error) throw error;
+        alert(t('admin.alert.success'));
+        setEventData({ title: "", description: "", startDate: format(new Date(), "yyyy-MM-dd"), endDate: "", location: "", imageUrl: "" });
+        fetchData(); 
+    } catch (err: any) {
+        alert(t('admin.alert.error') + ": " + err.message);
+    } finally {
+        setIsSubmitting(false);
+    }
+  };
+
+  const openEditEventModal = (event: any) => {
+    setEditingEvent({
+        id: event.id,
+        title: event.title,
+        description: event.description || "",
+        startDate: event.start_date,
+        endDate: event.end_date || "",
+        location: event.location || "",
+        imageUrl: event.image_url || ""
+    });
+    setIsEditEventOpen(true);
+  };
+
+  const handleUpdateEvent = async () => {
+    if (!user || !editingEvent) return;
+    setIsSubmitting(true);
+    try {
+        const { error } = await supabase.from("events").update({
+          title: editingEvent.title,
+          description: editingEvent.description,
+          start_date: editingEvent.startDate,
+          end_date: editingEvent.endDate ? editingEvent.endDate : editingEvent.startDate,
+          location: editingEvent.location,
+          image_url: editingEvent.imageUrl
+        }).eq("id", editingEvent.id);
+
+        if (error) throw error;
+        alert(t('admin.alert.success_update'));
+        setIsEditEventOpen(false);
+        fetchData();
+    } catch (err: any) {
+        alert(t('admin.alert.error') + ": " + err.message);
+    } finally {
+        setIsSubmitting(false);
     }
   };
 
@@ -251,9 +275,6 @@ export default function AdminDashboard() {
     if (!error) {
       alert(t('common.delete') + "되었습니다.");
       fetchData();
-      if (isEditingEvent && eventData.id === id) resetEventForm();
-    } else {
-      alert(t('admin.alert.error') + ": " + error.message);
     }
   };
 
@@ -262,8 +283,9 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100/50 pb-20">
-      <header className="bg-white border-b sticky top-0 z-30">
+    <div className="min-h-screen bg-gray-100/50 pb-20 pt-24">
+      
+      <header className="bg-white border-b sticky top-20 z-40 shadow-sm">
         <div className="container mx-auto max-w-7xl px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="bg-black text-white p-1.5 rounded-lg">
@@ -285,7 +307,6 @@ export default function AdminDashboard() {
       <main className="container mx-auto max-w-7xl px-4 py-8">
         <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab} className="space-y-8">
           
-          {/* [수정] 탭 메뉴 4개로 분리 */}
           <TabsList className="bg-white p-1 h-12 border shadow-sm rounded-lg grid grid-cols-4 w-full max-w-2xl mx-auto">
             <TabsTrigger value="overview" className="flex items-center gap-2 data-[state=active]:bg-gray-100 data-[state=active]:text-black">
               <LayoutDashboard className="w-4 h-4" /> {t('admin.tabs.overview')}
@@ -353,7 +374,7 @@ export default function AdminDashboard() {
             <AdminUsersClient initialUsers={usersData} />
           </TabsContent>
 
-          {/* 3. 말씀 카드 관리 (분리됨) */}
+          {/* 3. 말씀 카드 관리 */}
           <TabsContent value="words">
             <div className="space-y-6">
                 <div className="flex items-center justify-between">
@@ -398,7 +419,7 @@ export default function AdminDashboard() {
                         </Card>
                     </div>
 
-                    {/* 오른쪽: 미리보기 및 최근 목록 */}
+                    {/* 오른쪽: 미리보기 및 목록 */}
                     <div className="xl:col-span-5 flex flex-col gap-6">
                         <div className="flex flex-col items-center">
                              <div className="text-sm font-bold text-gray-500 mb-2 flex items-center gap-1">
@@ -427,28 +448,29 @@ export default function AdminDashboard() {
                                 <CardTitle className="text-sm text-gray-500">{t('admin.contents.word.recent_list_title')}</CardTitle>
                             </CardHeader>
                             <CardContent className="px-4 pb-4">
-                                {recentWords.length === 0 ? (
-                                    <p className="text-xs text-gray-400 text-center py-4">{t('admin.contents.word.recent_list_empty')}</p>
-                                ) : (
-                                    <ul className="space-y-2">
-                                        {recentWords.map(post => (
-                                            <li key={post.id} className="flex items-center justify-between p-2 bg-gray-50 rounded border border-gray-100">
-                                                <div className="flex items-center gap-2 overflow-hidden">
-                                                    <div className="w-8 h-8 rounded bg-gray-200 flex-shrink-0 overflow-hidden">
-                                                        {post.image_url && <img src={post.image_url} className="w-full h-full object-cover" />}
-                                                    </div>
-                                                    <div className="min-w-0">
-                                                        <p className="text-xs font-bold truncate">{post.title}</p>
-                                                        <p className="text-[10px] text-gray-500">{post.word_date}</p>
-                                                    </div>
+                                <ul className="space-y-2">
+                                    {recentWords.map(post => (
+                                        <li key={post.id} className="flex items-center justify-between p-2 bg-gray-50 rounded border border-gray-100">
+                                            <div className="flex items-center gap-2 overflow-hidden">
+                                                <div className="w-8 h-8 rounded bg-gray-200 flex-shrink-0 overflow-hidden">
+                                                    {post.image_url && <img src={post.image_url} className="w-full h-full object-cover" />}
                                                 </div>
+                                                <div className="min-w-0">
+                                                    <p className="text-xs font-bold truncate">{post.title}</p>
+                                                    <p className="text-[10px] text-gray-500">{post.word_date}</p>
+                                                </div>
+                                            </div>
+                                            <div className="flex gap-1">
+                                                <Button variant="ghost" size="icon" className="h-6 w-6 text-blue-400 hover:text-blue-600" onClick={() => openEditWordModal(post)}>
+                                                    <Edit2 className="w-3 h-3" />
+                                                </Button>
                                                 <Button variant="ghost" size="icon" className="h-6 w-6 text-red-400 hover:text-red-600" onClick={() => handleDeleteWord(post.id)}>
                                                     <Trash2 className="w-3 h-3" />
                                                 </Button>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                )}
+                                            </div>
+                                        </li>
+                                    ))}
+                                </ul>
                             </CardContent>
                         </Card>
                     </div>
@@ -456,24 +478,19 @@ export default function AdminDashboard() {
             </div>
           </TabsContent>
 
-          {/* 4. 이벤트 관리 (분리 및 기능 추가) */}
+          {/* 4. 이벤트 관리 */}
           <TabsContent value="events">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
               
-              {/* 왼쪽: 이벤트 등록/수정 폼 */}
+              {/* 왼쪽: 이벤트 생성 폼 */}
               <div className="lg:col-span-5 space-y-6">
                   <div className="flex items-center justify-between">
                     <h2 className="text-2xl font-bold flex items-center gap-2">
-                        <Calendar className="w-6 h-6"/> {isEditingEvent ? "이벤트 수정" : t('admin.contents.event.section_title')}
+                        <Calendar className="w-6 h-6"/> {t('admin.contents.event.section_title')}
                     </h2>
-                    {isEditingEvent && (
-                        <Button variant="outline" size="sm" onClick={resetEventForm} className="text-gray-500">
-                            <X className="w-4 h-4 mr-1"/> 취소
-                        </Button>
-                    )}
                   </div>
                   
-                  <Card className={isEditingEvent ? "border-orange-400 shadow-md" : ""}>
+                  <Card>
                     <CardContent className="p-6 space-y-4">
                        <div className="space-y-2">
                           <Label>{t('admin.contents.event.label.poster')}</Label>
@@ -514,27 +531,27 @@ export default function AdminDashboard() {
                           <Textarea value={eventData.description} onChange={e => setEventData({...eventData, description: e.target.value})} placeholder={t('admin.contents.event.placeholder.description')} />
                        </div>
 
-                       <Button onClick={handleSaveEvent} disabled={isImageUploading || isSubmitting} className="w-full" variant={isEditingEvent ? "default" : "secondary"}>
-                            {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2"/> : (isEditingEvent ? <Edit2 className="w-4 h-4 mr-2"/> : <Save className="w-4 h-4 mr-2"/>)}
-                            {isEditingEvent ? "수정 완료 (Update)" : t('admin.contents.event.submit_button')}
+                       <Button onClick={handleCreateEvent} disabled={isImageUploading || isSubmitting} className="w-full bg-blue-600 hover:bg-blue-700">
+                            {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2"/> : <PlusCircle className="w-4 h-4 mr-2"/>}
+                            {t('admin.contents.event.submit_button')}
                        </Button>
                     </CardContent>
                   </Card>
               </div>
 
-              {/* 오른쪽: 이벤트 목록 (삭제/수정용) */}
+              {/* 오른쪽: 이벤트 목록 */}
               <div className="lg:col-span-7 space-y-6">
                   <h2 className="text-xl font-bold flex items-center gap-2 text-gray-700">
-                      등록된 이벤트 목록 ({eventsList.length})
+                      {t('admin.tabs.events')} ({eventsList.length})
                   </h2>
                   <div className="grid gap-4">
                       {eventsList.length === 0 ? (
-                          <div className="text-center py-10 bg-white rounded-lg border border-dashed text-gray-400">등록된 이벤트가 없습니다.</div>
+                          <div className="text-center py-10 bg-white rounded-lg border border-dashed text-gray-400">{t('word.list.empty')}</div>
                       ) : (
                           eventsList.map(event => (
-                              <Card key={event.id} className={`overflow-hidden transition-all ${isEditingEvent && eventData.id === event.id ? 'ring-2 ring-blue-500 bg-blue-50' : ''}`}>
+                              <Card key={event.id} className="overflow-hidden hover:shadow-md transition-shadow">
                                   <div className="flex">
-                                      <div className="w-32 h-32 bg-gray-100 flex-shrink-0">
+                                      <div className="w-32 h-32 bg-gray-100 flex-shrink-0 relative">
                                           {event.image_url ? (
                                               <img src={event.image_url} className="w-full h-full object-cover" alt="poster"/>
                                           ) : (
@@ -543,15 +560,15 @@ export default function AdminDashboard() {
                                       </div>
                                       <div className="p-4 flex-1 flex flex-col justify-between">
                                           <div>
-                                              <h3 className="font-bold text-lg">{event.title}</h3>
-                                              <div className="text-xs text-gray-500 mt-1 flex gap-2">
+                                              <h3 className="font-bold text-lg leading-tight">{event.title}</h3>
+                                              <div className="text-xs text-gray-500 mt-1 flex flex-wrap gap-2">
                                                   <span className="bg-gray-100 px-2 py-0.5 rounded">{event.start_date} {event.end_date && `~ ${event.end_date}`}</span>
                                                   <span>{event.location}</span>
                                               </div>
-                                              <p className="text-sm text-gray-600 mt-2 line-clamp-1">{event.description}</p>
                                           </div>
                                           <div className="flex justify-end gap-2 mt-2">
-                                              <Button variant="outline" size="sm" onClick={() => handleEditEventClick(event)} className="h-8">
+                                              {/* 이벤트 수정 버튼 (팝업 오픈) */}
+                                              <Button variant="outline" size="sm" onClick={() => openEditEventModal(event)} className="h-8">
                                                   <Edit2 className="w-3 h-3 mr-1"/> {t('common.edit')}
                                               </Button>
                                               <Button variant="destructive" size="sm" onClick={() => handleDeleteEvent(event.id)} className="h-8">
@@ -571,6 +588,101 @@ export default function AdminDashboard() {
 
         </Tabs>
       </main>
+
+      {/* 말씀카드 수정 팝업 */}
+      <Dialog open={isEditWordOpen} onOpenChange={setIsEditWordOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>{t('admin.contents.word.edit_title')}</DialogTitle>
+            <DialogDescription>{t('admin.contents.word.edit_desc')}</DialogDescription>
+          </DialogHeader>
+          
+          {editingWord && (
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label>{t('admin.contents.word.label.image')}</Label>
+                <div className="flex items-center gap-2">
+                    <Input type="file" onChange={(e) => e.target.files && handleImageUpload(e.target.files[0], 'edit-word')} disabled={isImageUploading} />
+                    {editingWord.imageUrl && <div className="w-10 h-10 rounded overflow-hidden bg-gray-100"><img src={editingWord.imageUrl} className="w-full h-full object-cover"/></div>}
+                </div>
+              </div>
+              <div className="grid gap-2">
+                <Label>{t('admin.contents.word.label.title')}</Label>
+                <Input value={editingWord.title} onChange={(e) => setEditingWord({ ...editingWord, title: e.target.value })} />
+              </div>
+              <div className="grid gap-2">
+                <Label>{t('admin.contents.word.label.date')}</Label>
+                <Input type="date" value={editingWord.date} onChange={(e) => setEditingWord({ ...editingWord, date: e.target.value })} />
+              </div>
+              <div className="grid gap-2">
+                <Label>{t('admin.contents.word.label.content')}</Label>
+                <Textarea value={editingWord.content} onChange={(e) => setEditingWord({ ...editingWord, content: e.target.value })} className="min-h-[100px]" />
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditWordOpen(false)}>{t('common.cancel')}</Button>
+            <Button onClick={handleUpdateWord} disabled={isSubmitting}>
+              {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2"/> : null}
+              {t('admin.contents.word.update_button')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* 이벤트 수정 팝업 (새로 추가됨) */}
+      <Dialog open={isEditEventOpen} onOpenChange={setIsEditEventOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>{t('admin.contents.event.edit_title') || "Edit Event"}</DialogTitle>
+            <DialogDescription>{t('admin.contents.event.edit_desc') || "Modify event details."}</DialogDescription>
+          </DialogHeader>
+          
+          {editingEvent && (
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label>{t('admin.contents.event.label.poster')}</Label>
+                <div className="flex items-center gap-2">
+                    <Input type="file" onChange={(e) => e.target.files && handleImageUpload(e.target.files[0], 'edit-event')} disabled={isImageUploading} />
+                    {editingEvent.imageUrl && <div className="w-10 h-10 rounded overflow-hidden bg-gray-100"><img src={editingEvent.imageUrl} className="w-full h-full object-cover"/></div>}
+                </div>
+              </div>
+              <div className="grid gap-2">
+                <Label>{t('admin.contents.event.label.title')}</Label>
+                <Input value={editingEvent.title} onChange={(e) => setEditingEvent({ ...editingEvent, title: e.target.value })} />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="grid gap-2">
+                    <Label>{t('admin.contents.event.label.start_date')}</Label>
+                    <Input type="date" value={editingEvent.startDate} onChange={(e) => setEditingEvent({ ...editingEvent, startDate: e.target.value })} />
+                </div>
+                <div className="grid gap-2">
+                    <Label>{t('admin.contents.event.label.end_date')}</Label>
+                    <Input type="date" value={editingEvent.endDate} onChange={(e) => setEditingEvent({ ...editingEvent, endDate: e.target.value })} />
+                </div>
+              </div>
+              <div className="grid gap-2">
+                <Label>{t('admin.contents.event.label.location')}</Label>
+                <Input value={editingEvent.location} onChange={(e) => setEditingEvent({ ...editingEvent, location: e.target.value })} />
+              </div>
+              <div className="grid gap-2">
+                <Label>{t('admin.contents.event.label.description')}</Label>
+                <Textarea value={editingEvent.description} onChange={(e) => setEditingEvent({ ...editingEvent, description: e.target.value })} className="min-h-[100px]" />
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditEventOpen(false)}>{t('common.cancel')}</Button>
+            <Button onClick={handleUpdateEvent} disabled={isSubmitting}>
+              {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2"/> : null}
+              {t('admin.contents.event.update_button') || "Update Event"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
     </div>
   );
 }

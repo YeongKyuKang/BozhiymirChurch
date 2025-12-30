@@ -9,20 +9,26 @@ import { Card, CardContent, CardHeader, CardFooter, CardTitle } from "@/componen
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
-  Heart, MessageCircle, PlusCircle, Trash2, Loader2, Sparkles, 
-  ChevronLeft, ChevronRight
+  Heart, PlusCircle, Trash2, Loader2, Sparkles, 
+  ChevronLeft, ChevronRight, Frown, HandHeart
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ko, enUS, ru } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 
 // 타입 정의
+interface Reaction {
+  id: string;
+  user_id: string;
+  reaction_type: string;
+}
+
 interface ThanksPost {
   id: string;
   category: "grace" | "daily" | "family" | "church";
@@ -32,6 +38,7 @@ interface ThanksPost {
   author_nickname: string;
   author_profile_picture_url: string | null;
   created_at: string;
+  thanks_reactions: Reaction[]; // Join된 반응 데이터
 }
 
 interface ThanksPageClientProps {
@@ -61,13 +68,14 @@ export default function ThanksPageClient({ initialPosts }: ThanksPageClientProps
 
   useEffect(() => {
     setIsMounted(true);
+    fetchPosts(); // 초기 로드 시 최신 데이터(반응 포함) 가져오기
   }, []);
 
-  // 데이터 새로고침 함수
+  // 데이터 새로고침 함수 (반응 포함)
   const fetchPosts = useCallback(async () => {
     const { data } = await supabase
       .from('thanks_posts')
-      .select('*')
+      .select('*, thanks_reactions(*)') // 반응 데이터 함께 로드
       .order('created_at', { ascending: false });
     
     if (data) {
@@ -96,9 +104,8 @@ export default function ThanksPageClient({ initialPosts }: ThanksPageClientProps
   // 하루 3회 작성 제한 체크 함수
   const checkDailyLimit = async () => {
     if (!user) return false;
-
     const today = new Date();
-    today.setHours(0, 0, 0, 0); // 오늘 00:00:00
+    today.setHours(0, 0, 0, 0); 
 
     const { count } = await supabase
       .from('thanks_posts')
@@ -112,8 +119,6 @@ export default function ThanksPageClient({ initialPosts }: ThanksPageClientProps
   const handleCreateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return alert(t('common.login_required'));
-
-    // [수정] 제목과 내용 빈 값 체크
     if (!newPostTitle.trim() || !newPostContent.trim()) {
         return alert(t('thanks.alert.required_fields')); 
     }
@@ -121,15 +126,13 @@ export default function ThanksPageClient({ initialPosts }: ThanksPageClientProps
     setIsSubmitting(true);
 
     try {
-        // 1. 하루 3회 제한 확인
         const isLimitReached = await checkDailyLimit();
         if (isLimitReached) {
-            alert(t('thanks.alert.daily_limit') || "Daily limit reached.");
+            alert(t('thanks.alert.daily_limit'));
             setIsSubmitting(false);
             return;
         }
 
-        // 2. 글 작성
         const { error } = await supabase.from('thanks_posts').insert({
             category: newPostCategory,
             title: newPostTitle,
@@ -144,8 +147,6 @@ export default function ThanksPageClient({ initialPosts }: ThanksPageClientProps
             setIsWriteModalOpen(false);
             setNewPostTitle("");
             setNewPostContent("");
-            
-            // 3. 목록 즉시 갱신
             fetchPosts(); 
         } else {
             alert(t('common.error') + ": " + error.message);
@@ -160,10 +161,52 @@ export default function ThanksPageClient({ initialPosts }: ThanksPageClientProps
 
   const handleDelete = async (id: string) => {
     if (!confirm(t('common.confirm_delete'))) return;
-    
     const { error } = await supabase.from('thanks_posts').delete().eq('id', id);
-    if (!error) {
-        fetchPosts();
+    if (!error) fetchPosts();
+  };
+
+  // [기능 추가] 반응 핸들링
+  const handleReaction = async (postId: string, reactionType: string) => {
+    if (!user) return alert(t('common.login_required'));
+
+    // 1. 현재 상태 확인 (이미 눌렀는지)
+    const postIndex = posts.findIndex(p => p.id === postId);
+    if (postIndex === -1) return;
+
+    const currentPost = posts[postIndex];
+    const existingReaction = currentPost.thanks_reactions.find(
+      r => r.user_id === user.id && r.reaction_type === reactionType
+    );
+
+    // 2. 낙관적 UI 업데이트 (DB 요청 전 미리 반영)
+    const updatedReactions = existingReaction
+      ? currentPost.thanks_reactions.filter(r => r.id !== existingReaction.id) // 삭제
+      : [...currentPost.thanks_reactions, { id: 'temp', user_id: user.id, reaction_type: reactionType }]; // 추가
+
+    const newPosts = [...posts];
+    newPosts[postIndex] = { ...currentPost, thanks_reactions: updatedReactions };
+    setPosts(newPosts);
+
+    // 3. DB 요청
+    try {
+      if (existingReaction) {
+        // 이미 있으면 삭제 (Toggle Off)
+        await supabase
+          .from('thanks_reactions')
+          .delete()
+          .match({ post_id: postId, user_id: user.id, reaction_type: reactionType });
+      } else {
+        // 없으면 추가 (Toggle On)
+        await supabase
+          .from('thanks_reactions')
+          .insert({ post_id: postId, user_id: user.id, reaction_type: reactionType });
+      }
+      
+      // 정확한 데이터 동기화를 위해 백그라운드에서 다시 조회
+      fetchPosts(); 
+    } catch (error) {
+      console.error(error);
+      // 에러 시 롤백 (여기서는 생략, fetchPosts로 커버)
     }
   };
 
@@ -200,6 +243,7 @@ export default function ThanksPageClient({ initialPosts }: ThanksPageClientProps
       <section className="py-16 md:py-24">
         <div className="container mx-auto px-4 max-w-6xl">
           
+          {/* Filters & Actions */}
           <div className="flex flex-col md:flex-row gap-4 justify-between items-center mb-12 bg-white p-6 rounded-[24px] shadow-lg shadow-slate-100 border border-slate-100">
              <div className="flex flex-wrap gap-2 w-full md:w-auto justify-center">
                 <Select value={selectedCategory} onValueChange={(v) => { setSelectedCategory(v); setCurrentPage(1); }}>
@@ -275,6 +319,17 @@ export default function ThanksPageClient({ initialPosts }: ThanksPageClientProps
              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {currentPosts.map(post => {
                    const categoryInfo = categories.find(c => c.id === post.category);
+                   
+                   // 반응 카운트 계산
+                   const likes = post.thanks_reactions?.filter(r => r.reaction_type === 'like') || [];
+                   const sads = post.thanks_reactions?.filter(r => r.reaction_type === 'sad') || [];
+                   const prays = post.thanks_reactions?.filter(r => r.reaction_type === 'pray') || [];
+
+                   // 내가 눌렀는지 확인
+                   const isLiked = user && likes.some(r => r.user_id === user.id);
+                   const isSad = user && sads.some(r => r.user_id === user.id);
+                   const isPrayed = user && prays.some(r => r.user_id === user.id);
+
                    return (
                    <Card key={post.id} className="group rounded-[32px] border-none shadow-lg shadow-slate-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 bg-white overflow-hidden flex flex-col h-full">
                        <CardHeader className="p-6 pb-2">
@@ -306,15 +361,40 @@ export default function ThanksPageClient({ initialPosts }: ThanksPageClientProps
                            </p>
                        </CardContent>
 
+                       {/* 반응 버튼 그룹 */}
                        <CardFooter className="px-6 py-4 bg-slate-50/50 border-t border-slate-50 flex justify-between items-center">
                            <div className="flex gap-2">
-                               <Button variant="ghost" size="sm" className="text-slate-500 hover:text-pink-500 hover:bg-pink-50 rounded-full h-9">
-                                   <Heart className="w-4 h-4 mr-1.5" />
-                                   <span className="text-xs font-bold">{t('common.like')}</span>
+                               {/* 좋아요 (Like) */}
+                               <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => handleReaction(post.id, 'like')}
+                                className={cn("rounded-full h-9 transition-colors", isLiked ? "text-pink-500 bg-pink-50 hover:bg-pink-100" : "text-slate-400 hover:text-pink-500 hover:bg-pink-50")}
+                               >
+                                   <Heart className={cn("w-4 h-4 mr-1.5", isLiked && "fill-current")} />
+                                   <span className="text-xs font-bold">{likes.length > 0 ? likes.length : t('common.like')}</span>
                                </Button>
-                               <Button variant="ghost" size="sm" className="text-slate-500 hover:text-blue-500 hover:bg-blue-50 rounded-full h-9">
-                                   <MessageCircle className="w-4 h-4 mr-1.5" />
-                                   <span className="text-xs font-bold">{t('common.comment')}</span>
+
+                               {/* 슬퍼요 (Sad) */}
+                               <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => handleReaction(post.id, 'sad')}
+                                className={cn("rounded-full h-9 transition-colors", isSad ? "text-blue-500 bg-blue-50 hover:bg-blue-100" : "text-slate-400 hover:text-blue-500 hover:bg-blue-50")}
+                               >
+                                   <Frown className={cn("w-4 h-4 mr-1.5", isSad && "fill-current")} />
+                                   <span className="text-xs font-bold">{sads.length > 0 ? sads.length : t('common.sad')}</span>
+                               </Button>
+
+                               {/* 기도해요 (Pray) */}
+                               <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => handleReaction(post.id, 'pray')}
+                                className={cn("rounded-full h-9 transition-colors", isPrayed ? "text-purple-500 bg-purple-50 hover:bg-purple-100" : "text-slate-400 hover:text-purple-500 hover:bg-purple-50")}
+                               >
+                                   <HandHeart className={cn("w-4 h-4 mr-1.5", isPrayed && "fill-current")} />
+                                   <span className="text-xs font-bold">{prays.length > 0 ? prays.length : t('common.pray')}</span>
                                </Button>
                            </div>
 
@@ -329,6 +409,7 @@ export default function ThanksPageClient({ initialPosts }: ThanksPageClientProps
              </div>
           )}
 
+          {/* 페이지네이션 */}
           {totalPages > 1 && (
             <div className="flex justify-center items-center gap-2 mt-12">
               <Button variant="outline" size="icon" onClick={() => setCurrentPage(Math.max(1, currentPage - 1))} disabled={currentPage === 1} className="rounded-full border-slate-200 hover:border-blue-300 hover:text-blue-600">
