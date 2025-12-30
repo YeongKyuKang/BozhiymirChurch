@@ -1,4 +1,36 @@
 {
+  "common": {
+    "amen": "Amen",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "confirm_delete": "Are you sure you want to delete this?",
+    "login_required": "Login required.",
+    "error": "An error occurred",
+    "like": "Like",
+    "comment": "Comment"
+  },
+  "nav": {
+    "home": "Home",
+    "about": "About",
+    "story": "Our Ministry Journey",
+    "jesus": "Jesus",
+    "beliefs": "Beliefs",
+    "leadership": "Leadership",
+    "ukrainian": "Ukrainian",
+    "word": "Word",
+    "events": "Events",
+    "thanks": "Thanks",
+    "faith": "Faith",
+    "prayer": "Prayer",
+    "login": "Login",
+    "logout": "Logout",
+    "profile": "Profile",
+    "admin": "Dashboard",
+    "my_page": "My Page",
+    "join": "Join",
+    "login_required": "Login Required to Enter"
+  },
   "home": {
     "hero": {
       "welcome_title": "Welcome to Church Bozhiy Mir (The Peace of God)",
@@ -35,29 +67,6 @@
       "ministry2_time": "Sunday 3:00 PM"
     }
   },
-
-  "nav": {
-    "about":"About",
-    "story":"Our Ministry Journey",
-    "jesus":"Jesus",
-    "beliefs":"Beliefs",
-    "leadership":"Leadership",
-    "ukrainian":"Ukrainian",
-    "home": "Home",
-    "word": "Word",
-    "events": "Events",
-    "thanks": "Thanks",
-    "faith":"Faith",
-    "prayer": "Prayer",
-    "login": "Login",
-    "logout": "Logout",
-    "profile": "Profile",
-    "admin": "Dashboard",
-    "my_page": "My Page",
-    "join": "Join",
-    "login_required": "Login Required to Enter"
-  },
-
   "footer": {
     "description": "A welcoming community where families grow together in faith and fellowship.",
     "quick_links": "Quick Links",
@@ -94,7 +103,6 @@
     },
     "copyright": "Bozhiymir Church. All Rights Reserved."
   },
-
   "about": {
     "belief": {
       "title": "The Apostles' Creed",
@@ -119,7 +127,6 @@
         "item5_description": "Ministry to more than 80 Ukrainian orphaned children in the city of Łódź"
       }
     },
-
     "leadership": {
       "title": "Church Leadership",
       "description": "Guided by faith and dedicated to serving our community with love and grace.",
@@ -140,95 +147,68 @@
       }
     }
   },
-    "register": {
-      "title": "Join Our Community",
-      "description": "Create your Bozhiymir Church account",
-      "label_profile_picture": "Profile Picture (Optional)",
-      "label_nickname": "Nickname",
-      "label_gender": "Gender",
-      "label_email": "Email",
-      "label_password": "Password",
-      "label_confirm_password": "Confirm Password",
-      "placeholder_nickname": "Enter your preferred nickname",
-      "placeholder_gender": "Select your gender",
-      "placeholder_email": "Enter your email",
-      "placeholder_password": "Enter your password",
-      "placeholder_confirm_password": "Confirm your password",
-      "gender_male": "Male",
-      "gender_female": "Female",
-      "btn_create_account": "Create Account",
-      "btn_creating_account": "Creating Account...",
-      "text_upload_instruction": "Click the upload button to add a photo",
-      "text_upload_limits": "(Max 5MB, JPG/PNG only)",
-      "text_nickname_hint": "This is how other members will see you",
-      "text_already_have_account": "Already have an account?",
-      "link_sign_in": "Sign in",
-      "error_file_size": "File must be less than 5MB.",
-      "error_invalid_image": "Please select a valid image file.",
-      "error_compression": "Failed to compress the image.",
-      "error_nickname_required": "Nickname is required.",
-      "error_nickname_length": "Nickname must be at least 2 characters.",
-      "error_gender_required": "Please select your gender.",
-      "error_password_match": "Passwords do not match.",
-      "error_password_length": "Password must be at least 6 characters.",
-      "success_registration": "Registration successful!"
-    },
-
-    "login": {
-      "title": "Sign In",
-      "description": "Log in to your church account",
-      "label_email": "Email",
-      "label_password": "Password",
-      "placeholder_email": "Enter your email",
-      "placeholder_password": "Enter your password",
-      "btn_sign_in": "Sign In",
-      "btn_signing_in": "Signing In...",
-      "text_no_account": "Don't have an account?",
-      "link_register": "Register"
-    },
-    
-    "profile": {
-      "page_title": "My Profile",
-      "loading": "Loading...",
-      "default_nickname": "User",
-      "badge_verified": "Verified",
-      "text_joined": "Joined:",
-      "verify_title": "Verification Required",
-      "verify_description": "You currently have 'Guest' status. Enter the code issued by the church to grant permission for writing gratitude titles and comments.",
-      "placeholder_code": "Enter verification code",
-      "btn_verify": "Verify",
-      "btn_verifying": "Verifying...",
-      "verified_status_title": "Verification Complete",
-      "verified_status_desc": "You are now active as an official member of our church.",
-      "btn_logout": "Sign Out",
-      "alert_enter_code": "Please enter the verification code.",
-      "error_invalid_code": "Invalid or already used code.",
-      "success_verify": "Church member verification successful!"
-    },
-    "thanks": {
-    "title": "GRATITUDE BOARD",
-    "description": "A space to share the grace and testimonies received from God. Please share your story.",
-    "filter_all": "All Categories",
-    "category_answered_prayer": "Answered Prayer",
-    "category_personal_testimony": "Personal Testimony",
-    "category_church_support": "Church Support",
-    "category_blessing": "Daily Blessing",
-    "placeholder_category": "Select Category",
-    "btn_date": "Select Date",
-    "btn_write": "SHARE TESTIMONY",
-    "modal_title": "Share Gratitude",
-    "modal_description": "Share the grace God has given you with the community.",
-    "label_category": "Category",
-    "label_title": "Title",
-    "label_content": "Content",
-    "placeholder_title": "Enter a title for your testimony",
-    "placeholder_content": "Describe the grace you received in detail",
-    "btn_submit": "POST NOW",
-    "btn_load_more": "LOAD MORE TESTIMONIES",
-    "cat_answered_prayer": "Answered Prayer",
-    "cat_personal_testimony": "Personal Testimony",
-    "cat_church_support": "Church Support",
-    "cat_blessing": "Daily Blessing"
+  "register": {
+    "title": "Join Our Community",
+    "description": "Create your Bozhiymir Church account",
+    "label_profile_picture": "Profile Picture (Optional)",
+    "label_nickname": "Nickname",
+    "label_gender": "Gender",
+    "label_email": "Email",
+    "label_password": "Password",
+    "label_confirm_password": "Confirm Password",
+    "placeholder_nickname": "Enter your preferred nickname",
+    "placeholder_gender": "Select your gender",
+    "placeholder_email": "Enter your email",
+    "placeholder_password": "Enter your password",
+    "placeholder_confirm_password": "Confirm your password",
+    "gender_male": "Male",
+    "gender_female": "Female",
+    "btn_create_account": "Create Account",
+    "btn_creating_account": "Creating Account...",
+    "text_upload_instruction": "Click the upload button to add a photo",
+    "text_upload_limits": "(Max 5MB, JPG/PNG only)",
+    "text_nickname_hint": "This is how other members will see you",
+    "text_already_have_account": "Already have an account?",
+    "link_sign_in": "Sign in",
+    "error_file_size": "File must be less than 5MB.",
+    "error_invalid_image": "Please select a valid image file.",
+    "error_compression": "Failed to compress the image.",
+    "error_nickname_required": "Nickname is required.",
+    "error_nickname_length": "Nickname must be at least 2 characters.",
+    "error_gender_required": "Please select your gender.",
+    "error_password_match": "Passwords do not match.",
+    "error_password_length": "Password must be at least 6 characters.",
+    "success_registration": "Registration successful!"
+  },
+  "login": {
+    "title": "Sign In",
+    "description": "Log in to your church account",
+    "label_email": "Email",
+    "label_password": "Password",
+    "placeholder_email": "Enter your email",
+    "placeholder_password": "Enter your password",
+    "btn_sign_in": "Sign In",
+    "btn_signing_in": "Signing In...",
+    "text_no_account": "Don't have an account?",
+    "link_register": "Register"
+  },
+  "profile": {
+    "page_title": "My Profile",
+    "loading": "Loading...",
+    "default_nickname": "User",
+    "badge_verified": "Verified",
+    "text_joined": "Joined:",
+    "verify_title": "Verification Required",
+    "verify_description": "You currently have 'Guest' status. Enter the code issued by the church to grant permission for writing gratitude titles and comments.",
+    "placeholder_code": "Enter verification code",
+    "btn_verify": "Verify",
+    "btn_verifying": "Verifying...",
+    "verified_status_title": "Verification Complete",
+    "verified_status_desc": "You are now active as an official member of our church.",
+    "btn_logout": "Sign Out",
+    "alert_enter_code": "Please enter the verification code.",
+    "error_invalid_code": "Invalid or already used code.",
+    "success_verify": "Church member verification successful!"
   },
   "ministry": {
     "ukrainian": {
@@ -301,6 +281,100 @@
         "email_button": "Email Ministry Team",
         "home_button": "Back to Home"
       }
+    }
+  },
+  "word": {
+    "hero": {
+      "title": "Daily Word",
+      "desc": "Start your day with God's word provided daily."
+    },
+    "list": {
+      "empty": "No posts available."
+    }
+  },
+  "prayer": {
+    "hero": {
+      "title": "Prayer Requests",
+      "desc": "\"Confess your sins to each other and pray for each other so that you may be healed.\" (James 5:16)"
+    },
+    "button": {
+      "share": "Share Prayer Request",
+      "pray_together": "Pray Together",
+      "edit_answer": "Edit Answer",
+      "write_answer": "Write Answer"
+    },
+    "category": {
+      "all": "All",
+      "ukraine": "Ukraine",
+      "church": "Church",
+      "members": "Members",
+      "children": "Next Gen"
+    },
+    "status": {
+      "answered": "Answered"
+    },
+    "label": {
+      "answer_note": "Answer Note"
+    },
+    "modal": {
+      "title": "Share Prayer Request",
+      "desc": "Please share what you would like us to pray for.",
+      "label": {
+        "category": "Category",
+        "title": "Title",
+        "content": "Content"
+      },
+      "placeholder": {
+        "title": "Enter title",
+        "content": "Enter specific prayer details",
+        "answer": "Write the answer details..."
+      },
+      "button": {
+        "submit": "Submit"
+      }
+    },
+    "alert": {
+      "success": "Prayer request submitted."
+    },
+    "list": {
+      "empty": "No prayer requests found."
+    }
+  },
+  "thanks": {
+    "hero": {
+      "title": "Thanksgiving",
+      "desc": "Give thanks in all circumstances; for this is God's will for you in Christ Jesus. (1 Thess 5:18)"
+    },
+    "button": {
+      "share": "Share Thanks"
+    },
+    "category": {
+      "grace": "Grace",
+      "daily": "Daily Life",
+      "family": "Family",
+      "church": "Church"
+    },
+    "modal": {
+      "title": "Share Thanksgiving",
+      "desc": "Please share the grace of God you experienced.",
+      "label": {
+        "category": "Category",
+        "title": "Title",
+        "content": "Content"
+      },
+      "placeholder": {
+        "title": "Enter title",
+        "content": "Enter details"
+      },
+      "button": {
+        "submit": "Share"
+      }
+    },
+    "alert": {
+      "success": "Thanksgiving post submitted."
+    },
+    "list": {
+      "empty": "No posts found."
     }
   }
 }

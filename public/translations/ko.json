@@ -1,239 +1,220 @@
 {
+  "common": {
+    "amen": "아멘",
+    "save": "저장",
+    "cancel": "취소",
+    "delete": "삭제",
+    "confirm_delete": "정말 삭제하시겠습니까?",
+    "login_required": "로그인이 필요합니다.",
+    "error": "오류가 발생했습니다",
+    "like": "좋아요",
+    "comment": "댓글"
+  },
   "nav": {
-    "about": "소개",
-    "story": "사역",
-    "jesus": "예수님",
-    "beliefs": "신앙고백",
-    "leadership": "섬기는 사람들",
-    "ukrainian": "우크라이나 사역",
     "home": "홈",
-    "word": "말씀",
-    "events": "교회소식",
-    "thanks": "감사",
-    "faith": "믿음",
-    "prayer": "기도요청",
+    "about": "교회 소개",
+    "story": "사역 연혁",
+    "jesus": "예수님",
+    "beliefs": "우리의 믿음",
+    "leadership": "섬기는 이들",
+    "ukrainian": "우크라이나 사역",
+    "word": "말씀 묵상",
+    "events": "교회 소식",
+    "thanks": "감사 나눔",
+    "faith": "신앙",
+    "prayer": "중보기도",
     "login": "로그인",
     "logout": "로그아웃",
     "profile": "프로필",
-    "admin": "관리자 대시보드",
+    "admin": "관리자",
     "my_page": "마이페이지",
-    "join": "함께하기",
-    "login_required": "로그인 후 접근가능합니다"
+    "join": "회원가입",
+    "login_required": "로그인이 필요한 서비스입니다"
   },
   "home": {
     "hero": {
       "welcome_title": "보지미르 교회에 오신 것을 환영합니다",
-      "service_label": "예배 시간: 매주 일요일",
-      "service_time": "15:30 – 17:00",
-      "service_location": "📍 Hotel Poloneza, Poloneza 85A, 바르샤바",
+      "service_label": "주일 예배",
+      "service_time": "오후 3:30 – 5:00",
+      "service_location": "Hotel Poloneza, Poloneza 85A, Warsaw",
       "scripture_text": "“이 말을 할 때에 예수께서 친히 그들 가운데 서서 이르시되 너희에게 평강이 있을지어다 하시니”",
       "scripture_reference": "누가복음 24:36",
-      "cta_text": "함께하기"
+      "cta_text": "함께 예배하기"
     },
-
     "community_about": {
-      "section_label": "우리 공동체 소개",
+      "section_label": "우리 교회는",
       "main_title": "믿음과 사랑으로 하나 된 가족",
-      "paragraph_1": "보지미르 교회는 단순한 예배 처소 그 이상입니다. 우리는 다양한 문화와 언어, 배경을 가진 사람들이 모인 사랑 넘치는 가족입니다. 특히 폴란드에서 안식처를 찾은 우크라이나 가족들과 아이들을 맞이하며 우리 공동체는 더욱 단단해졌습니다.",
-      "paragraph_2": "전통적인 주일 예배부터 활기찬 어린이 프로그램에 이르기까지, 우리 교회의 문을 두드리는 모든 이들은 아름다운 공동체의 일원이 됩니다. 우리는 하나님의 사랑에는 국경이 없음을 믿으며, 우리 공동체는 매일 그 진리를 실천하고 있습니다.",
-      "scripture_text": "\"너희는 유대인이나 헬라인이나 종이나 자유인이나 남자나 여자나 다 그리스도 예수 안에서 하나이니라.\"",
+      "paragraph_1": "보지미르 교회(하나님의 평강 교회)는 단순한 예배 처소를 넘어, 문화와 언어, 배경을 초월한 사랑의 가족 공동체입니다. 우리는 폴란드로 피난 온 우크라이나 가족들과 어린이들을 환대하며 더욱 굳건해졌습니다.",
+      "paragraph_2": "전통적인 주일 예배부터 활기찬 주일학교 프로그램까지, 이곳에 발걸음하는 모든 분들은 아름다운 하나님 나라의 일부가 됩니다. 하나님의 사랑에는 국경이 없음을 우리는 매일 삶으로 증명하고 있습니다.",
+      "scripture_text": "\"너희는 유대인이나 헬라인이나 종이나 자유인이나 남자나 여자나 다 그리스도 예수 안에서 하나이니라\"",
       "scripture_reference": "– 갈라디아서 3:28"
     },
     "community_highlights": {
       "highlight1_title": "환대하는 마음",
-      "highlight1_description": "배경이나 언어, 삶의 환경에 상관없이 모든 사람을 따뜻한 품으로 맞이합니다.",
+      "highlight1_description": "배경이나 언어에 상관없이 모든 분들을 두 팔 벌려 환영합니다.",
       "highlight2_title": "글로벌 가족",
-      "highlight2_description": "다양한 국가와 문화가 모여 믿음과 교제 안에서 풍성한 조화를 이룹니다.",
-      "highlight3_title": "따뜻한 지원",
-      "highlight3_description": "실질적인 필요부터 정서적 지지까지, 그리스도의 사랑으로 모든 성도를 돌봅니다."
+      "highlight2_description": "다양한 국가와 문화가 어우러져 믿음 안에서 풍성한 교제를 나눕니다.",
+      "highlight3_title": "따뜻한 돌봄",
+      "highlight3_description": "실질적인 필요부터 정서적인 지원까지, 그리스도의 사랑으로 서로를 돌봅니다."
     },
     "ministries": {
-      "title": "교회 사역",
+      "title": "사역 소개",
       "ministry1_title": "어린이 주일학교",
-      "ministry1_description": "즐거운 활동과 성경 공부를 통해 어린이들이 믿음 안에서 배우고 성장할 수 있도록 준비된 특별 프로그램입니다.",
-      "ministry1_time": "매주 주일 오후 3:00",
-      "ministry2_title": "청년부 모임",
-      "ministry2_description": "청년들의 영적 여정을 돕고 지속적인 유대감을 쌓을 수 있도록 설계된 매력적인 이벤트와 소그룹 모임입니다.",
-      "ministry2_time": "매주 주일 오후 3:00"
+      "ministry1_description": "다양한 활동과 성경 말씀을 통해 아이들이 믿음 안에서 자라도록 돕습니다.",
+      "ministry1_time": "주일 오후 3:00",
+      "ministry2_title": "청소년 모임",
+      "ministry2_description": "청소년들이 영적 여정을 함께하며 지속적인 우정을 쌓을 수 있는 소그룹 모임입니다.",
+      "ministry2_time": "주일 오후 3:00"
     }
   },
-
   "footer": {
-    "description": "가족이 믿음과 교제 안에서 함께 성장하는 따뜻한 공동체입니다.",
+    "description": "믿음과 교제 안에서 온 가족이 함께 성장하는 환대의 공동체입니다.",
     "quick_links": "바로가기",
     "links": {
-      "leadership": "리더십",
-      "events": "교회 행사",
-      "join": "함께하기",
+      "leadership": "섬기는 이들",
+      "events": "교회 소식",
+      "join": "오시는 길",
       "ukrainian_ministry": "우크라이나 사역"
     },
-    "contact_title": "연락처 안내",
+    "contact_title": "연락처",
     "address_line1": "ul. Poloneza 85A,",
     "address_line2": "02-826 Warszawa",
-    "Contact Info_ru": "러시아어 및 우크라이나어 문의: +48 797 880 603",
-    "Contact Info_ko": "영어 및 한국어 문의: +48 573 229 077",
+    "Contact Info_ru": "러시아어/우크라이나어 문의: +48 797 880 603",
+    "Contact Info_ko": "한국어/영어 문의: +48 573 229 077",
     "email": "kosciolbozypokoj@gmail.com",
-    "service_title": "예배 및 모임 안내",
+    "service_title": "예배 안내",
     "services": {
       "main": {
-        "title": "주일 대예배",
-        "desc": "매주 주일 오후 3:30에 예배가 시작됩니다."
+        "title": "주일 예배",
+        "desc": "매주 주일 오후 3:30"
       },
       "youth": {
-        "title": "청년부 모임",
-        "desc": "매주 주일 대예배 전 오후 3:00에 모입니다."
+        "title": "청소년부",
+        "desc": "매주 주일 오후 3:00 (본예배 전)"
       },
       "kids": {
-        "title": "주일학교 (어린이 사역)",
-        "desc": "5~13세 어린이를 대상으로 매주 주일 오후 3:00에 진행됩니다."
+        "title": "주일학교",
+        "desc": "5~13세 어린이, 매주 주일 오후 3:00"
       },
       "prayer": {
         "title": "수요 기도회",
-        "desc": "매주 수요일 오후 7:00 / 주소: ul. Wyczółki 33 / 러시아어와 한국어로 번갈아 진행됩니다."
+        "desc": "매주 수요일 저녁 7:00 / 장소: ul. Wyczółki 33 / 러시아어와 한국어로 격주 진행"
       }
     },
-    "copyright": "Bozhiymir Church. 모든 권리 보유."
+    "copyright": "Bozhiymir Church. All Rights Reserved."
   },
-
-    "about": {
+  "about": {
     "belief": {
       "title": "사도신경",
-      "content": "전능하사 천지를 만드신 하나님 아버지를 내가 믿사오며,\n\n그 외아들 우리 주 예수 그리스도를 믿사오니,\n이는 성령으로 잉태하사 동정녀 마리아에게 나시고,\n본디오 빌라도에게 고난을 받으사,\n십자가에 못 박혀 죽으시고 장사한 지 사흘 만에 죽은 자 가운데서 다시 살아나시며,\n하늘에 오르사 전능하신 하나님 우편에 앉아 계시다가,\n저리로서 산 자와 죽은 자를 심판하러 오시리라.\n\n성령을 믿사오며, 거룩한 공회와,\n성도가 서로 교통하는 것과,\n죄를 사하여 주시는 것과, 몸이 다시 사는 것과,\n영원히 사는 것을 믿사옵나이다. 아멘."
+      "content": "나는 전능하신 아버지 하나님,\n천지의 창조주를 믿습니다.\n\n나는 그의 유일하신 아들, 우리 주 예수 그리스도를 믿습니다.\n그는 성령으로 잉태되어 동정녀 마리아에게서 나시고,\n본디오 빌라도에게 고난을 받아 십자가에 못 박혀 죽으시고,\n장사된 지 사흘 만에 죽은 자 가운데서 다시 살아나셨으며,\n하늘에 오르시어 전능하신 아버지 하나님 우편에 앉아 계시다가,\n거기로부터 살아있는 자와 죽은 자를 심판하러 오십니다.\n\n나는 성령을 믿으며,\n거룩한 공교회와 성도의 교제와\n죄를 용서받는 것과 몸의 부활과 영생을 믿습니다.\n아멘."
     },
     "story": {
       "main": {
-        "title": "사역의 여정",
-        "description": "보지미르 교회는 그리스도의 사랑을 전하며 도움이 필요한 이들을 섬기는 사명에 헌신하고 있습니다."
+        "title": "사역의 발자취",
+        "description": "보지미르 교회는 그리스도의 손과 발이 되어 도움이 필요한 이웃을 섬기는 소명에 헌신해 왔습니다."
       },
       "timeline": {
-        "section_title": "주요 사역 연혁",
-        "item1_title": "2022년 7월 17일",
+        "section_title": "주요 연혁",
+        "item1_title": "2022. 07. 17",
         "item1_description": "교회 설립",
-        "item2_title": "2022년 6월 – 2024년 12월",
-        "item2_description": "난민 센터 사역 (Global Expo)",
-        "item3_title": "2022년 7월 – 2024년 4월",
-        "item3_description": "“Dom Matki” 센터 미혼모 지원 사역",
-        "item4_title": "2023년 4월 – 2025년 8월",
-        "item4_description": "오사(Ossa) 지역 우크라이나 고아 어린이(100명 이상) 섬김 사역",
-        "item5_title": "2024년 9월 – 현재",
-        "item5_description": "우치(Łódź) 시 우크라이나 고아 어린이(80명 이상) 섬김 사역"
+        "item2_title": "2022. 06 – 2024. 12",
+        "item2_description": "난민 보호소 사역 (Global Expo)",
+        "item3_title": "2022. 07 – 2024. 04",
+        "item3_description": "미혼모 센터 “Dom Matki” 사역",
+        "item4_title": "2023. 04 – 2025. 08",
+        "item4_description": "Ossa 지역 우크라이나 고아 100여 명 섬김 사역",
+        "item5_title": "2024. 09 – 현재",
+        "item5_description": "Łódź 지역 우크라이나 고아 80여 명 섬김 사역"
       }
     },
     "leadership": {
-      "title": "섬기는 사람들",
-      "description": "믿음 안에서 사랑과 은혜로 공동체를 섬기는 리더십을 소개합니다.",
+      "title": "섬기는 분들",
+      "description": "믿음과 사랑으로 교회 공동체를 섬기는 리더십을 소개합니다.",
       "leader1": {
-        "name": "최 베드로 목사",
-        "role": "담임 목사 및 설립자",
-        "bio": "온누리 교회 선교사. 2022년부터 바르샤바 '보지미르' 교회의 설립자이자 담임 목사로 사역하고 있습니다."
+        "name": "최피터 목사",
+        "role": "담임목사 & 설립자",
+        "bio": "온누리교회 파송 선교사. 2022년 바르샤바에 '하나님의 평강(보지미르)' 교회를 개척하여 섬기고 있습니다."
       },
       "leader2": {
-        "name": "뱌체슬라프 돌기흐 목사",
-        "role": "설교자",
-        "bio": "하나님의 말씀을 선포하며 공동체의 영적 성장을 돕는 설교자입니다."
+        "name": "뱌체슬라프 목사",
+        "role": "협력 목사",
+        "bio": "깊이 있는 말씀 선포로 성도들의 영적 성장을 돕고 있습니다."
       },
       "leader3": {
-        "name": "디아나 타르티치나야",
-        "role": "교회 행정 간사",
-        "bio": "교회 운영 및 공동체 협력을 지원하는 행정 전문가입니다."
+        "name": "다이아나 간사",
+        "role": "행정 간사",
+        "bio": "교회의 전반적인 행정과 커뮤니티 조정을 탁월하게 감당하고 있습니다."
       }
     }
   },
-    "register": {
-      "title": "우리 커뮤니티에 참여하세요",
-      "description": "보지미르 교회의 계정을 만듭니다",
-      "label_profile_picture": "프로필 사진 (선택 사항)",
-      "label_nickname": "닉네임",
-      "label_gender": "성별",
-      "label_email": "이메일",
-      "label_password": "비밀번호",
-      "label_confirm_password": "비밀번호 확인",
-      "placeholder_nickname": "원하는 닉네임을 입력하세요",
-      "placeholder_gender": "성별 선택",
-      "placeholder_email": "이메일을 입력하세요",
-      "placeholder_password": "비밀번호를 입력하세요",
-      "placeholder_confirm_password": "비밀번호를 다시 입력하세요",
-      "gender_male": "남성",
-      "gender_female": "여성",
-      "btn_create_account": "계정 만들기",
-      "btn_creating_account": "계정 생성 중...",
-      "text_upload_instruction": "업로드 버튼을 클릭하여 사진을 추가하세요",
-      "text_upload_limits": "(최대 5MB, JPG/PNG 전용)",
-      "text_nickname_hint": "다른 회원들에게 표시되는 이름입니다",
-      "text_already_have_account": "이미 계정이 있으신가요?",
-      "link_sign_in": "로그인",
-      "error_file_size": "파일 크기는 5MB 이하여야 합니다.",
-      "error_invalid_image": "유효한 이미지 파일을 선택해주세요.",
-      "error_compression": "이미지 압축에 실패했습니다.",
-      "error_nickname_required": "닉네임은 필수입니다.",
-      "error_nickname_length": "닉네임은 최소 2자 이상이어야 합니다.",
-      "error_gender_required": "성별을 선택해주세요.",
-      "error_password_match": "비밀번호가 일치하지 않습니다.",
-      "error_password_length": "비밀번호는 최소 6자 이상이어야 합니다.",
-      "success_registration": "회원가입이 성공했습니다!"
-    },
-
-    "login": {
-      "title": "로그인",
-      "description": "교회 계정으로 로그인하세요",
-      "label_email": "이메일",
-      "label_password": "비밀번호",
-      "placeholder_email": "이메일을 입력하세요",
-      "placeholder_password": "비밀번호를 입력하세요",
-      "btn_sign_in": "로그인",
-      "btn_signing_in": "로그인 중...",
-      "text_no_account": "계정이 없으신가요?",
-      "link_register": "회원가입"
-    },
-    "profile": {
-      "page_title": "마이페이지",
-      "loading": "불러오는 중...",
-      "default_nickname": "사용자",
-      "badge_verified": "인증됨",
-      "text_joined": "가입일:",
-      "verify_title": "교인 인증이 필요합니다",
-      "verify_description": "현재 '방문자' 권한입니다. 교회에서 발급받은 코드를 입력하시면\n감사 제목 작성 및 댓글 참여 권한이 부여됩니다.",
-      "placeholder_code": "인증 코드 입력",
-      "btn_verify": "인증하기",
-      "btn_verifying": "인증 중...",
-      "verified_status_title": "교인 인증 완료",
-      "verified_status_desc": "우리 교회의 정교인으로 활동 중입니다.",
-      "btn_logout": "로그아웃 하기",
-      "alert_enter_code": "인증 코드를 입력해주세요.",
-      "error_invalid_code": "유효하지 않거나 이미 사용된 코드입니다.",
-      "success_verify": "교인 인증이 완료되었습니다!"
-    },
-
-  "thanks": {
-    "title": "감사 게시판",
-    "description": "하나님께 받은 은혜와 간증을 나누는 공간입니다.",
-    "filter_all": "모든 게시물",
-    "category_answered_prayer": "응답받은 기도",
-    "category_personal_testimony": "개인 간증",
-    "category_church_support": "공동체 지원",
-    "category_blessing": "일상의 축복",
-    "placeholder_category": "카테고리 선택",
-    "btn_date": "날짜 선택",
-    "btn_write": "간증 나누기",
-    "modal_title": "감사 나눔",
-    "modal_description": "하나님께서 주신 은혜를 공동체와 나누어 보세요.",
-    "label_category": "카테고리",
-    "label_title": "제목",
-    "label_content": "내용",
-    "placeholder_title": "제목을 입력하세요",
-    "placeholder_content": "받은 은혜를 설명해주세요",
-    "btn_submit": "지금 게시하기",
-    "btn_load_more": "더 많은 간증 보기",
-    "cat_answered_prayer": "응답받은 기도",
-    "cat_personal_testimony": "개인 간증",
-    "cat_church_support": "공동체 지원",
-    "cat_blessing": "일상의 축복"
+  "register": {
+    "title": "회원가입",
+    "description": "보지미르 교회 온라인 멤버십 가입",
+    "label_profile_picture": "프로필 사진 (선택)",
+    "label_nickname": "닉네임",
+    "label_gender": "성별",
+    "label_email": "이메일",
+    "label_password": "비밀번호",
+    "label_confirm_password": "비밀번호 확인",
+    "placeholder_nickname": "사용하실 닉네임을 입력하세요",
+    "placeholder_gender": "성별 선택",
+    "placeholder_email": "이메일을 입력하세요",
+    "placeholder_password": "비밀번호를 입력하세요",
+    "placeholder_confirm_password": "비밀번호를 다시 입력하세요",
+    "gender_male": "남성",
+    "gender_female": "여성",
+    "btn_create_account": "계정 생성",
+    "btn_creating_account": "생성 중...",
+    "text_upload_instruction": "사진을 업로드하려면 버튼을 클릭하세요",
+    "text_upload_limits": "(최대 5MB, JPG/PNG만 가능)",
+    "text_nickname_hint": "다른 성도들에게 보여질 이름입니다",
+    "text_already_have_account": "이미 계정이 있으신가요?",
+    "link_sign_in": "로그인",
+    "error_file_size": "파일 크기는 5MB 이하여야 합니다.",
+    "error_invalid_image": "유효한 이미지 파일을 선택해주세요.",
+    "error_compression": "이미지 압축에 실패했습니다.",
+    "error_nickname_required": "닉네임은 필수입니다.",
+    "error_nickname_length": "닉네임은 최소 2글자 이상이어야 합니다.",
+    "error_gender_required": "성별을 선택해주세요.",
+    "error_password_match": "비밀번호가 일치하지 않습니다.",
+    "error_password_length": "비밀번호는 최소 6글자 이상이어야 합니다.",
+    "success_registration": "회원가입이 완료되었습니다!"
+  },
+  "login": {
+    "title": "로그인",
+    "description": "교회 계정으로 로그인하세요",
+    "label_email": "이메일",
+    "label_password": "비밀번호",
+    "placeholder_email": "이메일을 입력하세요",
+    "placeholder_password": "비밀번호를 입력하세요",
+    "btn_sign_in": "로그인",
+    "btn_signing_in": "로그인 중...",
+    "text_no_account": "계정이 없으신가요?",
+    "link_register": "회원가입"
+  },
+  "profile": {
+    "page_title": "내 프로필",
+    "loading": "로딩 중...",
+    "default_nickname": "사용자",
+    "badge_verified": "인증됨",
+    "text_joined": "가입일:",
+    "verify_title": "교인 인증 필요",
+    "verify_description": "현재 '손님(Guest)' 상태입니다. 감사 나눔이나 댓글 작성을 위해 교회에서 발급받은 인증 코드를 입력해주세요.",
+    "placeholder_code": "인증 코드 입력",
+    "btn_verify": "인증하기",
+    "btn_verifying": "인증 중...",
+    "verified_status_title": "인증 완료",
+    "verified_status_desc": "정식 교인으로 인증되었습니다. 모든 기능을 자유롭게 이용하실 수 있습니다.",
+    "btn_logout": "로그아웃",
+    "alert_enter_code": "인증 코드를 입력해주세요.",
+    "error_invalid_code": "유효하지 않거나 이미 사용된 코드입니다.",
+    "success_verify": "교인 인증이 완료되었습니다!"
   },
   "ministry": {
     "ukrainian": {
       "hero": {
         "title": "우크라이나 어린이 사역",
-        "desc": "도움이 절실한 시기에 우크라이나 가족들에게 사랑과 희망, 그리고 실질적인 도움을 제공합니다."
+        "desc": "도움이 필요한 시기에 우크라이나 가족들에게 사랑과 희망, 실질적인 도움을 지원합니다."
       },
       "stats": {
         "title": "우리의 영향력",
@@ -246,17 +227,17 @@
         "title": "운영 프로그램",
         "program1": {
           "title": "임시 보호소",
-          "desc": "난민 가족들에게 안전하고 따뜻한 임시 거처를 제공하여 안정을 돕습니다.",
+          "desc": "난민 가족들에게 안전하고 따뜻한 임시 거처를 제공합니다.",
           "stats": "가용 객실 20개"
         },
         "program2": {
           "title": "교육 지원",
-          "desc": "언어 장벽 해소와 학교 적응을 위한 방과 후 학습을 지원합니다.",
+          "desc": "방과 후 학습을 통해 언어 습득과 학교 적응을 돕습니다.",
           "stats": "주 5회 수업"
         },
         "program3": {
           "title": "의료 지원",
-          "desc": "기초 건강 검진 및 필수 의약품을 제공하며 병원 동행을 지원합니다.",
+          "desc": "기초 건강 검진 및 필수 의약품 제공, 병원 동행을 지원합니다.",
           "stats": "주간 방문 검진"
         },
         "program4": {
@@ -296,10 +277,104 @@
       },
       "contact": {
         "title": "문의하기",
-        "desc": "우크라이나 사역에 대해 더 궁금한 점이 있으시거나 도움이 필요하신가요? 언제든 연락주세요.",
+        "desc": "우크라이나 사역에 대해 궁금한 점이 있으시거나 도움이 필요하신가요? 언제든 연락주세요.",
         "email_button": "사역팀에 메일 보내기",
         "home_button": "홈으로 돌아가기"
       }
+    }
+  },
+  "word": {
+    "hero": {
+      "title": "오늘의 말씀",
+      "desc": "매일 공급해주시는 하나님의 말씀으로 하루를 시작하세요."
+    },
+    "list": {
+      "empty": "등록된 말씀이 없습니다."
+    }
+  },
+  "prayer": {
+    "hero": {
+      "title": "중보기도함",
+      "desc": "\"너희 죄를 서로 고백하며 병이 낫기를 위하여 서로 기도하라\" (약 5:16)"
+    },
+    "button": {
+      "share": "기도 제목 나누기",
+      "pray_together": "함께 기도하기",
+      "edit_answer": "응답 수정",
+      "write_answer": "응답 작성"
+    },
+    "category": {
+      "all": "전체 보기",
+      "ukraine": "우크라이나",
+      "church": "교회",
+      "members": "성도",
+      "children": "다음 세대"
+    },
+    "status": {
+      "answered": "응답됨"
+    },
+    "label": {
+      "answer_note": "응답 노트"
+    },
+    "modal": {
+      "title": "기도 제목 나누기",
+      "desc": "함께 기도하고 싶은 내용을 작성해주세요.",
+      "label": {
+        "category": "카테고리",
+        "title": "제목",
+        "content": "내용"
+      },
+      "placeholder": {
+        "title": "제목을 입력하세요",
+        "content": "구체적인 기도 내용을 입력하세요",
+        "answer": "응답 내용을 적어주세요..."
+      },
+      "button": {
+        "submit": "등록하기"
+      }
+    },
+    "alert": {
+      "success": "기도 제목이 등록되었습니다."
+    },
+    "list": {
+      "empty": "등록된 기도 제목이 없습니다."
+    }
+  },
+  "thanks": {
+    "hero": {
+      "title": "감사 나눔",
+      "desc": "범사에 감사하라 이것이 그리스도 예수 안에서 너희를 향하신 하나님의 뜻이니라 (살전 5:18)"
+    },
+    "button": {
+      "share": "감사 나누기"
+    },
+    "category": {
+      "grace": "은혜",
+      "daily": "일상",
+      "family": "가정",
+      "church": "교회"
+    },
+    "modal": {
+      "title": "감사 제목 나누기",
+      "desc": "삶 속에서 경험한 하나님의 은혜를 나눠주세요.",
+      "label": {
+        "category": "카테고리",
+        "title": "제목",
+        "content": "감사 내용"
+      },
+      "placeholder": {
+        "title": "감사 제목을 입력하세요",
+        "content": "구체적인 감사 내용을 입력하세요"
+      },
+      "button": {
+        "submit": "등록하기"
+      }
+    },
+    "alert": {
+      "success": "감사 나눔이 등록되었습니다."
+    },
+    "list": {
+      "empty": "등록된 감사 나눔이 없습니다."
     }
   }
 }
