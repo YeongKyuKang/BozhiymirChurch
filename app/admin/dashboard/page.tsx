@@ -11,10 +11,11 @@ import { Label } from "@/components/ui/label";
 import { 
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter 
 } from "@/components/ui/dialog"; 
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   LayoutDashboard, Users, Calendar, 
   Image as ImageIcon, Loader2, 
-  Save, Activity, BookOpen, Trash2, RefreshCw, Smartphone, Edit2, X, PlusCircle
+  Save, Activity, BookOpen, Trash2, RefreshCw, Smartphone, Edit2, X, PlusCircle, Search
 } from "lucide-react";
 import { format } from "date-fns";
 import { ko, enUS, ru } from "date-fns/locale"; 
@@ -48,27 +49,23 @@ export default function AdminDashboard() {
   const [isImageUploading, setIsImageUploading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // [말씀 카드] 생성 데이터
+  // 성경 데이터 상태 추가 
+  const [bibleData, setBibleData] = useState<any[]>([]);
+  const [selectedBook, setSelectedBook] = useState("");
+  const [selectedChapter, setSelectedChapter] = useState("1");
+  const [selectedVerse, setSelectedVerse] = useState("1");
+
+  // 말씀 카드 생성 데이터
   const [wordData, setWordData] = useState({ title: "", content: "", date: format(new Date(), "yyyy-MM-dd"), imageUrl: "" });
-  // [말씀 카드] 수정 상태
   const [isEditWordOpen, setIsEditWordOpen] = useState(false);
-  const [editingWord, setEditingWord] = useState<{ id: string, title: string, content: string, date: string, imageUrl: string } | null>(null);
+  const [editingWord, setEditingWord] = useState<any>(null);
 
-  // [이벤트] 생성 데이터
+  // 이벤트 데이터
   const [eventData, setEventData] = useState({ 
-    title: "", 
-    description: "", 
-    startDate: format(new Date(), "yyyy-MM-dd"), 
-    endDate: "", 
-    location: "", 
-    imageUrl: "" 
+    title: "", description: "", startDate: format(new Date(), "yyyy-MM-dd"), endDate: "", location: "", imageUrl: "" 
   });
-  // [이벤트] 수정 상태
   const [isEditEventOpen, setIsEditEventOpen] = useState(false);
-  const [editingEvent, setEditingEvent] = useState<{ 
-    id: string, title: string, description: string, startDate: string, endDate: string, location: string, imageUrl: string 
-  } | null>(null);
-
+  const [editingEvent, setEditingEvent] = useState<any>(null);
 
   const getDateLocale = () => {
     switch (language) {
@@ -78,9 +75,22 @@ export default function AdminDashboard() {
     }
   };
 
+  // 성경 데이터 로드 효과 추가 
+  useEffect(() => {
+    const loadBible = async () => {
+      try {
+        const res = await fetch(`/bible/${language}.json`);
+        const data = await res.json();
+        setBibleData(data);
+      } catch (e) {
+        console.error("Bible data load failed");
+      }
+    };
+    loadBible();
+  }, [language]);
+
   const fetchData = useCallback(async () => {
     setLoading(true);
-    
     const { data: users, count: userCount } = await supabase.from("users").select("*", { count: 'exact' }).order("created_at", { ascending: false });
     const { count: eventCount } = await supabase.from("events").select("*", { count: 'exact', head: true });
     const { count: wordCount } = await supabase.from("word_posts").select("*", { count: 'exact', head: true });
@@ -105,8 +115,7 @@ export default function AdminDashboard() {
     fetchData();
   }, [fetchData]);
 
-  // 통합 이미지 업로드 핸들러
-  const handleImageUpload = async (file: File, target: 'word' | 'edit-word' | 'event' | 'edit-event') => {
+  const handleImageUpload = async (file: File, target: string) => {
     if (!file) return;
     setIsImageUploading(true);
     
@@ -138,11 +147,34 @@ export default function AdminDashboard() {
     }
   };
 
-  // --- 말씀 카드 로직 ---
+  // 성경 구절 적용 함수 추가 
+  const applyBibleVerse = (isEdit = false) => {
+    const book = bibleData.find(b => b.abbrev === selectedBook);
+    if (!book) return;
+    try {
+      const verseText = book.chapters[parseInt(selectedChapter) - 1][parseInt(selectedVerse) - 1];
+      const titleText = `${book.name} ${selectedChapter}:${selectedVerse}`;
+      if (isEdit) {
+        setEditingWord({ 
+          ...editingWord, 
+          title: titleText, 
+          content: verseText, 
+          book_id: selectedBook, 
+          chapter_num: parseInt(selectedChapter), 
+          verse_num: parseInt(selectedVerse) 
+        });
+      } else {
+        setWordData({ ...wordData, title: titleText, content: verseText });
+      }
+    } catch (e) {
+      alert("Invalid chapter or verse");
+    }
+  };
 
   const handleCreateWord = async () => {
     if (!user) return alert(t('common.login_required')); 
     setIsSubmitting(true);
+
     try {
         const { error } = await supabase.from("word_posts").insert([{
           title: wordData.title,
@@ -150,7 +182,11 @@ export default function AdminDashboard() {
           word_date: wordData.date,
           image_url: wordData.imageUrl,
           author_id: user.id,
-          author_nickname: userProfile?.nickname || user.email?.split('@')[0] || "Admin"
+          author_nickname: userProfile?.nickname || user.email?.split('@')[0] || "Admin",
+          // 성경 참조 정보 추가 
+          book_id: selectedBook,
+          chapter_num: parseInt(selectedChapter),
+          verse_num: parseInt(selectedVerse)
         }]);
 
         if (error) throw error;
@@ -170,7 +206,10 @@ export default function AdminDashboard() {
       title: post.title,
       content: post.content,
       date: post.word_date,
-      imageUrl: post.image_url || ""
+      imageUrl: post.image_url || "",
+      book_id: post.book_id || "",
+      chapter_num: post.chapter_num || 1,
+      verse_num: post.verse_num || 1
     });
     setIsEditWordOpen(true);
   };
@@ -183,7 +222,11 @@ export default function AdminDashboard() {
           title: editingWord.title,
           content: editingWord.content,
           word_date: editingWord.date,
-          image_url: editingWord.imageUrl
+          image_url: editingWord.imageUrl,
+          // 성경 참조 정보 업데이트 추가 
+          book_id: editingWord.book_id,
+          chapter_num: editingWord.chapter_num,
+          verse_num: editingWord.verse_num
         }).eq("id", editingWord.id);
 
       if (error) throw error;
@@ -205,8 +248,6 @@ export default function AdminDashboard() {
       fetchData();
     }
   };
-
-  // --- 이벤트 로직 ---
 
   const handleCreateEvent = async () => {
     if (!user) return alert(t('common.login_required')); 
@@ -262,8 +303,8 @@ export default function AdminDashboard() {
         alert(t('admin.alert.success_update'));
         setIsEditEventOpen(false);
         fetchData();
-    } catch (err: any) {
-        alert(t('admin.alert.error') + ": " + err.message);
+    } catch (error: any) {
+        alert(t('admin.alert.error') + ": " + error.message);
     } finally {
         setIsSubmitting(false);
     }
@@ -322,7 +363,6 @@ export default function AdminDashboard() {
             </TabsTrigger>
           </TabsList>
 
-          {/* 1. 오버뷰 */}
           <TabsContent value="overview" className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <StatsCard title={t('admin.stats.users.title')} count={stats.userCount} icon={<Users className="w-6 h-6 text-blue-600" />} desc={t('admin.stats.users.desc')} />
@@ -369,12 +409,10 @@ export default function AdminDashboard() {
             </div>
           </TabsContent>
 
-          {/* 2. 유저 관리 */}
           <TabsContent value="users">
             <AdminUsersClient initialUsers={usersData} />
           </TabsContent>
 
-          {/* 3. 말씀 카드 관리 */}
           <TabsContent value="words">
             <div className="space-y-6">
                 <div className="flex items-center justify-between">
@@ -390,10 +428,33 @@ export default function AdminDashboard() {
                 </div>
 
                 <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
-                    {/* 왼쪽: 에디터 */}
                     <div className="xl:col-span-7">
                         <Card>
                         <CardContent className="p-6 space-y-4">
+                            {/* 성경 선택 UI 추가  */}
+                            <div className="grid grid-cols-3 gap-2 p-4 bg-slate-50 rounded-xl border border-dashed">
+                              <div className="space-y-1">
+                                <Label className="text-xs">Book</Label>
+                                <Select value={selectedBook} onValueChange={setSelectedBook}>
+                                  <SelectTrigger className="h-9"><SelectValue placeholder="Select Book" /></SelectTrigger>
+                                  <SelectContent>
+                                    {bibleData.map(b => <SelectItem key={b.abbrev} value={b.abbrev}>{b.name}</SelectItem>)}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <div className="space-y-1">
+                                <Label className="text-xs">Chapter</Label>
+                                <Input value={selectedChapter} onChange={e => setSelectedChapter(e.target.value)} className="h-9" type="number" />
+                              </div>
+                              <div className="space-y-1">
+                                <Label className="text-xs">Verse</Label>
+                                <div className="flex gap-1">
+                                  <Input value={selectedVerse} onChange={e => setSelectedVerse(e.target.value)} className="h-9" type="number" />
+                                  <Button size="icon" variant="secondary" className="h-9 w-9 shrink-0" onClick={() => applyBibleVerse(false)}><Search className="h-4 w-4"/></Button>
+                                </div>
+                              </div>
+                            </div>
+
                             <div className="space-y-2">
                             <Label>{t('admin.contents.word.label.image')}</Label>
                             <div className="flex items-center gap-2">
@@ -419,7 +480,6 @@ export default function AdminDashboard() {
                         </Card>
                     </div>
 
-                    {/* 오른쪽: 미리보기 및 목록 */}
                     <div className="xl:col-span-5 flex flex-col gap-6">
                         <div className="flex flex-col items-center">
                              <div className="text-sm font-bold text-gray-500 mb-2 flex items-center gap-1">
@@ -448,29 +508,33 @@ export default function AdminDashboard() {
                                 <CardTitle className="text-sm text-gray-500">{t('admin.contents.word.recent_list_title')}</CardTitle>
                             </CardHeader>
                             <CardContent className="px-4 pb-4">
-                                <ul className="space-y-2">
-                                    {recentWords.map(post => (
-                                        <li key={post.id} className="flex items-center justify-between p-2 bg-gray-50 rounded border border-gray-100">
-                                            <div className="flex items-center gap-2 overflow-hidden">
-                                                <div className="w-8 h-8 rounded bg-gray-200 flex-shrink-0 overflow-hidden">
-                                                    {post.image_url && <img src={post.image_url} className="w-full h-full object-cover" />}
+                                {recentWords.length === 0 ? (
+                                    <p className="text-xs text-gray-400 text-center py-4">{t('admin.contents.word.recent_list_empty')}</p>
+                                ) : (
+                                    <ul className="space-y-2">
+                                        {recentWords.map(post => (
+                                            <li key={post.id} className="flex items-center justify-between p-2 bg-gray-50 rounded border border-gray-100">
+                                                <div className="flex items-center gap-2 overflow-hidden">
+                                                    <div className="w-8 h-8 rounded bg-gray-200 flex-shrink-0 overflow-hidden">
+                                                        {post.image_url && <img src={post.image_url} className="w-full h-full object-cover" />}
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <p className="text-xs font-bold truncate">{post.title}</p>
+                                                        <p className="text-[10px] text-gray-500">{post.word_date}</p>
+                                                    </div>
                                                 </div>
-                                                <div className="min-w-0">
-                                                    <p className="text-xs font-bold truncate">{post.title}</p>
-                                                    <p className="text-[10px] text-gray-500">{post.word_date}</p>
+                                                <div className="flex gap-1">
+                                                  <Button variant="ghost" size="icon" className="h-6 w-6 text-blue-400 hover:text-blue-600" onClick={() => openEditWordModal(post)}>
+                                                      <Edit2 className="w-3 h-3" />
+                                                  </Button>
+                                                  <Button variant="ghost" size="icon" className="h-6 w-6 text-red-400 hover:text-red-600" onClick={() => handleDeleteWord(post.id)}>
+                                                      <Trash2 className="w-3 h-3" />
+                                                  </Button>
                                                 </div>
-                                            </div>
-                                            <div className="flex gap-1">
-                                                <Button variant="ghost" size="icon" className="h-6 w-6 text-blue-400 hover:text-blue-600" onClick={() => openEditWordModal(post)}>
-                                                    <Edit2 className="w-3 h-3" />
-                                                </Button>
-                                                <Button variant="ghost" size="icon" className="h-6 w-6 text-red-400 hover:text-red-600" onClick={() => handleDeleteWord(post.id)}>
-                                                    <Trash2 className="w-3 h-3" />
-                                                </Button>
-                                            </div>
-                                        </li>
-                                    ))}
-                                </ul>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                )}
                             </CardContent>
                         </Card>
                     </div>
@@ -478,11 +542,8 @@ export default function AdminDashboard() {
             </div>
           </TabsContent>
 
-          {/* 4. 이벤트 관리 */}
           <TabsContent value="events">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-              
-              {/* 왼쪽: 이벤트 생성 폼 */}
               <div className="lg:col-span-5 space-y-6">
                   <div className="flex items-center justify-between">
                     <h2 className="text-2xl font-bold flex items-center gap-2">
@@ -539,7 +600,6 @@ export default function AdminDashboard() {
                   </Card>
               </div>
 
-              {/* 오른쪽: 이벤트 목록 */}
               <div className="lg:col-span-7 space-y-6">
                   <h2 className="text-xl font-bold flex items-center gap-2 text-gray-700">
                       {t('admin.tabs.events')} ({eventsList.length})
@@ -567,7 +627,6 @@ export default function AdminDashboard() {
                                               </div>
                                           </div>
                                           <div className="flex justify-end gap-2 mt-2">
-                                              {/* 이벤트 수정 버튼 (팝업 오픈) */}
                                               <Button variant="outline" size="sm" onClick={() => openEditEventModal(event)} className="h-8">
                                                   <Edit2 className="w-3 h-3 mr-1"/> {t('common.edit')}
                                               </Button>
@@ -582,14 +641,12 @@ export default function AdminDashboard() {
                       )}
                   </div>
               </div>
-
             </div>
           </TabsContent>
 
         </Tabs>
       </main>
 
-      {/* 말씀카드 수정 팝업 */}
       <Dialog open={isEditWordOpen} onOpenChange={setIsEditWordOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
@@ -599,6 +656,21 @@ export default function AdminDashboard() {
           
           {editingWord && (
             <div className="grid gap-4 py-4">
+              {/* 수정 팝업 내 성경 선택 UI 추가  */}
+              <div className="grid grid-cols-3 gap-2 p-3 bg-slate-50 rounded-lg">
+                <Select value={selectedBook} onValueChange={setSelectedBook}>
+                  <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Book" /></SelectTrigger>
+                  <SelectContent>
+                    {bibleData.map(b => <SelectItem key={b.abbrev} value={b.abbrev}>{b.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                <Input value={selectedChapter} onChange={e => setSelectedChapter(e.target.value)} className="h-8 text-xs" placeholder="Ch" />
+                <div className="flex gap-1">
+                  <Input value={selectedVerse} onChange={e => setSelectedVerse(e.target.value)} className="h-8 text-xs" placeholder="Vs" />
+                  <Button size="icon" variant="secondary" className="h-8 w-8 shrink-0" onClick={() => applyBibleVerse(true)}><Search className="h-3 w-3"/></Button>
+                </div>
+              </div>
+
               <div className="grid gap-2">
                 <Label>{t('admin.contents.word.label.image')}</Label>
                 <div className="flex items-center gap-2">
@@ -631,7 +703,6 @@ export default function AdminDashboard() {
         </DialogContent>
       </Dialog>
 
-      {/* 이벤트 수정 팝업 (새로 추가됨) */}
       <Dialog open={isEditEventOpen} onOpenChange={setIsEditEventOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>

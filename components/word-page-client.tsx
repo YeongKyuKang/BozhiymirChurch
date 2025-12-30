@@ -12,7 +12,7 @@ import { format } from "date-fns";
 import { ko, enUS, ru } from "date-fns/locale"; 
 import { cn } from "@/lib/utils";
 import {
-  Calendar as CalendarIcon, Download, Heart, Loader2
+  Calendar as CalendarIcon, Download, Heart, Loader2, Sparkles
 } from "lucide-react";
 import html2canvas from 'html2canvas';
 
@@ -28,6 +28,9 @@ interface WordPost {
   image_url?: string | null;
   likes?: { user_id: string }[]; 
   imageContainerRef?: React.RefObject<HTMLDivElement>;
+  book_id?: string;
+  chapter_num?: number;
+  verse_num?: number;
 }
 
 interface WordPageClientProps {
@@ -56,9 +59,33 @@ export default function WordPageClient({ initialPosts }: WordPageClientProps) {
   const [isDownloading, setIsDownloading] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
 
+  // 성경 데이터 상태 유지
+  const [bibleData, setBibleData] = useState<any[]>([]);
+  const [loadingBible, setLoadingBible] = useState(true);
+
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  // [수정] 성경 데이터를 불러오는 로직 강화
+  useEffect(() => {
+    const loadBible = async () => {
+      setLoadingBible(true);
+      try {
+        // public/bible/ko.json 등의 경로에서 데이터를 가져옴
+        const res = await fetch(`/bible/${language}.json`);
+        if (!res.ok) throw new Error("Failed to fetch bible");
+        const data = await res.json();
+        setBibleData(Array.isArray(data) ? data : []); // 배열 형태 확인
+      } catch (e) {
+        console.error("Bible load error:", e);
+        setBibleData([]);
+      } finally {
+        setLoadingBible(false);
+      }
+    };
+    loadBible();
+  }, [language]);
 
   const getDateLocale = () => {
     switch (language) {
@@ -73,6 +100,36 @@ export default function WordPageClient({ initialPosts }: WordPageClientProps) {
     const formattedSelectedDate = format(selectedDate, 'yyyy-MM-dd');
     return wordPosts.find(post => format(new Date(post.word_date), 'yyyy-MM-dd') === formattedSelectedDate) || null;
   }, [selectedDate, wordPosts]);
+
+  // [수정] 실시간 번역된 구절을 가져오는 함수
+  const getTranslatedVerse = (post: WordPost) => {
+    // book_id가 없거나 성경 데이터가 로드되지 않았다면 DB 원본 텍스트 반환
+    if (!post.book_id || bibleData.length === 0) return post.content;
+    
+    // abbrev와 book_id 매칭
+    const book = bibleData.find(b => b.abbrev === post.book_id);
+    if (!book || !book.chapters) return post.content;
+
+    try {
+      // chapters[장-1][절-1] 구조로 접근
+      const verseText = book.chapters[post.chapter_num! - 1][post.verse_num! - 1];
+      return verseText || post.content;
+    } catch (e) {
+      return post.content;
+    }
+  };
+
+  // [수정] 제목 번역 (형식 포함)
+  const getTranslatedTitle = (post: WordPost) => {
+    if (!post.book_id || bibleData.length === 0) return post.title;
+    const book = bibleData.find(b => b.abbrev === post.book_id);
+    if (!book) return post.title;
+
+    if (language === 'ko') {
+      return `${book.name} ${post.chapter_num}장 ${post.verse_num}절`;
+    }
+    return `${book.name} ${post.chapter_num}:${post.verse_num}`;
+  };
 
   const handleDateSelect = (date: Date | undefined) => {
     setSelectedDate(date);
@@ -137,10 +194,9 @@ export default function WordPageClient({ initialPosts }: WordPageClientProps) {
       <section className="py-12 md:py-16">
         <div className="container mx-auto px-4 max-w-6xl">
           
-          {/* [수정] Grid 대신 Flexbox 사용으로 중앙 정렬 및 간격 좁힘 */}
           <div className="flex flex-col lg:flex-row justify-center gap-10 items-start">
             
-            {/* 왼쪽: 말씀 카드 영역 (모바일 9:16 비율) */}
+            {/* 왼쪽: 말씀 카드 영역 */}
             <div className="w-full max-w-xs flex-shrink-0">
               {!currentWordPost ? (
                 <div className="text-center py-24 bg-white rounded-[32px] border border-dashed border-slate-200 shadow-sm w-full">
@@ -154,10 +210,9 @@ export default function WordPageClient({ initialPosts }: WordPageClientProps) {
                 <div className="flex flex-col gap-4 w-full">
                   <Card className="rounded-[32px] border-none shadow-xl shadow-slate-200 bg-white overflow-hidden">
                     
-                    {/* 캡처 대상: 9:16 고정 */}
+                    {/* 캡처 대상 */}
                     <div ref={currentWordPost.imageContainerRef} className="bg-white relative w-full aspect-[9/16] overflow-hidden">
                         
-                        {/* 배경 이미지 */}
                         {currentWordPost.image_url ? (
                             <>
                                 <div 
@@ -173,12 +228,18 @@ export default function WordPageClient({ initialPosts }: WordPageClientProps) {
                         {/* 텍스트 콘텐츠 */}
                         <div className="absolute inset-0 z-10 p-6 flex flex-col justify-center items-center text-center text-white h-full">
                             <div className="flex-1 flex flex-col justify-center">
-                                <h2 className="text-xl md:text-2xl font-black mb-4 leading-tight drop-shadow-xl">
-                                    {currentWordPost.title}
-                                </h2>
-                                <p className="text-sm md:text-base text-white/95 leading-relaxed font-medium whitespace-pre-wrap drop-shadow-lg font-serif">
-                                    {currentWordPost.content}
-                                </p>
+                                {loadingBible ? (
+                                    <Loader2 className="h-8 w-8 animate-spin mx-auto opacity-50" />
+                                ) : (
+                                    <>
+                                        <h2 className="text-xl md:text-2xl font-black mb-4 leading-tight drop-shadow-xl">
+                                            {getTranslatedTitle(currentWordPost)}
+                                        </h2>
+                                        <p className="text-sm md:text-base text-white/95 leading-relaxed font-medium whitespace-pre-wrap drop-shadow-lg font-serif">
+                                            "{getTranslatedVerse(currentWordPost)}"
+                                        </p>
+                                    </>
+                                )}
                             </div>
                             
                             <div className="mt-auto pt-4 border-t border-white/30 w-full">
@@ -213,7 +274,6 @@ export default function WordPageClient({ initialPosts }: WordPageClientProps) {
             </div>
 
             {/* 오른쪽: 달력 영역 */}
-            {/* [수정] 카드와 균형을 맞추기 위해 max-w를 설정하고 sticky 적용 */}
             <div className="w-full max-w-[320px] flex flex-col gap-6 sticky top-24 flex-shrink-0">
               <Card className="rounded-[24px] border-none shadow-lg shadow-slate-100 bg-white p-6">
                 <CardHeader className="p-0 mb-4 border-b border-slate-50 pb-4">
