@@ -1,25 +1,11 @@
-// yeongkyukang/bozhiymirchurch/BozhiymirChurch-3007c4235d54890bd3db6acc74558b701965297b/app/prayer/page.tsx
-import Header from "@/components/header";
-import Footer from "@/components/footer";
 import { createServerClient, type CookieOptions } from "@supabase/ssr"; 
 import { cookies } from "next/headers";
 import PrayerPageClient from "@/components/prayer-page-client";
 
-interface PrayerRequest {
-  id: string;
-  category: "ukraine" | "bozhiymirchurch" | "members" | "children";
-  title: string;
-  content: string;
-  author_id: string;
-  author_nickname: string;
-  created_at: string;
-  answer_content?: string | null;
-  answer_author_id?: string | null;
-  answer_author_nickname?: string | null;
-  answered_at?: string | null;
-}
+// 페이지를 동적으로 렌더링하도록 설정 (DB/쿠키 사용 시 권장)
+export const dynamic = "force-dynamic";
 
-async function fetchPrayerContentAndRequests() {
+async function fetchPrayerRequests() {
   const cookieStore = await cookies();
 
   const supabase = createServerClient(
@@ -27,33 +13,23 @@ async function fetchPrayerContentAndRequests() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get: (name: string) => cookieStore.get(name)?.value,
-        set: (name: string, value: string, options: CookieOptions) => {
-          cookieStore.set({ name, value, ...options });
+        getAll() {
+          return cookieStore.getAll();
         },
-        remove: (name: string, options: CookieOptions) => {
-          cookieStore.set({ name, value: '', ...options });
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            );
+          } catch {
+            // 서버 컴포넌트에서 쿠키 설정 시 에러 무시
+          }
         },
       },
     }
   );
 
-  const { data: contentData, error: contentError } = await supabase
-    .from("content")
-    .select("*")
-    .eq("page", "prayer");
-
-  const contentMap: Record<string, any> = {};
-  contentData?.forEach((item) => {
-    if (!contentMap[item.section]) {
-      contentMap[item.section] = {};
-    }
-    contentMap[item.section][item.key] = item.value;
-  });
-
-  if (contentError) {
-    console.error("Error fetching Prayer page content:", contentError);
-  }
+  // [수정] content 테이블 조회 로직 삭제 (더 이상 필요 없음)
 
   const { data: prayerRequestsData, error: prayerRequestsError } = await supabase
     .from("prayer_requests")
@@ -64,18 +40,17 @@ async function fetchPrayerContentAndRequests() {
     console.error("Error fetching Prayer Requests:", prayerRequestsError);
   }
 
-  return {
-    content: contentMap,
-    prayerRequests: prayerRequestsData || [],
-  };
+  return prayerRequestsData || [];
 }
 
 export default async function PrayerPage() {
-  const { content, prayerRequests } = await fetchPrayerContentAndRequests();
+  // [수정] content를 받지 않고 기도 요청 데이터만 가져옴
+  const prayerRequests = await fetchPrayerRequests();
 
   return (
     <>
-      <PrayerPageClient initialContent={content} initialPrayerRequests={prayerRequests} /> 
+      {/* [수정] initialContent prop 전달 삭제 */}
+      <PrayerPageClient initialPrayerRequests={prayerRequests} /> 
     </>
   );
 }

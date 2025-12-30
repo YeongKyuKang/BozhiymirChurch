@@ -38,17 +38,27 @@ import { supabase } from '@/lib/supabase'
 type UserProfile = Database['public']['Tables']['users']['Row']
 type UserRole = UserProfile['role']
 
-interface AdminUsersClientProps {}
+// [수정 1] props 인터페이스에 initialUsers 추가
+interface AdminUsersClientProps {
+  initialUsers: UserProfile[]
+}
 
-export default function AdminUsersClient({}: AdminUsersClientProps) {
-  const { t } = useLanguage() // t 함수 가져오기
-  const [users, setUsers] = useState<UserProfile[]>([])
-  const [loading, setLoading] = useState(true)
+// [수정 2] 파라미터에서 initialUsers 받기
+export default function AdminUsersClient({ initialUsers }: AdminUsersClientProps) {
+  const { t } = useLanguage()
+  // [수정 3] 초기값을 전달받은 initialUsers로 설정
+  const [users, setUsers] = useState<UserProfile[]>(initialUsers || [])
+  // [수정 4] 데이터가 있으면 로딩 false, 없으면 true로 시작
+  const [loading, setLoading] = useState(initialUsers ? false : true)
+  
   const { user } = useAuth()
   const [password, setPassword] = useState('')
   const [userToDelete, setUserToDelete] = useState<UserProfile | null>(null)
 
   useEffect(() => {
+    // 만약 초기 데이터가 없거나 갱신이 필요하다면 fetch 실행
+    if (initialUsers && initialUsers.length > 0) return;
+
     const fetchUsers = async () => {
       setLoading(true)
       const { data, error } = await supabase
@@ -58,7 +68,6 @@ export default function AdminUsersClient({}: AdminUsersClientProps) {
 
       if (error) {
         console.error('Error fetching users:', error)
-         // ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★
         toast.error(t('Error fetching users.')) 
       } else {
         setUsers(data || [])
@@ -67,7 +76,7 @@ export default function AdminUsersClient({}: AdminUsersClientProps) {
     }
 
     fetchUsers()
-  }, [t])
+  }, [t, initialUsers])
 
   const handlePermissionChange = async (
     userId: string,
@@ -78,7 +87,7 @@ export default function AdminUsersClient({}: AdminUsersClientProps) {
     const response = await fetch('/api/admin/update-user-permission', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId, canComment }),
+      body: JSON.stringify({ userId, can_comment: canComment }), // canComment -> can_comment로 키 이름 주의 (API 스펙에 맞춤)
     })
 
     if (response.ok) {
@@ -87,10 +96,8 @@ export default function AdminUsersClient({}: AdminUsersClientProps) {
           u.id === userId ? { ...u, can_comment: canComment } : u,
         ),
       )
-       // ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★
       toast.success(t('Permission updated successfully.')) 
     } else {
-       // ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★
       toast.error(t('Error updating permission.')) 
     }
   }
@@ -106,11 +113,9 @@ export default function AdminUsersClient({}: AdminUsersClientProps) {
       setUsers((prevUsers) =>
         prevUsers.map((u) => (u.id === userId ? { ...u, role: newRole } : u)),
       )
-       // ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★
       toast.success(t('User role updated successfully.')) 
     } else {
       const error = await response.json()
-       // ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★
       toast.error(
         `${t('Error updating user role')}: ${error.error || t('Unknown error')}`, 
       )
@@ -120,7 +125,7 @@ export default function AdminUsersClient({}: AdminUsersClientProps) {
   const handleDeleteUser = async () => {
     if (!userToDelete || !password) return
 
-    const response = await fetch('/admin/delete-user', {
+    const response = await fetch('/api/admin/delete-user', { // 경로 앞에 /api가 빠져있을 수 있어 확인 필요
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userId: userToDelete.id, password }),
@@ -130,13 +135,11 @@ export default function AdminUsersClient({}: AdminUsersClientProps) {
       setUsers((prevUsers) =>
         prevUsers.filter((u) => u.id !== userToDelete.id),
       )
-       // ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★
       toast.success(t('User deleted successfully.')) 
       setUserToDelete(null)
       setPassword('')
     } else {
       const error = await response.json()
-       // ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★
       toast.error(
         `${t('Error deleting user')}: ${error.error || t('Unknown error')}`, 
       )
@@ -144,7 +147,6 @@ export default function AdminUsersClient({}: AdminUsersClientProps) {
   }
 
   if (loading) {
-     // ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★
     return <div>{t('Loading...')}</div> 
   }
 
@@ -152,13 +154,11 @@ export default function AdminUsersClient({}: AdminUsersClientProps) {
 
   return (
     <div>
-       {/* ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★ */}
       <h1 className="mb-4 text-2xl font-bold">{t('User Management')}</h1>
       <h2 className="text-xl font-semibold">{t('All Users')}</h2>
       <Table>
         <TableHeader>
           <TableRow>
-             {/* ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★ */}
             <TableHead>{t('Email')}</TableHead>
             <TableHead>{t('Role')}</TableHead>
             <TableHead>{t('Can Comment')}</TableHead>
@@ -181,17 +181,15 @@ export default function AdminUsersClient({}: AdminUsersClientProps) {
               </TableCell>
               <TableCell>
                 <Select
-                  value={user.role}
+                  value={user.role || 'user'}
                   onValueChange={(newRole) =>
                     handleRoleChange(user.id, newRole as UserRole)
                   }
                 >
                   <SelectTrigger className="w-[120px]">
-                     {/* ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★ */}
                     <SelectValue placeholder={t('Select role')} /> 
                   </SelectTrigger>
                   <SelectContent>
-                     {/* ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★ */}
                     <SelectItem value="admin">{t('Administrator')}</SelectItem> 
                     <SelectItem value="user">{t('User')}</SelectItem> 
                     <SelectItem value="child">{t('Child')}</SelectItem> 
@@ -205,22 +203,18 @@ export default function AdminUsersClient({}: AdminUsersClientProps) {
                       variant="destructive"
                       onClick={() => setUserToDelete(user)}
                     >
-                       {/* ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★ */}
                       {t('Delete User')} 
                     </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
-                       {/* ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★ */}
                       <AlertDialogTitle>{t('Are you sure?')}</AlertDialogTitle> 
                       <AlertDialogDescription>
-                         {/* ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★ */}
                         {t("User '")}
                         <strong>{user.email}</strong>
                         {t("' will be permanently deleted. This action cannot be undone.")}
                         <br />
                         <br />
-                         {/* ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★ */}
                         {t('Please enter the admin password to confirm.')} 
                       </AlertDialogDescription>
                     </AlertDialogHeader>
@@ -228,17 +222,14 @@ export default function AdminUsersClient({}: AdminUsersClientProps) {
                       type="password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                       // ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★
                       placeholder={t('Admin Password')} 
-                      className="mt-2 rounded border p-2"
+                      className="mt-2 rounded border p-2 w-full"
                     />
                     <AlertDialogFooter>
-                       {/* ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★ */}
                       <AlertDialogCancel onClick={() => setUserToDelete(null)}>
                         {t('Cancel')} 
                       </AlertDialogCancel>
                       <AlertDialogAction onClick={handleDeleteUser}>
-                         {/* ★ 1. 번역 키를 실제 영어 텍스트로 변경 ★ */}
                         {t('Confirm Delete')} 
                       </AlertDialogAction>
                     </AlertDialogFooter>

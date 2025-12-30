@@ -157,9 +157,9 @@ export default function Header() {
                 )}
               </div>
 
-              <Link href="/join/1" className="text-white text-sm font-bold hover:text-yellow-400 transition-colors tracking-widest">
+              {/* <Link href="/join/1" className="text-white text-sm font-bold hover:text-yellow-400 transition-colors tracking-widest">
                 {t('nav.join') || "JOIN"}
-              </Link>
+              </Link> */}
 
               {/* Global Controls */}
               <div className="flex items-center space-x-4 ml-4 pl-4 border-l border-white/20">

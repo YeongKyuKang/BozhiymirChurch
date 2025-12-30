@@ -29,6 +29,8 @@ export interface User extends UserProfile {}
 
 interface AuthContextType {
   user: User | null
+  userProfile: User | null // ✅ 추가: user와 동일한 객체를 가리키는 별칭
+  userRole: string | undefined // ✅ 추가: 편의를 위한 role 접근자
   loading: boolean
   signIn: (email: string, password?: string) => Promise<{ data: any; error: any }>
   signInWithGoogle: () => Promise<void>
@@ -210,22 +212,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return { error: null }
   }
 
-  const updatePassword = async (newPassword: string) => {
-    console.log("[v0] updatePassword called - redirecting to server action")
-    // This is now handled by server action
-    return { error: { message: "Use server action instead" } }
-  }
-
-  const registerCode = async (code: string) => {
-    console.log("[v0] registerCode called - redirecting to server action")
-    // This is now handled by server action
-    return { error: { message: "Use server action instead" } }
-  }
-
   return (
     <AuthContext.Provider
       value={{
         user,
+        userProfile: user, // ✅ 추가됨: user 객체를 userProfile로도 접근 가능하게 함
+        userRole: user?.role, // ✅ 추가됨: user.role을 바로 꺼내서 제공
         loading,
         signIn,
         signInWithGoogle,

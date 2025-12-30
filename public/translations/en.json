@@ -229,5 +229,78 @@
     "cat_personal_testimony": "Personal Testimony",
     "cat_church_support": "Church Support",
     "cat_blessing": "Daily Blessing"
+  },
+  "ministry": {
+    "ukrainian": {
+      "hero": {
+        "title": "Ukrainian Children Ministry",
+        "desc": "Supporting Ukrainian families with love, hope, and practical assistance in their time of need."
+      },
+      "stats": {
+        "title": "Our Impact",
+        "stat1": { "number": "150+", "label": "Families Helped" },
+        "stat2": { "number": "500+", "label": "Meals Provided" },
+        "stat3": { "number": "75+", "label": "Children Supported" },
+        "stat4": { "number": "25+", "label": "Volunteers" }
+      },
+      "programs": {
+        "title": "Our Programs",
+        "program1": {
+          "title": "Shelter Support",
+          "desc": "Providing safe and warm temporary housing for refugee families to help them stabilize.",
+          "stats": "20 Rooms Available"
+        },
+        "program2": {
+          "title": "Education",
+          "desc": "Offering after-school support for language learning and school adaptation.",
+          "stats": "5 Classes Weekly"
+        },
+        "program3": {
+          "title": "Medical Aid",
+          "desc": "Providing basic health checkups and essential medicines, including hospital accompaniment.",
+          "stats": "Weekly Visits"
+        },
+        "program4": {
+          "title": "Food Bank",
+          "desc": "Distributing fresh groceries and daily necessities to families in need every week.",
+          "stats": "500kg Weekly"
+        },
+        "program5": {
+          "title": "Counseling",
+          "desc": "Professional psychological counseling and art therapy for war trauma healing.",
+          "stats": "10 Sessions/Week"
+        },
+        "program6": {
+          "title": "Clothing Drive",
+          "desc": "Distributing seasonal clothing and bedding to those in need.",
+          "stats": "200 Items Monthly"
+        }
+      },
+      "foundation": {
+        "title": "Biblical Foundation",
+        "quote": "Do not forget to show hospitality to strangers, for by so doing some people have shown hospitality to angels without knowing it.",
+        "reference": "Hebrews 13:2",
+        "desc": "Our ministry is rooted in Christ's call to love and serve our suffering neighbors as ourselves."
+      },
+      "testimonials": {
+        "title": "Stories of Hope",
+        "testi1": { "quote": "When we had nowhere to go in a strange land, the church became a warm home for our family. Thank you." },
+        "testi2": { "quote": "I love learning Korean and meeting friends here. The teachers are so kind!" },
+        "testi3": { "quote": "Even amidst the pain of war, I feel God's love crossing borders to be with us." }
+      },
+      "help": {
+        "title": "How You Can Help",
+        "button": "Get Involved Today",
+        "card1": { "title": "Donate", "desc": "Financially support the settlement of refugee families and the education of children." },
+        "card2": { "title": "Volunteer", "desc": "Join our ministry with your talents in education, translation, or organizing supplies." },
+        "card3": { "title": "Pray", "desc": "Please pray for the end of the war, peace in Ukraine, and our ministry workers." }
+      },
+      "contact": {
+        "title": "Get in Touch",
+        "desc": "Have questions about our Ukrainian Ministry or need assistance? Please feel free to contact us.",
+        "email_button": "Email Ministry Team",
+        "home_button": "Back to Home"
+      }
+    }
   }
 }
