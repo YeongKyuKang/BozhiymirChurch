@@ -1,91 +1,113 @@
 "use client";
 
-import * as React from "react";
-import { useState, useEffect, useMemo } from "react";
-import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { useAuth } from "@/contexts/auth-context";
-import { useLanguage } from "@/contexts/language-context"; 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Calendar } from "@/components/ui/calendar";
+import { useState } from "react";
 import { format } from "date-fns";
-import { ko, enUS, ru } from "date-fns/locale"; 
-import { cn } from "@/lib/utils";
-import {
-  Calendar as CalendarIcon, Download, Heart, Loader2, Sparkles
+import { ko, enUS, ru } from "date-fns/locale";
+import { 
+  Calendar as CalendarIcon, 
+  Download, 
+  Share2
 } from "lucide-react";
-import html2canvas from 'html2canvas';
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
+import { useLanguage } from "@/contexts/language-context";
+import { Database } from "@/lib/supabase";
+import html2canvas from "html2canvas";
 
-// WordPost 타입 정의
-interface WordPost {
-  id: string;
-  title: string;
-  content: string;
-  word_date: string;
-  author_id: string;
-  author_nickname: string;
-  created_at: string;
-  image_url?: string | null;
-  likes?: { user_id: string }[]; 
-  imageContainerRef?: React.RefObject<HTMLDivElement>;
+// [수정] 성경 책 이름 매핑 (DB의 book_id 'gn', 'ex' 등에 맞춤)
+// 2글자(gn), 3글자(gen), 풀네임(genesis) 모두 지원하도록 키를 여러 개 등록함
+const BIBLE_BOOK_NAMES: Record<string, { ko: string; ru: string; en: string }> = {
+  // 구약 (Old Testament)
+  gn: { ko: "창세기", ru: "Бытие", en: "Genesis" },
+  ex: { ko: "출애굽기", ru: "Исход", en: "Exodus" },
+  lv: { ko: "레위기", ru: "Левит", en: "Leviticus" },
+  nm: { ko: "민수기", ru: "Числа", en: "Numbers" },
+  dt: { ko: "신명기", ru: "Второзаконие", en: "Deuteronomy" },
+  js: { ko: "여호수아", ru: "Иисус Навин", en: "Joshua" },
+  jud: { ko: "사사기", ru: "Судьи", en: "Judges" },
+  rt: { ko: "룻기", ru: "Руфь", en: "Ruth" },
+  "1sm": { ko: "사무엘상", ru: "1-я Царств", en: "1 Samuel" },
+  "2sm": { ko: "사무엘하", ru: "2-я Царств", en: "2 Samuel" },
+  "1kg": { ko: "열왕기상", ru: "3-я Царств", en: "1 Kings" },
+  "2kg": { ko: "열왕기하", ru: "4-я Царств", en: "2 Kings" },
+  "1ch": { ko: "역대상", ru: "1-я Паралипоменон", en: "1 Chronicles" },
+  "2ch": { ko: "역대하", ru: "2-я Паралипоменон", en: "2 Chronicles" },
+  ez: { ko: "에스라", ru: "Ездра", en: "Ezra" },
+  ne: { ko: "느헤미야", ru: "Неемия", en: "Nehemiah" },
+  es: { ko: "에스더", ru: "Есфирь", en: "Esther" },
+  jb: { ko: "욥기", ru: "Иов", en: "Job" },
+  ps: { ko: "시편", ru: "Псалтирь", en: "Psalms" },
+  prv: { ko: "잠언", ru: "Притчи", en: "Proverbs" },
+  ec: { ko: "전도서", ru: "Екклесиаст", en: "Ecclesiastes" },
+  sn: { ko: "아가", ru: "Песнь Песней", en: "Song of Solomon" },
+  is: { ko: "이사야", ru: "Исаия", en: "Isaiah" },
+  jr: { ko: "예레미야", ru: "Иеремия", en: "Jeremiah" },
+  lm: { ko: "예레미야애가", ru: "Плач Иеремии", en: "Lamentations" },
+  ek: { ko: "에스겔", ru: "Иезекииль", en: "Ezekiel" },
+  dn: { ko: "다니엘", ru: "Даниил", en: "Daniel" },
+  ho: { ko: "호세아", ru: "Осия", en: "Hosea" },
+  jl: { ko: "요엘", ru: "Иоиль", en: "Joel" },
+  am: { ko: "아모스", ru: "Амос", en: "Amos" },
+  ob: { ko: "오바댜", ru: "Авдий", en: "Obadiah" },
+  jn: { ko: "요나", ru: "Иона", en: "Jonah" },
+  mi: { ko: "미가", ru: "Михей", en: "Micah" },
+  na: { ko: "나훔", ru: "Наум", en: "Nahum" },
+  ha: { ko: "하박국", ru: "Аввакум", en: "Habakkuk" },
+  zp: { ko: "스바냐", ru: "Софония", en: "Zephaniah" },
+  hg: { ko: "학개", ru: "Аггей", en: "Haggai" },
+  zc: { ko: "스가랴", ru: "Захария", en: "Zechariah" },
+  ml: { ko: "말라기", ru: "Малахия", en: "Malachi" },
+
+  // 신약 (New Testament)
+  mt: { ko: "마태복음", ru: "От Матфея", en: "Matthew" },
+  mk: { ko: "마가복음", ru: "От Марка", en: "Mark" },
+  lk: { ko: "누가복음", ru: "От Луки", en: "Luke" },
+  jo: { ko: "요한복음", ru: "От Иоанна", en: "John" },
+  act: { ko: "사도행전", ru: "Деяния", en: "Acts" },
+  rm: { ko: "로마서", ru: "Римлянам", en: "Romans" },
+  "1co": { ko: "고린도전서", ru: "1-е Коринфянам", en: "1 Corinthians" },
+  "2co": { ko: "고린도후서", ru: "2-е Коринфянам", en: "2 Corinthians" },
+  gl: { ko: "갈라디아서", ru: "Галатам", en: "Galatians" },
+  eph: { ko: "에베소서", ru: "Ефесянам", en: "Ephesians" },
+  ph: { ko: "빌립보서", ru: "Филиппийцам", en: "Philippians" },
+  col: { ko: "골로새서", ru: "Колоссянам", en: "Colossians" },
+  "1ts": { ko: "데살로니가전서", ru: "1-е Фессалоникийцам", en: "1 Thessalonians" },
+  "2ts": { ko: "데살로니가후서", ru: "2-е Фессалоникийцам", en: "2 Thessalonians" },
+  "1tm": { ko: "디모데전서", ru: "1-е Тимофею", en: "1 Timothy" },
+  "2tm": { ko: "디모데후서", ru: "2-е Тимофею", en: "2 Timothy" },
+  tt: { ko: "디도서", ru: "Титу", en: "Titus" },
+  phm: { ko: "빌레몬서", ru: "Филимону", en: "Philemon" },
+  heb: { ko: "히브리서", ru: "Евреям", en: "Hebrews" },
+  jm: { ko: "야고보서", ru: "Иакова", en: "James" },
+  "1pe": { ko: "베드로전서", ru: "1-е Петра", en: "1 Peter" },
+  "2pe": { ko: "베드로후서", ru: "2-е Петра", en: "2 Peter" },
+  "1jo": { ko: "요한1서", ru: "1-е Иоанна", en: "1 John" },
+  "2jo": { ko: "요한2서", ru: "2-е Иоанна", en: "2 John" },
+  "3jo": { ko: "요한3서", ru: "3-е Иоанна", en: "3 John" },
+  jd: { ko: "유다서", ru: "Иуды", en: "Jude" },
+  re: { ko: "요한계시록", ru: "Откровение", en: "Revelation" },
+};
+
+type WordPost = Database['public']['Tables']['word_posts']['Row'] & {
   book_id?: string;
   chapter_num?: number;
   verse_num?: number;
-}
+};
 
 interface WordPageClientProps {
   initialPosts: WordPost[];
 }
 
 export default function WordPageClient({ initialPosts }: WordPageClientProps) {
-  const { user } = useAuth();
   const { t, language } = useLanguage();
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-
-  const [wordPosts] = useState<WordPost[]>(
-    initialPosts.map(post => ({
-      ...post,
-      imageContainerRef: React.createRef<HTMLDivElement>()
-    }))
-  );
-
-  const initialDateFromParams = searchParams.get('date');
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(
-    initialDateFromParams ? new Date(initialDateFromParams) : new Date()
-  );
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   
-  const [isDownloading, setIsDownloading] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
-
-  // 성경 데이터 상태 유지
-  const [bibleData, setBibleData] = useState<any[]>([]);
-  const [loadingBible, setLoadingBible] = useState(true);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  // [수정] 성경 데이터를 불러오는 로직 강화
-  useEffect(() => {
-    const loadBible = async () => {
-      setLoadingBible(true);
-      try {
-        // public/bible/ko.json 등의 경로에서 데이터를 가져옴
-        const res = await fetch(`/bible/${language}.json`);
-        if (!res.ok) throw new Error("Failed to fetch bible");
-        const data = await res.json();
-        setBibleData(Array.isArray(data) ? data : []); // 배열 형태 확인
-      } catch (e) {
-        console.error("Bible load error:", e);
-        setBibleData([]);
-      } finally {
-        setLoadingBible(false);
-      }
-    };
-    loadBible();
-  }, [language]);
+  const selectedDateStr = format(selectedDate, "yyyy-MM-dd");
+  
+  const activePost = initialPosts.find(
+    (post) => post.word_date === selectedDateStr
+  );
 
   const getDateLocale = () => {
     switch (language) {
@@ -95,214 +117,191 @@ export default function WordPageClient({ initialPosts }: WordPageClientProps) {
     }
   };
 
-  const currentWordPost = useMemo(() => {
-    if (!selectedDate) return null;
-    const formattedSelectedDate = format(selectedDate, 'yyyy-MM-dd');
-    return wordPosts.find(post => format(new Date(post.word_date), 'yyyy-MM-dd') === formattedSelectedDate) || null;
-  }, [selectedDate, wordPosts]);
-
-  // [수정] 실시간 번역된 구절을 가져오는 함수
-  const getTranslatedVerse = (post: WordPost) => {
-    // book_id가 없거나 성경 데이터가 로드되지 않았다면 DB 원본 텍스트 반환
-    if (!post.book_id || bibleData.length === 0) return post.content;
-    
-    // abbrev와 book_id 매칭
-    const book = bibleData.find(b => b.abbrev === post.book_id);
-    if (!book || !book.chapters) return post.content;
+  const handleDownload = async () => {
+    const element = document.getElementById("word-card");
+    if (!element) return;
 
     try {
-      // chapters[장-1][절-1] 구조로 접근
-      const verseText = book.chapters[post.chapter_num! - 1][post.verse_num! - 1];
-      return verseText || post.content;
-    } catch (e) {
-      return post.content;
-    }
-  };
-
-  // [수정] 제목 번역 (형식 포함)
-  const getTranslatedTitle = (post: WordPost) => {
-    if (!post.book_id || bibleData.length === 0) return post.title;
-    const book = bibleData.find(b => b.abbrev === post.book_id);
-    if (!book) return post.title;
-
-    if (language === 'ko') {
-      return `${book.name} ${post.chapter_num}장 ${post.verse_num}절`;
-    }
-    return `${book.name} ${post.chapter_num}:${post.verse_num}`;
-  };
-
-  const handleDateSelect = (date: Date | undefined) => {
-    setSelectedDate(date);
-    const dateString = date ? format(date, 'yyyy-MM-dd') : '';
-    const params = new URLSearchParams(searchParams.toString());
-    if (dateString) params.set('date', dateString);
-    else params.delete('date');
-    router.push(`${pathname}?${params.toString()}`);
-  };
-
-  const handleLike = async () => {
-    if (!user) {
-      alert(t('common.login_required'));
-      return;
-    }
-    alert("준비 중입니다."); 
-  };
-
-  const handleDownload = async (post: WordPost) => {
-    if (!post.imageContainerRef?.current) return;
-    setIsDownloading(true);
-    try {
-      const canvas = await html2canvas(post.imageContainerRef.current, { 
+      const canvas = await html2canvas(element, {
         useCORS: true, 
-        scale: 3, 
-        backgroundColor: "#ffffff",
-        logging: false
+        scale: 2, 
+        backgroundColor: null
       });
-      const link = document.createElement('a');
-      link.href = canvas.toDataURL('image/png');
-      link.download = `word_${post.word_date}.png`;
+      const dataUrl = canvas.toDataURL("image/png");
+      const link = document.createElement("a");
+      link.download = `bozhiymir-word-${selectedDateStr}.png`;
+      link.href = dataUrl;
       link.click();
-    } catch (e) {
-      console.error(e);
-      alert(t('common.error'));
-    } finally {
-      setIsDownloading(false);
+    } catch (err) {
+      console.error("Download failed:", err);
     }
   };
 
-  if (!isMounted) return null;
+  // [핵심] 제목 동적 생성 함수 (book_id 기반)
+  const getDisplayTitle = (post: WordPost) => {
+    // 1. DB에 book_id(예: 'gn'), chapter, verse가 있으면 이를 해석
+    if (post.book_id && post.chapter_num && post.verse_num) {
+      const abbrev = post.book_id.toLowerCase();
+      const bookNameMap = BIBLE_BOOK_NAMES[abbrev];
+      
+      if (bookNameMap) {
+        // 현재 언어에 맞는 책 이름 (ko, ru, en)
+        const localizedBookName = bookNameMap[language as 'ko' | 'en' | 'ru'] || bookNameMap.en;
+        return `${localizedBookName} ${post.chapter_num}:${post.verse_num}`;
+      }
+    }
+    // 2. 정보가 없으면 기존 title 그대로 표시
+    return post.title;
+  };
 
   return (
-    <div className="min-h-screen bg-slate-50 pt-16">
-      
+    <div className="min-h-screen bg-slate-50 pb-20 pt-24">
       {/* Hero Section */}
-      <div className="bg-[#0F172A] text-white py-10 border-b-4 border-yellow-500">
+      <div className="bg-[#0F172A] text-white py-16 border-b-4 border-yellow-500 mb-12">
         <div className="container mx-auto px-4 text-center">
-          <div className="mb-2 animate-bounce">
-            <span className="text-3xl md:text-4xl">📖</span>
-          </div>
-          <h1 className="text-3xl md:text-4xl font-black mb-2 italic tracking-tight">
+          <h1 className="text-4xl md:text-5xl font-black italic tracking-tight mb-4">
             {t('word.hero.title')}
           </h1>
-          <p className="text-slate-400 max-w-2xl mx-auto text-sm md:text-base font-light leading-relaxed">
+          <p className="text-slate-300 max-w-2xl mx-auto text-lg">
             {t('word.hero.desc')}
           </p>
         </div>
       </div>
 
-      {/* Main Content */}
-      <section className="py-12 md:py-16">
-        <div className="container mx-auto px-4 max-w-6xl">
+      <div className="container mx-auto px-4 max-w-6xl">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
-          <div className="flex flex-col lg:flex-row justify-center gap-10 items-start">
-            
-            {/* 왼쪽: 말씀 카드 영역 */}
-            <div className="w-full max-w-xs flex-shrink-0">
-              {!currentWordPost ? (
-                <div className="text-center py-24 bg-white rounded-[32px] border border-dashed border-slate-200 shadow-sm w-full">
-                  <div className="bg-slate-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                    <CalendarIcon className="w-8 h-8 text-slate-400" />
-                  </div>
-                  <p className="text-slate-500 text-lg font-medium">{t('word.list.empty_date')}</p>
-                  <p className="text-slate-400 text-sm mt-2">{t('word.list.select_date')}</p>
-                </div>
-              ) : (
-                <div className="flex flex-col gap-4 w-full">
-                  <Card className="rounded-[32px] border-none shadow-xl shadow-slate-200 bg-white overflow-hidden">
-                    
-                    {/* 캡처 대상 */}
-                    <div ref={currentWordPost.imageContainerRef} className="bg-white relative w-full aspect-[9/16] overflow-hidden">
-                        
-                        {currentWordPost.image_url ? (
-                            <>
-                                <div 
-                                    className="absolute inset-0 w-full h-full bg-cover bg-center transition-transform hover:scale-105 duration-700"
-                                    style={{ backgroundImage: `url(${currentWordPost.image_url})` }}
-                                />
-                                <div className="absolute inset-0 bg-black/40" />
-                            </>
-                        ) : (
-                            <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-slate-900" />
-                        )}
-                        
-                        {/* 텍스트 콘텐츠 */}
-                        <div className="absolute inset-0 z-10 p-6 flex flex-col justify-center items-center text-center text-white h-full">
-                            <div className="flex-1 flex flex-col justify-center">
-                                {loadingBible ? (
-                                    <Loader2 className="h-8 w-8 animate-spin mx-auto opacity-50" />
-                                ) : (
-                                    <>
-                                        <h2 className="text-xl md:text-2xl font-black mb-4 leading-tight drop-shadow-xl">
-                                            {getTranslatedTitle(currentWordPost)}
-                                        </h2>
-                                        <p className="text-sm md:text-base text-white/95 leading-relaxed font-medium whitespace-pre-wrap drop-shadow-lg font-serif">
-                                            "{getTranslatedVerse(currentWordPost)}"
-                                        </p>
-                                    </>
-                                )}
-                            </div>
-                            
-                            <div className="mt-auto pt-4 border-t border-white/30 w-full">
-                                <p className="text-xs font-bold tracking-widest uppercase opacity-90">
-                                    {format(new Date(currentWordPost.word_date), 'yyyy.MM.dd')}
-                                </p>
-                                <p className="text-[10px] opacity-70 mt-1 tracking-wide">Bozhiymir Church Daily Word</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* 카드 푸터 */}
-                    <CardFooter className="px-5 py-3 bg-slate-50 border-t border-slate-100 flex justify-between items-center">
-                        <Button variant="ghost" size="sm" onClick={handleLike} className="text-slate-500 hover:text-red-500 hover:bg-red-50 rounded-full gap-1.5 px-3">
-                            <Heart className={cn("h-4 w-4")} />
-                            <span className="text-xs font-bold">{t('common.amen')}</span>
-                        </Button>
-                        <Button 
-                            variant="default" 
-                            size="sm" 
-                            onClick={() => handleDownload(currentWordPost)}
-                            disabled={isDownloading}
-                            className="rounded-full bg-slate-900 hover:bg-slate-800 text-white px-4 shadow-lg shadow-slate-200 h-8"
-                        >
-                            {isDownloading ? <Loader2 className="h-3 w-3 animate-spin mr-1.5"/> : <Download className="h-3 w-3 mr-1.5" />}
-                            <span className="font-bold text-[10px]">{t('word.button.download')}</span>
-                        </Button>
-                    </CardFooter>
-                  </Card>
-                </div>
-              )}
-            </div>
-
-            {/* 오른쪽: 달력 영역 */}
-            <div className="w-full max-w-[320px] flex flex-col gap-6 sticky top-24 flex-shrink-0">
-              <Card className="rounded-[24px] border-none shadow-lg shadow-slate-100 bg-white p-6">
-                <CardHeader className="p-0 mb-4 border-b border-slate-50 pb-4">
-                    <CardTitle className="flex items-center text-lg font-bold text-slate-800">
-                        <CalendarIcon className="h-5 w-5 mr-2 text-blue-600" />
-                        {t('word.calendar.title')}
-                    </CardTitle>
-                </CardHeader>
-                <div className="flex justify-center">
-                    <Calendar 
-                        mode="single" 
-                        selected={selectedDate} 
-                        onSelect={handleDateSelect}
-                        className="p-0 w-full"
-                        classNames={{
-                            head_cell: "text-slate-400 font-normal text-[0.8rem]",
-                            cell: "h-9 w-9 text-center text-sm p-0 relative [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
-                            day: "h-9 w-9 p-0 font-normal aria-selected:opacity-100 hover:bg-slate-100 rounded-full",
-                            day_selected: "bg-blue-600 text-white hover:bg-blue-600 hover:text-white focus:bg-blue-600 focus:text-white rounded-full shadow-md shadow-blue-200",
-                            day_today: "bg-slate-100 text-slate-900 font-bold",
-                        }}
+          {/* Main Card Area */}
+          <div className="lg:col-span-8 flex flex-col gap-6">
+            {activePost ? (
+              <div className="flex flex-col items-center">
+                {/* Word Card Container for Download */}
+                <div 
+                  id="word-card"
+                  className="relative aspect-[9/16] w-full max-w-md bg-black rounded-[24px] overflow-hidden shadow-2xl border-4 border-slate-900 mx-auto"
+                >
+                  {/* Background Image */}
+                  {activePost.image_url ? (
+                    <img 
+                      src={activePost.image_url} 
+                      alt="Background" 
+                      className="absolute inset-0 w-full h-full object-cover opacity-70"
                     />
+                  ) : (
+                    <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-black" />
+                  )}
+                  
+                  {/* Content Overlay */}
+                  <div className="absolute inset-0 z-10 p-8 flex flex-col justify-center text-center text-white">
+                    <div className="mb-6 inline-block mx-auto px-4 py-1 rounded-full border border-white/30 bg-black/20 backdrop-blur-sm text-xs font-medium tracking-wider uppercase">
+                      Bozhiymir Church
+                    </div>
+                    
+                    {/* [수정] 제목을 동적으로 표시 */}
+                    <h2 className="text-3xl font-black mb-6 drop-shadow-lg leading-tight break-keep">
+                      {getDisplayTitle(activePost)}
+                    </h2>
+                    
+                    <p className="text-lg md:text-xl font-medium leading-relaxed opacity-95 whitespace-pre-wrap drop-shadow-md break-keep">
+                      {activePost.content}
+                    </p>
+                    
+                    <div className="mt-8 pt-6 border-t border-white/20 inline-block mx-auto">
+                      <p className="text-sm font-medium opacity-80">
+                        {format(new Date(activePost.word_date), "MMMM d, yyyy", { locale: getDateLocale() })}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-              </Card>
+
+                {/* Action Buttons */}
+                <div className="flex gap-4 mt-6">
+                  <Button onClick={handleDownload} className="bg-blue-600 hover:bg-blue-700 rounded-full px-6">
+                    <Download className="w-4 h-4 mr-2" />
+                    {t('word.button.download')}
+                  </Button>
+                  <Button variant="outline" className="rounded-full px-6" onClick={() => {
+                    if (navigator.share) {
+                      navigator.share({
+                        title: getDisplayTitle(activePost),
+                        text: activePost.content,
+                        url: window.location.href
+                      });
+                    } else {
+                      alert("Sharing is not supported on this browser.");
+                    }
+                  }}>
+                    <Share2 className="w-4 h-4 mr-2" />
+                    Share
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center min-h-[400px] bg-white rounded-3xl border-2 border-dashed border-slate-200 text-slate-400 p-8 text-center">
+                <CalendarIcon className="w-12 h-12 mb-4 opacity-50" />
+                <p className="text-lg font-medium">{t('word.list.empty_date')}</p>
+                <p className="text-sm">{t('word.list.select_date')}</p>
+              </div>
+            )}
+          </div>
+
+          {/* Sidebar / Calendar */}
+          <div className="lg:col-span-4 space-y-6">
+            <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
+              <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                <CalendarIcon className="w-5 h-5 text-blue-600" />
+                {t('word.calendar.title')}
+              </h3>
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={(date) => date && setSelectedDate(date)}
+                className="rounded-md border mx-auto"
+                modifiers={{
+                  posted: initialPosts.map(p => new Date(p.word_date))
+                }}
+                modifiersStyles={{
+                  posted: { fontWeight: 'bold', color: '#2563eb', textDecoration: 'underline' }
+                }}
+                locale={getDateLocale()} 
+              />
             </div>
 
+            {/* Recent List */}
+            <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
+              <h3 className="text-lg font-bold mb-4">Recent Words</h3>
+              <div className="space-y-3">
+                {initialPosts.slice(0, 5).map(post => (
+                  <button 
+                    key={post.id} 
+                    onClick={() => setSelectedDate(new Date(post.word_date))}
+                    className={cn(
+                      "w-full text-left p-3 rounded-xl transition-all flex items-center gap-3",
+                      post.word_date === selectedDateStr 
+                        ? "bg-blue-50 border-blue-200 ring-1 ring-blue-200" 
+                        : "hover:bg-slate-50 border border-transparent"
+                    )}
+                  >
+                    <div className="w-10 h-10 rounded-lg bg-slate-200 flex-shrink-0 overflow-hidden">
+                        {post.image_url && <img src={post.image_url} className="w-full h-full object-cover" />}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold truncate text-slate-800">
+                        {/* [수정] 목록에서도 동적 제목 사용 */}
+                        {getDisplayTitle(post)}
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        {post.word_date}
+                      </p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
+
         </div>
-      </section>
+      </div>
     </div>
   );
 }

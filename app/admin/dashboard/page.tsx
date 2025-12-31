@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { 
   LayoutDashboard, Users, Calendar, 
   Image as ImageIcon, Loader2, 
-  Save, Activity, BookOpen, Trash2, Smartphone, Edit2, PlusCircle, Search
+  Save, Activity, BookOpen, Trash2, Smartphone, Edit2, PlusCircle, Search, RefreshCw
 } from "lucide-react";
 import { format } from "date-fns";
 import { ko, enUS, ru } from "date-fns/locale"; 
@@ -24,64 +24,67 @@ import { useAuth } from "@/contexts/auth-context";
 
 import AdminUsersClient from "@/components/admin-users-client";
 
-// 성경 책 이름 매핑 정보 (약어 기준)
+// 성경 책 이름 매핑 정보 (JSON 파일의 2글자 약어 'gn', 'ex' 등과 매칭)
 const BIBLE_BOOK_NAMES: Record<string, { ko: string; ru: string; en: string }> = {
+  // 구약 (Old Testament)
   gn: { ko: "창세기", ru: "Бытие", en: "Genesis" },
   ex: { ko: "출애굽기", ru: "Исход", en: "Exodus" },
   lv: { ko: "레위기", ru: "Левит", en: "Leviticus" },
   nm: { ko: "민수기", ru: "Числа", en: "Numbers" },
   dt: { ko: "신명기", ru: "Второзаконие", en: "Deuteronomy" },
   js: { ko: "여호수아", ru: "Иисус Навин", en: "Joshua" },
-  jd: { ko: "사사기", ru: "Судьи", en: "Judges" },
+  jud: { ko: "사사기", ru: "Судьи", en: "Judges" },
   rt: { ko: "룻기", ru: "Руфь", en: "Ruth" },
-  "1sa": { ko: "사무엘상", ru: "1-я Царств", en: "1 Samuel" },
-  "2sa": { ko: "사무엘하", ru: "2-я Царств", en: "2 Samuel" },
-  "1ki": { ko: "열왕기상", ru: "3-я Царств", en: "1 Kings" },
-  "2ki": { ko: "열왕기하", ru: "4-я Царств", en: "2 Kings" },
+  "1sm": { ko: "사무엘상", ru: "1-я Царств", en: "1 Samuel" },
+  "2sm": { ko: "사무엘하", ru: "2-я Царств", en: "2 Samuel" },
+  "1kg": { ko: "열왕기상", ru: "3-я Царств", en: "1 Kings" },
+  "2kg": { ko: "열왕기하", ru: "4-я Царств", en: "2 Kings" },
   "1ch": { ko: "역대상", ru: "1-я Паралипоменон", en: "1 Chronicles" },
   "2ch": { ko: "역대하", ru: "2-я Паралипоменон", en: "2 Chronicles" },
   ez: { ko: "에스라", ru: "Ездра", en: "Ezra" },
   ne: { ko: "느헤미야", ru: "Неемия", en: "Nehemiah" },
   es: { ko: "에스더", ru: "Есфирь", en: "Esther" },
-  job: { ko: "욥기", ru: "Иов", en: "Job" },
+  jb: { ko: "욥기", ru: "Иов", en: "Job" },
   ps: { ko: "시편", ru: "Псалтирь", en: "Psalms" },
   prv: { ko: "잠언", ru: "Притчи", en: "Proverbs" },
   ec: { ko: "전도서", ru: "Екклесиаст", en: "Ecclesiastes" },
-  so: { ko: "아가", ru: "Песня Песней", en: "Song of Solomon" },
-  isa: { ko: "이사야", ru: "Исаия", en: "Isaiah" },
-  jer: { ko: "예레미야", ru: "Иеремия", en: "Jeremiah" },
+  sn: { ko: "아가", ru: "Песнь Песней", en: "Song of Solomon" },
+  is: { ko: "이사야", ru: "Исаия", en: "Isaiah" },
+  jr: { ko: "예레미야", ru: "Иеремия", en: "Jeremiah" },
   lm: { ko: "예레미야애가", ru: "Плач Иеремии", en: "Lamentations" },
-  eze: { ko: "에스겔", ru: "Иезекииль", en: "Ezekiel" },
-  da: { ko: "다니엘", ru: "Даниил", en: "Daniel" },
-  hos: { ko: "호세아", ru: "Осия", en: "Hosea" },
-  joe: { ko: "요엘", ru: "Иоиль", en: "Joel" },
-  amo: { ko: "아모스", ru: "Амос", en: "Amos" },
-  oba: { ko: "오바댜", ru: "Авдий", en: "Obadiah" },
+  ek: { ko: "에스겔", ru: "Иезекииль", en: "Ezekiel" },
+  dn: { ko: "다니엘", ru: "Даниил", en: "Daniel" },
+  ho: { ko: "호세아", ru: "Осия", en: "Hosea" },
+  jl: { ko: "요엘", ru: "Иоиль", en: "Joel" },
+  am: { ko: "아모스", ru: "Амос", en: "Amos" },
+  ob: { ko: "오바댜", ru: "Авдий", en: "Obadiah" },
   jn: { ko: "요나", ru: "Иона", en: "Jonah" },
-  mic: { ko: "미가", ru: "Михей", en: "Micah" },
+  mi: { ko: "미가", ru: "Михей", en: "Micah" },
   na: { ko: "나훔", ru: "Наум", en: "Nahum" },
-  hab: { ko: "하박국", ru: "Аввакум", en: "Habakkuk" },
-  zep: { ko: "스바냐", ru: "Софония", en: "Zephaniah" },
-  hag: { ko: "학개", ru: "Аггей", en: "Haggai" },
-  zec: { ko: "스가랴", ru: "Захария", en: "Zechariah" },
+  ha: { ko: "하박국", ru: "Аввакум", en: "Habakkuk" },
+  zp: { ko: "스바냐", ru: "Софония", en: "Zephaniah" },
+  hg: { ko: "학개", ru: "Аггей", en: "Haggai" },
+  zc: { ko: "스가랴", ru: "Захария", en: "Zechariah" },
   ml: { ko: "말라기", ru: "Малахия", en: "Malachi" },
+
+  // 신약 (New Testament)
   mt: { ko: "마태복음", ru: "От Матфея", en: "Matthew" },
-  mr: { ko: "마가복음", ru: "От Марка", en: "Mark" },
+  mk: { ko: "마가복음", ru: "От Марка", en: "Mark" },
   lk: { ko: "누가복음", ru: "От Луки", en: "Luke" },
   jo: { ko: "요한복음", ru: "От Иоанна", en: "John" },
   act: { ko: "사도행전", ru: "Деяния", en: "Acts" },
   rm: { ko: "로마서", ru: "Римлянам", en: "Romans" },
   "1co": { ko: "고린도전서", ru: "1-е Коринфянам", en: "1 Corinthians" },
   "2co": { ko: "고린도후서", ru: "2-е Коринфянам", en: "2 Corinthians" },
-  gal: { ko: "갈라디아서", ru: "Галатам", en: "Galatians" },
+  gl: { ko: "갈라디아서", ru: "Галатам", en: "Galatians" },
   eph: { ko: "에베소서", ru: "Ефесянам", en: "Ephesians" },
   ph: { ko: "빌립보서", ru: "Филиппийцам", en: "Philippians" },
-  cl: { ko: "골로새서", ru: "Колоссянам", en: "Colossians" },
+  col: { ko: "골로새서", ru: "Колоссянам", en: "Colossians" },
   "1ts": { ko: "데살로니가전서", ru: "1-е Фессалоникийцам", en: "1 Thessalonians" },
   "2ts": { ko: "데살로니가후서", ru: "2-е Фессалоникийцам", en: "2 Thessalonians" },
   "1tm": { ko: "디모데전서", ru: "1-е Тимофею", en: "1 Timothy" },
   "2tm": { ko: "디모데후서", ru: "2-е Тимофею", en: "2 Timothy" },
-  tit: { ko: "디도서", ru: "Титу", en: "Titus" },
+  tt: { ko: "디도서", ru: "Титу", en: "Titus" },
   phm: { ko: "빌레몬서", ru: "Филимону", en: "Philemon" },
   heb: { ko: "히브리서", ru: "Евреям", en: "Hebrews" },
   jm: { ko: "야고보서", ru: "Иакова", en: "James" },
@@ -90,8 +93,8 @@ const BIBLE_BOOK_NAMES: Record<string, { ko: string; ru: string; en: string }> =
   "1jo": { ko: "요한1서", ru: "1-е Иоанна", en: "1 John" },
   "2jo": { ko: "요한2서", ru: "2-е Иоанна", en: "2 John" },
   "3jo": { ko: "요한3서", ru: "3-е Иоанна", en: "3 John" },
-  jud: { ko: "유다서", ru: "Иуды", en: "Jude" },
-  rev: { ko: "요한계시록", ru: "Откровение", en: "Revelation" },
+  jd: { ko: "유다서", ru: "Иуды", en: "Jude" },
+  re: { ko: "요한계시록", ru: "Откровение", en: "Revelation" },
 };
 
 export default function AdminDashboard() {
@@ -145,7 +148,7 @@ export default function AdminDashboard() {
     }
   };
 
-  // 성경 데이터 로드 및 이름 덮어쓰기
+  // [수정] 성경 데이터 로드 및 이름 덮어쓰기
   useEffect(() => {
     const loadBible = async () => {
       try {
@@ -154,13 +157,11 @@ export default function AdminDashboard() {
         
         // JSON 파일의 영어 이름을 현재 언어 설정에 맞는 이름으로 교체
         const localizedData = data.map((book: any) => {
-          // JSON 파일의 약어(abbrev)를 소문자로 사용하여 매핑 찾기
           const abbrev = book.abbrev.toLowerCase();
           const localizedName = BIBLE_BOOK_NAMES[abbrev]?.[language as 'ko' | 'en' | 'ru'];
           
           return {
             ...book,
-            // 매핑된 이름이 있으면 사용하고, 없으면 원래 이름 사용
             name: localizedName || book.name
           };
         });
@@ -266,6 +267,7 @@ export default function AdminDashboard() {
           image_url: wordData.imageUrl,
           author_id: user.id,
           author_nickname: user.nickname || user.email?.split('@')[0] || "Admin",
+          // [중요] 성경 약어, 장, 절 정보를 저장
           book_id: selectedBook,
           chapter_num: parseInt(selectedChapter),
           verse_num: parseInt(selectedVerse)
@@ -305,6 +307,7 @@ export default function AdminDashboard() {
           content: editingWord.content,
           word_date: editingWord.date,
           image_url: editingWord.imageUrl,
+          // [중요] 업데이트 시에도 저장
           book_id: editingWord.book_id,
           chapter_num: editingWord.chapter_num,
           verse_num: editingWord.verse_num
