@@ -191,22 +191,21 @@ export default function WordPageClient({ initialPosts }: WordPageClientProps) {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-20 pt-24">
+    <div className="min-h-screen bg-slate-50 pt-16">
       {/* Hero Section */}
       <div className="bg-[#0F172A] text-white py-16 border-b-4 border-yellow-500 mb-12">
         <div className="container mx-auto px-4 text-center">
-          <h1 className="text-4xl md:text-5xl font-black italic tracking-tight mb-4">
+          <h1 className="text-3xl md:text-4xl font-black mb-2 italic tracking-tight">
             {t('word.hero.title')}
           </h1>
-          <p className="text-slate-300 max-w-2xl mx-auto text-lg">
+          <p className="text-slate-400 max-w-2xl mx-auto text-sm md:text-base font-light leading-relaxed">
             {t('word.hero.desc')}
           </p>
         </div>
       </div>
 
       <div className="container mx-auto px-4 max-w-6xl">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          
+        <div className="flex flex-col lg:flex-row justify-center items-start gap-6 lg:gap-8">   
           {/* Main Card Area */}
           <div className="lg:col-span-8 flex flex-col gap-6">
             {activePost ? (
@@ -214,7 +213,7 @@ export default function WordPageClient({ initialPosts }: WordPageClientProps) {
                 {/* Word Card Container for Download */}
                 <div 
                   id="word-card"
-                  className="relative aspect-[9/16] w-full max-w-md bg-black rounded-[24px] overflow-hidden shadow-2xl border-4 border-slate-900 mx-auto"
+                  className="relative aspect-[9/16] w-full max-w-xs bg-black rounded-[24px] overflow-hidden shadow-2xl border-4 border-slate-900 mx-auto"
                 >
                   {/* Background Image */}
                   {activePost.image_url ? (
@@ -228,18 +227,18 @@ export default function WordPageClient({ initialPosts }: WordPageClientProps) {
                   )}
                   
                   {/* Content Overlay */}
-                  <div className="absolute inset-0 z-10 p-8 flex flex-col justify-center text-center text-white">
+                  <div className="absolute inset-0 z- p-4 flex flex-col justify-center text-center text-white">
                     <div className="mb-6 inline-block mx-auto px-4 py-1 rounded-full border border-white/30 bg-black/20 backdrop-blur-sm text-xs font-medium tracking-wider uppercase">
                       Bozhiymir Church
                     </div>
                     
                     {/* 제목 (동적) */}
-                    <h2 className="text-3xl font-black mb-6 drop-shadow-lg leading-tight break-keep">
+                    <h2 className="text-2xl font-black mb-6 drop-shadow-lg leading-tight break-keep">
                       {getDisplayTitle(activePost)}
                     </h2>
                     
                     {/* [수정됨] 본문 (동적: DB내용 대신 성경 JSON 내용 우선 표시) */}
-                    <p className="text-lg md:text-xl font-medium leading-relaxed opacity-95 whitespace-pre-wrap drop-shadow-md break-keep">
+                    <p className="text-lg md:text-md font-medium leading-relaxed opacity-95 whitespace-pre-wrap drop-shadow-md break-keep">
                       {getDisplayContent(activePost)}
                     </p>
                     
@@ -284,7 +283,7 @@ export default function WordPageClient({ initialPosts }: WordPageClientProps) {
           </div>
 
           {/* Sidebar / Calendar */}
-          <div className="lg:col-span-4 space-y-6">
+          <div className="lg:col-span-4 space-y-2">
             <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
               <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
                 <CalendarIcon className="w-5 h-5 text-blue-600" />
@@ -303,40 +302,8 @@ export default function WordPageClient({ initialPosts }: WordPageClientProps) {
                 }}
                 locale={getDateLocale()} 
               />
-            </div>
-
-            {/* Recent List */}
-            <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
-              <h3 className="text-lg font-bold mb-4">Recent Words</h3>
-              <div className="space-y-3">
-                {initialPosts.slice(0, 5).map(post => (
-                  <button 
-                    key={post.id} 
-                    onClick={() => setSelectedDate(new Date(post.word_date))}
-                    className={cn(
-                      "w-full text-left p-3 rounded-xl transition-all flex items-center gap-3",
-                      post.word_date === selectedDateStr 
-                        ? "bg-blue-50 border-blue-200 ring-1 ring-blue-200" 
-                        : "hover:bg-slate-50 border border-transparent"
-                    )}
-                  >
-                    <div className="w-10 h-10 rounded-lg bg-slate-200 flex-shrink-0 overflow-hidden">
-                        {post.image_url && <img src={post.image_url} className="w-full h-full object-cover" />}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-bold truncate text-slate-800">
-                        {getDisplayTitle(post)}
-                      </p>
-                      <p className="text-xs text-slate-500">
-                        {post.word_date}
-                      </p>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
+            </div>        
           </div>
-
         </div>
       </div>
     </div>
