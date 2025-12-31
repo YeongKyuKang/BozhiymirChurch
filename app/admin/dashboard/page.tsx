@@ -128,8 +128,17 @@ export default function AdminDashboard() {
   const [selectedChapter, setSelectedChapter] = useState("1");
   const [selectedVerse, setSelectedVerse] = useState("1");
 
-  // 말씀 카드 생성 데이터
-  const [wordData, setWordData] = useState({ title: "", content: "", date: format(new Date(), "yyyy-MM-dd"), imageUrl: "" });
+  // [수정] 말씀 카드 생성 데이터: 성경 메타데이터(book_id, chapter, verse)를 wordData 상태에 포함시킴
+  const [wordData, setWordData] = useState({ 
+    title: "", 
+    content: "", 
+    date: format(new Date(), "yyyy-MM-dd"), 
+    imageUrl: "",
+    book_id: "",        // 추가됨
+    chapter_num: 0,     // 추가됨
+    verse_num: 0        // 추가됨
+  });
+  
   const [isEditWordOpen, setIsEditWordOpen] = useState(false);
   const [editingWord, setEditingWord] = useState<any>(null);
 
@@ -148,14 +157,13 @@ export default function AdminDashboard() {
     }
   };
 
-  // [수정] 성경 데이터 로드 및 이름 덮어쓰기
+  // 성경 데이터 로드
   useEffect(() => {
     const loadBible = async () => {
       try {
         const res = await fetch(`/bible/${language}.json`);
         const data = await res.json();
         
-        // JSON 파일의 영어 이름을 현재 언어 설정에 맞는 이름으로 교체
         const localizedData = data.map((book: any) => {
           const abbrev = book.abbrev.toLowerCase();
           const localizedName = BIBLE_BOOK_NAMES[abbrev]?.[language as 'ko' | 'en' | 'ru'];
@@ -231,24 +239,35 @@ export default function AdminDashboard() {
     }
   };
 
-  // 성경 구절 적용 함수
+  // [수정] 성경 구절 적용 함수: 실제 상태(state)에 메타데이터(book_id 등)를 확실히 저장하도록 수정
   const applyBibleVerse = (isEdit = false) => {
     const book = bibleData.find(b => b.abbrev === selectedBook);
     if (!book) return;
     try {
-      const verseText = book.chapters[parseInt(selectedChapter) - 1][parseInt(selectedVerse) - 1];
+      const chapter = parseInt(selectedChapter);
+      const verse = parseInt(selectedVerse);
+      const verseText = book.chapters[chapter - 1][verse - 1];
       const titleText = `${book.name} ${selectedChapter}:${selectedVerse}`;
+
       if (isEdit) {
         setEditingWord({ 
           ...editingWord, 
           title: titleText, 
           content: verseText, 
           book_id: selectedBook, 
-          chapter_num: parseInt(selectedChapter), 
-          verse_num: parseInt(selectedVerse) 
+          chapter_num: chapter, 
+          verse_num: verse 
         });
       } else {
-        setWordData({ ...wordData, title: titleText, content: verseText });
+        // [핵심 수정] 새 글 작성 시에도 book_id, chapter_num, verse_num을 wordData에 저장
+        setWordData({ 
+          ...wordData, 
+          title: titleText, 
+          content: verseText,
+          book_id: selectedBook,
+          chapter_num: chapter,
+          verse_num: verse
+        });
       }
     } catch (e) {
       alert(t('admin.alert.invalid_bible_ref') || "Invalid chapter or verse");
@@ -260,6 +279,8 @@ export default function AdminDashboard() {
     setIsSubmitting(true);
 
     try {
+        // [핵심 수정] selectedBook(UI 상태)이 아니라, applyBibleVerse로 확정된 wordData의 값을 사용
+        // 만약 wordData.book_id가 없으면(수동 입력 등), null로 들어가게 하여 오작동 방지
         const { error } = await supabase.from("word_posts").insert([{
           title: wordData.title,
           content: wordData.content,
@@ -267,15 +288,25 @@ export default function AdminDashboard() {
           image_url: wordData.imageUrl,
           author_id: user.id,
           author_nickname: user.nickname || user.email?.split('@')[0] || "Admin",
-          // [중요] 성경 약어, 장, 절 정보를 저장
-          book_id: selectedBook,
-          chapter_num: parseInt(selectedChapter),
-          verse_num: parseInt(selectedVerse)
+          
+          // 여기서 wordData에 저장된 값을 사용함
+          book_id: wordData.book_id || null,
+          chapter_num: wordData.chapter_num || null,
+          verse_num: wordData.verse_num || null
         }]);
 
         if (error) throw error;
         alert(t('admin.alert.success'));
-        setWordData({ title: "", content: "", date: format(new Date(), "yyyy-MM-dd"), imageUrl: "" });
+        // 초기화
+        setWordData({ 
+          title: "", 
+          content: "", 
+          date: format(new Date(), "yyyy-MM-dd"), 
+          imageUrl: "", 
+          book_id: "", 
+          chapter_num: 0, 
+          verse_num: 0 
+        });
         fetchData(); 
     } catch (err: any) {
         alert(t('admin.alert.error') + ": " + err.message);
@@ -292,9 +323,14 @@ export default function AdminDashboard() {
       date: post.word_date,
       imageUrl: post.image_url || "",
       book_id: post.book_id || "",
-      chapter_num: post.chapter_num || 1,
-      verse_num: post.verse_num || 1
+      chapter_num: post.chapter_num || 0,
+      verse_num: post.verse_num || 0
     });
+    // 모달 열 때 선택된 성경 정보도 UI에 반영
+    if (post.book_id) setSelectedBook(post.book_id);
+    if (post.chapter_num) setSelectedChapter(post.chapter_num.toString());
+    if (post.verse_num) setSelectedVerse(post.verse_num.toString());
+    
     setIsEditWordOpen(true);
   };
 
@@ -307,10 +343,10 @@ export default function AdminDashboard() {
           content: editingWord.content,
           word_date: editingWord.date,
           image_url: editingWord.imageUrl,
-          // [중요] 업데이트 시에도 저장
-          book_id: editingWord.book_id,
-          chapter_num: editingWord.chapter_num,
-          verse_num: editingWord.verse_num
+          // 수정 시에도 저장된 메타데이터 사용
+          book_id: editingWord.book_id || null,
+          chapter_num: editingWord.chapter_num || null,
+          verse_num: editingWord.verse_num || null
         }).eq("id", editingWord.id);
 
       if (error) throw error;
@@ -323,6 +359,8 @@ export default function AdminDashboard() {
       setIsSubmitting(false);
     }
   };
+
+  // ... (나머지 코드는 동일)
 
   const handleDeleteWord = async (id: string) => {
     if (!confirm(t('common.confirm_delete'))) return;

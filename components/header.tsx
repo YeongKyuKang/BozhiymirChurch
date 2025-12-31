@@ -157,7 +157,8 @@ export default function Header() {
                 )}
               </div>
 
-              {/* <Link href="/join/1" className="text-white text-sm font-bold hover:text-yellow-400 transition-colors tracking-widest">
+              {/* JOIN link commented out in Desktop as well
+              <Link href="/join/1" className="text-white text-sm font-bold hover:text-yellow-400 transition-colors tracking-widest">
                 {t('nav.join') || "JOIN"}
               </Link> */}
 
@@ -249,7 +250,9 @@ export default function Header() {
                   </AccordionItem>
                 </Accordion>
 
+                {/* JOIN Link Hidden for Mobile as well
                 <Link href="/join/1" className="flex items-center h-14 text-white text-lg font-bold">JOIN</Link>
+                */}
 
                 <div className="pt-6 space-y-4">
                   {user ? (
