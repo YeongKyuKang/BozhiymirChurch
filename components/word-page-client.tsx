@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { ko, enUS, ru } from "date-fns/locale";
 import { 
@@ -15,8 +15,7 @@ import { useLanguage } from "@/contexts/language-context";
 import { Database } from "@/lib/supabase";
 import html2canvas from "html2canvas";
 
-// [수정] 성경 책 이름 매핑 (DB의 book_id 'gn', 'ex' 등에 맞춤)
-// 2글자(gn), 3글자(gen), 풀네임(genesis) 모두 지원하도록 키를 여러 개 등록함
+// [기존] 성경 책 이름 매핑 (제목 표시용)
 const BIBLE_BOOK_NAMES: Record<string, { ko: string; ru: string; en: string }> = {
   // 구약 (Old Testament)
   gn: { ko: "창세기", ru: "Бытие", en: "Genesis" },
@@ -103,6 +102,9 @@ export default function WordPageClient({ initialPosts }: WordPageClientProps) {
   const { t, language } = useLanguage();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   
+  // [추가] 성경 전체 데이터를 저장할 state
+  const [bibleData, setBibleData] = useState<any[]>([]);
+
   const selectedDateStr = format(selectedDate, "yyyy-MM-dd");
   
   const activePost = initialPosts.find(
@@ -116,6 +118,21 @@ export default function WordPageClient({ initialPosts }: WordPageClientProps) {
       default: return ko;
     }
   };
+
+  // [추가] 언어가 바뀔 때마다 해당 언어의 성경 데이터 로드
+  useEffect(() => {
+    const loadBible = async () => {
+      try {
+        const res = await fetch(`/bible/${language}.json`);
+        if (!res.ok) throw new Error("Bible data fetch failed");
+        const data = await res.json();
+        setBibleData(data);
+      } catch (e) {
+        console.error("Failed to load bible data:", e);
+      }
+    };
+    loadBible();
+  }, [language]);
 
   const handleDownload = async () => {
     const element = document.getElementById("word-card");
@@ -137,21 +154,40 @@ export default function WordPageClient({ initialPosts }: WordPageClientProps) {
     }
   };
 
-  // [핵심] 제목 동적 생성 함수 (book_id 기반)
+  // 제목 동적 생성 함수 (book_id 기반)
   const getDisplayTitle = (post: WordPost) => {
-    // 1. DB에 book_id(예: 'gn'), chapter, verse가 있으면 이를 해석
     if (post.book_id && post.chapter_num && post.verse_num) {
       const abbrev = post.book_id.toLowerCase();
       const bookNameMap = BIBLE_BOOK_NAMES[abbrev];
       
       if (bookNameMap) {
-        // 현재 언어에 맞는 책 이름 (ko, ru, en)
         const localizedBookName = bookNameMap[language as 'ko' | 'en' | 'ru'] || bookNameMap.en;
         return `${localizedBookName} ${post.chapter_num}:${post.verse_num}`;
       }
     }
-    // 2. 정보가 없으면 기존 title 그대로 표시
     return post.title;
+  };
+
+  // [추가] 본문 동적 생성 함수 (JSON 데이터 기반)
+  const getDisplayContent = (post: WordPost) => {
+    // 1. 성경 정보가 있고, JSON 데이터가 로드되어 있는지 확인
+    if (post.book_id && post.chapter_num && post.verse_num && bibleData.length > 0) {
+      // JSON 데이터에서 해당 책 찾기 (약어 비교)
+      const book = bibleData.find((b: any) => b.abbrev.toLowerCase() === post.book_id?.toLowerCase());
+      
+      if (book && book.chapters) {
+        try {
+          // 배열 인덱스는 0부터 시작하므로 -1
+          // 예: 1장 1절 -> chapters[0][0]
+          const content = book.chapters[post.chapter_num - 1][post.verse_num - 1];
+          if (content) return content;
+        } catch (e) {
+          console.warn("Verse not found in JSON data, falling back to DB content.");
+        }
+      }
+    }
+    // 2. 정보가 없거나 실패하면 DB에 저장된 원래 content 반환
+    return post.content;
   };
 
   return (
@@ -197,13 +233,14 @@ export default function WordPageClient({ initialPosts }: WordPageClientProps) {
                       Bozhiymir Church
                     </div>
                     
-                    {/* [수정] 제목을 동적으로 표시 */}
+                    {/* 제목 (동적) */}
                     <h2 className="text-3xl font-black mb-6 drop-shadow-lg leading-tight break-keep">
                       {getDisplayTitle(activePost)}
                     </h2>
                     
+                    {/* [수정됨] 본문 (동적: DB내용 대신 성경 JSON 내용 우선 표시) */}
                     <p className="text-lg md:text-xl font-medium leading-relaxed opacity-95 whitespace-pre-wrap drop-shadow-md break-keep">
-                      {activePost.content}
+                      {getDisplayContent(activePost)}
                     </p>
                     
                     <div className="mt-8 pt-6 border-t border-white/20 inline-block mx-auto">
@@ -224,7 +261,8 @@ export default function WordPageClient({ initialPosts }: WordPageClientProps) {
                     if (navigator.share) {
                       navigator.share({
                         title: getDisplayTitle(activePost),
-                        text: activePost.content,
+                        // 공유할 때도 번역된 본문을 사용
+                        text: getDisplayContent(activePost),
                         url: window.location.href
                       });
                     } else {
@@ -287,7 +325,6 @@ export default function WordPageClient({ initialPosts }: WordPageClientProps) {
                     </div>
                     <div className="min-w-0">
                       <p className="text-sm font-bold truncate text-slate-800">
-                        {/* [수정] 목록에서도 동적 제목 사용 */}
                         {getDisplayTitle(post)}
                       </p>
                       <p className="text-xs text-slate-500">
