@@ -67,7 +67,7 @@ export type Database = {
         Row: {
           id: string
           email: string
-          role: "admin" | "user" | "child" | "guest"
+          role: "admin" | "user" | "guest"
           nickname: string | null
           gender: "male" | "female" | null
           profile_picture_url: string | null
