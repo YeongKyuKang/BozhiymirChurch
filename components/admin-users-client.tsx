@@ -48,7 +48,7 @@ export default function AdminUsersClient({ initialUsers }: AdminUsersClientProps
   const [users, setUsers] = useState<UserProfile[]>(initialUsers || [])
   const [loading, setLoading] = useState(initialUsers ? false : true)
   
-  // [추가] 필터 상태 관리
+  // 필터 상태 관리
   const [roleFilter, setRoleFilter] = useState<string>('all') // all, admin, user, guest, child
   const [commentFilter, setCommentFilter] = useState<string>('all') // all, allowed, blocked
 
@@ -71,7 +71,7 @@ export default function AdminUsersClient({ initialUsers }: AdminUsersClientProps
 
       if (error) {
         console.error('Error fetching users:', error)
-        toast.error(t('Error fetching users.')) 
+        toast.error(t('admin.users.fetch_error') || 'Error fetching users.') 
       } else {
         setUsers(data || [])
       }
@@ -87,7 +87,6 @@ export default function AdminUsersClient({ initialUsers }: AdminUsersClientProps
   ) => {
     if (!user) return
 
-    // [수정] adminPassword 없이 요청을 보냅니다. (API 수정됨)
     const response = await fetch('/api/admin/update-user-permission', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -100,10 +99,10 @@ export default function AdminUsersClient({ initialUsers }: AdminUsersClientProps
           u.id === userId ? { ...u, can_comment: canComment } : u,
         ),
       )
-      toast.success(t('Permission updated successfully.')) 
+      toast.success(t('admin.users.permission_updated') || 'Permission updated successfully.') 
     } else {
       const err = await response.json();
-      toast.error(t('Error updating permission.') + (err.error ? `: ${err.error}` : '')) 
+      toast.error((t('admin.users.permission_error') || 'Error updating permission.') + (err.error ? `: ${err.error}` : '')) 
     }
   }
 
@@ -118,11 +117,11 @@ export default function AdminUsersClient({ initialUsers }: AdminUsersClientProps
       setUsers((prevUsers) =>
         prevUsers.map((u) => (u.id === userId ? { ...u, role: newRole } : u)),
       )
-      toast.success(t('User role updated successfully.')) 
+      toast.success(t('admin.users.role_updated') || 'User role updated successfully.') 
     } else {
       const error = await response.json()
       toast.error(
-        `${t('Error updating user role')}: ${error.error || t('Unknown error')}`, 
+        `${t('admin.users.role_error') || 'Error updating user role'}: ${error.error || t('common.unknown_error')}`, 
       )
     }
   }
@@ -140,33 +139,30 @@ export default function AdminUsersClient({ initialUsers }: AdminUsersClientProps
       setUsers((prevUsers) =>
         prevUsers.filter((u) => u.id !== userToDelete.id),
       )
-      toast.success(t('User deleted successfully.')) 
+      toast.success(t('admin.users.deleted') || 'User deleted successfully.') 
       setUserToDelete(null)
       setPassword('')
     } else {
       const error = await response.json()
       toast.error(
-        `${t('Error deleting user')}: ${error.error || t('Unknown error')}`, 
+        `${t('admin.users.delete_error') || 'Error deleting user'}: ${error.error || t('common.unknown_error')}`, 
       )
     }
   }
 
   if (loading) {
-    return <div>{t('Loading...')}</div> 
+    return <div>{t('common.loading') || 'Loading...'}</div> 
   }
 
-  // [추가] 필터링 로직
+  // 필터링 로직
   const filteredUsers = users.filter((u) => {
-    // 본인은 리스트에서 제외 (혹은 포함하고 싶으면 이 줄 삭제)
     if (u.id === user?.id) return false;
 
-    // Role 필터
     const roleMatch = roleFilter === 'all' || u.role === roleFilter;
     
-    // Comment 필터
     let commentMatch = true;
     if (commentFilter === 'allowed') commentMatch = u.can_comment === true;
-    if (commentFilter === 'blocked') commentMatch = u.can_comment === false; // null도 blocked로 칠지 여부는 정책에 따라
+    if (commentFilter === 'blocked') commentMatch = u.can_comment === false; 
 
     return roleMatch && commentMatch;
   });
@@ -175,8 +171,8 @@ export default function AdminUsersClient({ initialUsers }: AdminUsersClientProps
     <div className="space-y-4">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-            <h1 className="text-2xl font-bold">{t('User Management')}</h1>
-            <h2 className="text-sm text-gray-500">{t('All Users')}: {filteredUsers.length} / {users.length}</h2>
+            <h1 className="text-2xl font-bold">{t('admin.users.title') || 'User Management'}</h1>
+            <h2 className="text-sm text-gray-500">{t('admin.users.subtitle_all') || 'All Users'}: {filteredUsers.length} / {users.length}</h2>
         </div>
         
         {/* 필터링 UI */}
@@ -187,14 +183,16 @@ export default function AdminUsersClient({ initialUsers }: AdminUsersClientProps
                 {/* Role Filter */}
                 <Select value={roleFilter} onValueChange={setRoleFilter}>
                     <SelectTrigger className="w-[130px] border-0 focus:ring-0 h-8 text-xs">
-                        <SelectValue placeholder="Role" />
+                        {/* [수정] Placeholder 번역 */}
+                        <SelectValue placeholder={t('admin.users.filter.role_placeholder') || "Role"} />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="all">All Roles</SelectItem>
-                        <SelectItem value="admin">Admin</SelectItem>
-                        <SelectItem value="user">User</SelectItem>
-                        <SelectItem value="guest">Guest</SelectItem>
-                        <SelectItem value="child">Child</SelectItem>
+                        {/* [수정] 옵션 텍스트 번역 */}
+                        <SelectItem value="all">{t('admin.users.filter.all_roles') || "All Roles"}</SelectItem>
+                        <SelectItem value="admin">{t('admin.role.admin') || "Admin"}</SelectItem>
+                        <SelectItem value="user">{t('admin.role.user') || "User"}</SelectItem>
+                        <SelectItem value="guest">{t('admin.role.guest') || "Guest"}</SelectItem>
+                        <SelectItem value="child">{t('admin.role.child') || "Child"}</SelectItem>
                     </SelectContent>
                 </Select>
 
@@ -203,12 +201,14 @@ export default function AdminUsersClient({ initialUsers }: AdminUsersClientProps
                 {/* Comment Filter */}
                 <Select value={commentFilter} onValueChange={setCommentFilter}>
                     <SelectTrigger className="w-[140px] border-0 focus:ring-0 h-8 text-xs">
-                        <SelectValue placeholder="Permission" />
+                         {/* [수정] Placeholder 번역 */}
+                        <SelectValue placeholder={t('admin.users.filter.permission_placeholder') || "Permission"} />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="all">All Permissions</SelectItem>
-                        <SelectItem value="allowed">Can Comment</SelectItem>
-                        <SelectItem value="blocked">Blocked</SelectItem>
+                        {/* [수정] 옵션 텍스트 번역 */}
+                        <SelectItem value="all">{t('admin.users.filter.all_permissions') || "All Permissions"}</SelectItem>
+                        <SelectItem value="allowed">{t('admin.users.filter.allowed') || "Can Comment"}</SelectItem>
+                        <SelectItem value="blocked">{t('admin.users.filter.blocked') || "Blocked"}</SelectItem>
                     </SelectContent>
                 </Select>
             </div>
@@ -219,18 +219,19 @@ export default function AdminUsersClient({ initialUsers }: AdminUsersClientProps
         <Table>
             <TableHeader>
             <TableRow>
-                <TableHead>{t('Email')}</TableHead>
-                <TableHead>{t('Role')}</TableHead>
-                <TableHead>{t('Can Comment')}</TableHead>
-                <TableHead>{t('Change Role')}</TableHead>
-                <TableHead>{t('Actions')}</TableHead>
+                <TableHead>{t('login.label_email') || 'Email'}</TableHead>
+                <TableHead>{t('admin.users.col_role') || 'Role'}</TableHead>
+                <TableHead>{t('admin.users.col_comment') || 'Can Comment'}</TableHead>
+                <TableHead>{t('admin.users.col_change_role') || 'Change Role'}</TableHead>
+                <TableHead>{t('admin.users.col_actions') || 'Actions'}</TableHead>
             </TableRow>
             </TableHeader>
             <TableBody>
             {filteredUsers.length === 0 ? (
                 <TableRow>
                     <TableCell colSpan={5} className="text-center py-8 text-gray-500">
-                        No users found matching filters.
+                        {/* [수정] 빈 결과 메시지 번역 */}
+                        {t('admin.users.filter.no_results') || "No users found matching filters."}
                     </TableCell>
                 </TableRow>
             ) : (
@@ -260,7 +261,10 @@ export default function AdminUsersClient({ initialUsers }: AdminUsersClientProps
                             }
                             />
                             <span className="text-xs text-gray-400 w-12">
-                                {user.can_comment ? 'Allowed' : 'Blocked'}
+                                {/* [수정] 상태 텍스트 번역 */}
+                                {user.can_comment 
+                                  ? (t('admin.users.status_allowed') || 'Allowed') 
+                                  : (t('admin.users.status_blocked') || 'Blocked')}
                             </span>
                         </div>
                     </TableCell>
@@ -272,13 +276,13 @@ export default function AdminUsersClient({ initialUsers }: AdminUsersClientProps
                         }
                         >
                         <SelectTrigger className="w-[120px] h-8 text-xs">
-                            <SelectValue placeholder={t('Select role')} /> 
+                            <SelectValue placeholder={t('admin.users.select_role') || 'Select role'} /> 
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="admin">{t('Administrator')}</SelectItem> 
-                            <SelectItem value="user">{t('User')}</SelectItem> 
-                            <SelectItem value="child">{t('Child')}</SelectItem> 
-                            <SelectItem value="guest">{t('Guest')}</SelectItem> 
+                            <SelectItem value="admin">{t('admin.role.admin') || 'Administrator'}</SelectItem> 
+                            <SelectItem value="user">{t('admin.role.user') || 'User'}</SelectItem> 
+                            <SelectItem value="child">{t('admin.role.child') || 'Child'}</SelectItem> 
+                            <SelectItem value="guest">{t('admin.role.guest') || 'Guest'}</SelectItem> 
                         </SelectContent>
                         </Select>
                     </TableCell>
@@ -296,29 +300,29 @@ export default function AdminUsersClient({ initialUsers }: AdminUsersClientProps
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                             <AlertDialogHeader>
-                            <AlertDialogTitle>{t('Are you sure?')}</AlertDialogTitle> 
+                            <AlertDialogTitle>{t('common.confirm_title') || 'Are you sure?'}</AlertDialogTitle> 
                             <AlertDialogDescription>
-                                {t("User '")}
+                                {t("admin.users.delete_confirm_prefix") || "User '"}
                                 <strong>{user.email}</strong>
-                                {t("' will be permanently deleted. This action cannot be undone.")}
+                                {t("admin.users.delete_confirm_suffix") || "' will be permanently deleted. This action cannot be undone."}
                                 <br />
                                 <br />
-                                {t('Please enter the admin password to confirm.')} 
+                                {t('admin.users.enter_admin_pw') || 'Please enter the admin password to confirm.'} 
                             </AlertDialogDescription>
                             </AlertDialogHeader>
                             <input
                             type="password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            placeholder={t('Admin Password')} 
+                            placeholder={t('admin.users.admin_pw_placeholder') || 'Admin Password'} 
                             className="mt-2 rounded border p-2 w-full"
                             />
                             <AlertDialogFooter>
                             <AlertDialogCancel onClick={() => setUserToDelete(null)}>
-                                {t('Cancel')} 
+                                {t('common.cancel') || 'Cancel'} 
                             </AlertDialogCancel>
                             <AlertDialogAction onClick={handleDeleteUser}>
-                                {t('Confirm Delete')} 
+                                {t('common.delete') || 'Confirm Delete'} 
                             </AlertDialogAction>
                             </AlertDialogFooter>
                         </AlertDialogContent>

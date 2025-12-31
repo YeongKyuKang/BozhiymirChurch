@@ -12,7 +12,12 @@
     "like": "Like",
     "sad": "Sad",
     "pray": "Pray",
-    "back": "Back"
+    "back": "Back",
+    "loading": "Loading...",
+    "completed": "completed.",
+    "delete_success": "Deleted successfully.",
+    "unknown_error": "An unknown error occurred.",
+    "confirm_title": "Confirm"
   },
   "nav": {
     "home": "Home",
@@ -434,6 +439,48 @@
       "write_word": "New Word Post",
       "add_event": "Add Event"
     },
+    "users": {
+      "title": "User Management",
+      "subtitle_all": "All Users",
+      "filter": {
+        "role_placeholder": "Role",
+        "permission_placeholder": "Permission",
+        "all_roles": "All Roles",
+        "all_permissions": "All Permissions",
+        "allowed": "Can Comment",
+        "blocked": "Blocked",
+        "no_results": "No users found matching filters."
+      },
+      "col_role": "Role",
+      "col_comment": "Can Comment",
+      "col_change_role": "Change Role",
+      "col_actions": "Actions",
+      "status_allowed": "Allowed",
+      "status_blocked": "Blocked",
+      "select_role": "Select role",
+      "delete_confirm_prefix": "User '",
+      "delete_confirm_suffix": "' will be permanently deleted. This action cannot be undone.",
+      "enter_admin_pw": "Please enter the admin password to confirm.",
+      "admin_pw_placeholder": "Admin Password",
+      "fetch_error": "Error fetching users.",
+      "permission_updated": "Permission updated successfully.",
+      "permission_error": "Error updating permission.",
+      "role_updated": "User role updated successfully.",
+      "role_error": "Error updating user role.",
+      "deleted": "User deleted successfully.",
+      "delete_error": "Error deleting user."
+    },
+    "role": {
+      "admin": "Admin",
+      "user": "User",
+      "guest": "Guest",
+      "child": "Child"
+    },
+    "bible": {
+      "select_book": "Select Book",
+      "chapter": "Ch",
+      "verse": "Vs"
+    },
     "contents": {
       "word": {
         "recent_list_title": "Recent Posts (Delete)",
@@ -492,7 +539,8 @@
       "success": "Registered successfully.",
       "success_update": "Updated successfully.",
       "error": "Registration failed",
-      "upload_error": "Image upload failed"
+      "upload_error": "Image upload failed",
+      "invalid_bible_ref": "Invalid chapter or verse."
     }
   }
 }

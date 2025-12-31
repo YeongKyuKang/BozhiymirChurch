@@ -4,104 +4,109 @@
     "save": "저장",
     "cancel": "취소",
     "delete": "삭제",
-    "edit": "변경",
-    "change": "변경하기",
+    "edit": "수정",
+    "change": "변경",
     "confirm_delete": "정말 삭제하시겠습니까?",
     "login_required": "로그인이 필요합니다.",
     "error": "오류가 발생했습니다",
     "like": "좋아요",
     "sad": "슬퍼요",
     "pray": "기도해요",
-    "back": "뒤로가기"
+    "back": "뒤로",
+    "loading": "로딩 중...",
+    "completed": "완료되었습니다.",
+    "delete_success": "삭제되었습니다.",
+    "unknown_error": "알 수 없는 오류가 발생했습니다.",
+    "confirm_title": "확인"
   },
   "nav": {
     "home": "홈",
-    "about": "교회 소개",
+    "about": "소개",
     "story": "사역 연혁",
     "jesus": "예수님",
-    "beliefs": "우리의 믿음",
+    "beliefs": "신앙고백",
     "leadership": "섬기는 이들",
     "ukrainian": "우크라이나 사역",
-    "word": "말씀 묵상",
-    "events": "교회 소식",
-    "thanks": "감사 나눔",
-    "faith": "신앙",
-    "prayer": "중보기도",
+    "word": "말씀",
+    "events": "행사",
+    "thanks": "감사나눔",
+    "faith": "믿음",
+    "prayer": "기도제목",
     "login": "로그인",
     "logout": "로그아웃",
     "profile": "프로필",
     "admin": "관리자",
     "my_page": "마이페이지",
     "join": "회원가입",
-    "login_required": "로그인이 필요한 서비스입니다"
+    "login_required": "회원 전용"
   },
   "home": {
     "hero": {
-      "welcome_title": "보지미르 교회에 오신 것을 환영합니다",
+      "welcome_title": "하나님의 평강 교회에 오신 것을 환영합니다",
       "service_label": "주일 예배",
       "service_time": "오후 3:30 – 5:00",
       "service_location": "Hotel Poloneza, Poloneza 85A, Warsaw",
       "scripture_text": "“이 말을 할 때에 예수께서 친히 그들 가운데 서서 이르시되 너희에게 평강이 있을지어다 하시니”",
       "scripture_reference": "누가복음 24:36",
-      "cta_text": "함께 예배하기"
+      "cta_text": "함께하기"
     },
     "community_about": {
-      "section_label": "우리 교회는",
+      "section_label": "공동체 소개",
       "main_title": "믿음과 사랑으로 하나 된 가족",
-      "paragraph_1": "보지미르 교회(하나님의 평강 교회)는 단순한 예배 처소를 넘어, 문화와 언어, 배경을 초월한 사랑의 가족 공동체입니다. 우리는 폴란드로 피난 온 우크라이나 가족들과 어린이들을 환대하며 더욱 굳건해졌습니다.",
-      "paragraph_2": "전통적인 주일 예배부터 활기찬 주일학교 프로그램까지, 이곳에 발걸음하는 모든 분들은 아름다운 하나님 나라의 일부가 됩니다. 하나님의 사랑에는 국경이 없음을 우리는 매일 삶으로 증명하고 있습니다.",
+      "paragraph_1": "하나님의 평강 교회(Bozhiy Mir Church)는 단순한 예배 장소를 넘어, 문화와 언어, 배경을 초월한 다양하고 사랑 넘치는 가족입니다. 우리 공동체는 폴란드에서 피난처를 찾은 우크라이나 가족들과 아이들을 환영하며 더욱 성장해 왔습니다.",
+      "paragraph_2": "전통적인 주일 예배부터 활기찬 주일학교 프로그램까지, 우리 교회의 문을 여는 모든 분은 아름다운 무언가의 일부가 됩니다. 우리는 하나님의 사랑에는 국경이 없음을 믿으며, 우리 공동체는 매일 그 진리를 반영하고 있습니다.",
       "scripture_text": "\"너희는 유대인이나 헬라인이나 종이나 자유인이나 남자나 여자나 다 그리스도 예수 안에서 하나이니라\"",
       "scripture_reference": "– 갈라디아서 3:28"
     },
     "community_highlights": {
-      "highlight1_title": "환대하는 마음",
-      "highlight1_description": "배경이나 언어에 상관없이 모든 분들을 두 팔 벌려 환영합니다.",
+      "highlight1_title": "환영하는 마음",
+      "highlight1_description": "배경, 언어, 삶의 환경과 상관없이 모든 분을 두 팔 벌려 환영합니다.",
       "highlight2_title": "글로벌 가족",
-      "highlight2_description": "다양한 국가와 문화가 어우러져 믿음 안에서 풍성한 교제를 나눕니다.",
+      "highlight2_description": "다양한 국가와 문화를 가진 성도들이 모여 믿음과 교제의 풍성한 조화를 이룹니다.",
       "highlight3_title": "따뜻한 돌봄",
-      "highlight3_description": "실질적인 필요부터 정서적인 지원까지, 그리스도의 사랑으로 서로를 돌봅니다."
+      "highlight3_description": "실질적인 필요부터 정서적인 지원까지, 우리 공동체는 그리스도의 사랑으로 서로를 돌봅니다."
     },
     "ministries": {
-      "title": "사역 소개",
+      "title": "사역 안내",
       "ministry1_title": "어린이 주일학교",
-      "ministry1_description": "다양한 활동과 성경 말씀을 통해 아이들이 믿음 안에서 자라도록 돕습니다.",
+      "ministry1_description": "재미있는 활동과 성경 말씀을 통해 아이들이 믿음 안에서 성장하도록 돕는 헌신적인 프로그램입니다.",
       "ministry1_time": "주일 오후 3:00",
       "ministry2_title": "청소년 모임",
-      "ministry2_description": "청소년들이 영적 여정을 함께하며 지속적인 우정을 쌓을 수 있는 소그룹 모임입니다.",
+      "ministry2_description": "청소년들이 영적 여정에서 힘을 얻고 지속적인 우정을 쌓을 수 있도록 고안된 흥미로운 모임과 소그룹입니다.",
       "ministry2_time": "주일 오후 3:00"
     }
   },
   "footer": {
-    "description": "믿음과 교제 안에서 온 가족이 함께 성장하는 환대의 공동체입니다.",
+    "description": "가족들이 믿음과 교제 안에서 함께 성장하는 환영하는 공동체입니다.",
     "quick_links": "바로가기",
     "links": {
       "leadership": "섬기는 이들",
-      "events": "교회 소식",
+      "events": "행사",
       "ukrainian-ministry": "우크라이나 사역"
     },
     "contact_title": "연락처",
     "address_line1": "ul. Poloneza 85A,",
     "address_line2": "02-826 Warszawa",
     "Contact Info_ru": "러시아어/우크라이나어 문의: +48 797 880 603",
-    "Contact Info_ko": "한국어/영어 문의: +48 573 229 077",
+    "Contact Info_ko": "영어/한국어 문의: +48 573 229 077",
     "email": "kosciolbozypokoj@gmail.com",
     "service_title": "예배 안내",
     "services": {
       "main": {
-        "title": "주일 예배",
-        "desc": "매주 주일 오후 3:30"
+        "title": "주일 대예배",
+        "desc": "주일 오후 3:30 예배 시작"
       },
       "youth": {
-        "title": "청소년부",
-        "desc": "매주 주일 오후 3:00 (본예배 전)"
+        "title": "청소년 모임",
+        "desc": "매 주일 대예배 전 오후 3:00"
       },
       "kids": {
         "title": "주일학교",
-        "desc": "5~13세 어린이, 매주 주일 오후 3:00"
+        "desc": "5~13세 어린이, 매 주일 오후 3:00"
       },
       "prayer": {
         "title": "수요 기도회",
-        "desc": "매주 수요일 저녁 7:00 / 장소: ul. Wyczółki 33 / 러시아어와 한국어로 격주 진행"
+        "desc": "매주 수요일 오후 7:00 / 장소: ul. Wyczółki 33 / 러시아어와 한국어로 격주 진행"
       }
     },
     "copyright": "Bozhiymir Church. All Rights Reserved."
@@ -109,50 +114,50 @@
   "about": {
     "belief": {
       "title": "사도신경",
-      "content": "나는 전능하신 아버지 하나님,\n천지의 창조주를 믿습니다.\n\n나는 그의 유일하신 아들, 우리 주 예수 그리스도를 믿습니다.\n그는 성령으로 잉태되어 동정녀 마리아에게서 나시고,\n본디오 빌라도에게 고난을 받아 십자가에 못 박혀 죽으시고,\n장사된 지 사흘 만에 죽은 자 가운데서 다시 살아나셨으며,\n하늘에 오르시어 전능하신 아버지 하나님 우편에 앉아 계시다가,\n거기로부터 살아있는 자와 죽은 자를 심판하러 오십니다.\n\n나는 성령을 믿으며,\n거룩한 공교회와 성도의 교제와\n죄를 용서받는 것과 몸의 부활과 영생을 믿습니다.\n아멘."
+      "content": "전능하사 천지를 만드신 하나님 아버지를 내가 믿사오며,\n그 외아들 우리 주 예수 그리스도를 믿사오니,\n이는 성령으로 잉태하사 동정녀 마리아에게 나시고,\n본디오 빌라도에게 고난을 받으사,\n십자가에 못박혀 죽으시고,\n장사한 지 사흘 만에 죽은 자 가운데서 다시 살아나시며,\n하늘에 오르사 전능하신 하나님 우편에 앉아 계시다가,\n저리로서 산 자와 죽은 자를 심판하러 오시리라.\n성령을 믿사오며,\n거룩한 공회와,\n성도가 서로 교통하는 것과,\n죄를 사하여 주시는 것과,\n몸이 다시 사는 것과,\n영원히 사는 것을 믿사옵나이다.\n아멘."
     },
     "story": {
       "main": {
-        "title": "사역의 발자취",
-        "description": "보지미르 교회는 그리스도의 손과 발이 되어 도움이 필요한 이웃을 섬기는 소명에 헌신해 왔습니다."
+        "title": "사역 연혁",
+        "description": "하나님의 평강 교회는 그리스도의 손과 발이 되어 도움이 필요한 이들을 섬기는 부르심을 따르고 있습니다."
       },
       "timeline": {
-        "section_title": "주요 연혁",
-        "item1_title": "2022. 07. 17",
+        "section_title": "사역 타임라인",
+        "item1_title": "2022.07.17",
         "item1_description": "교회 설립",
-        "item2_title": "2022. 06 – 2024. 12",
-        "item2_description": "난민 보호소 사역 (Global Expo)",
-        "item3_title": "2022. 07 – 2024. 04",
+        "item2_title": "2022.06 – 2024.12",
+        "item2_description": "난민 센터 사역 (Global Expo)",
+        "item3_title": "2022.07 – 2024.04",
         "item3_description": "미혼모 센터 “Dom Matki” 사역",
-        "item4_title": "2023. 04 – 2025. 08",
-        "item4_description": "Ossa 지역 우크라이나 고아 100여 명 섬김 사역",
-        "item5_title": "2024. 09 – 현재",
-        "item5_description": "Łódź 지역 우크라이나 고아 80여 명 섬김 사역"
+        "item4_title": "2023.04 – 2025.08",
+        "item4_description": "Ossa 지역 우크라이나 고아원 사역 (100명 이상)",
+        "item5_title": "2024.09 – 현재",
+        "item5_description": "Łódź 지역 우크라이나 고아원 사역 (80명 이상)"
       }
     },
     "leadership": {
-      "title": "섬기는 분들",
-      "description": "믿음과 사랑으로 교회 공동체를 섬기는 리더십을 소개합니다.",
+      "title": "섬기는 이들",
+      "description": "믿음으로 인도하며 사랑과 은혜로 공동체를 섬깁니다.",
       "leader1": {
-        "name": "최피터 목사",
-        "role": "담임목사 & 설립자",
-        "bio": "온누리교회 파송 선교사. 2022년 바르샤바에 '하나님의 평강(보지미르)' 교회를 개척하여 섬기고 있습니다."
+        "name": "최광수 목사",
+        "role": "담임목사",
+        "bio": "온누리교회 파송 선교사. 2022년부터 바르샤바 '하나님의 평강 교회' 담임목사."
       },
       "leader2": {
-        "name": "뱌체슬라프 목사",
-        "role": "협력 목사",
-        "bio": "깊이 있는 말씀 선포로 성도들의 영적 성장을 돕고 있습니다."
+        "name": "비아체슬라브 돌기흐",
+        "role": "설교자",
+        "bio": "우리 공동체에 하나님의 말씀을 전하는 헌신된 설교자입니다."
       },
       "leader3": {
-        "name": "다이아나 간사",
-        "role": "행정 간사",
-        "bio": "교회의 전반적인 행정과 커뮤니티 조정을 탁월하게 감당하고 있습니다."
+        "name": "디아나 타르티치나야",
+        "role": "교회 행정",
+        "bio": "교회 운영과 공동체 조정을 탁월하게 담당하고 있습니다."
       }
     }
   },
   "register": {
     "title": "회원가입",
-    "description": "보지미르 교회 온라인 멤버십 가입",
+    "description": "하나님의 평강 교회 계정을 생성합니다",
     "label_profile_picture": "프로필 사진 (선택)",
     "label_nickname": "닉네임",
     "label_gender": "성별",
@@ -160,7 +165,7 @@
     "label_password": "비밀번호",
     "label_confirm_password": "비밀번호 확인",
     "placeholder_nickname": "사용하실 닉네임을 입력하세요",
-    "placeholder_gender": "성별 선택",
+    "placeholder_gender": "성별을 선택하세요",
     "placeholder_email": "이메일을 입력하세요",
     "placeholder_password": "비밀번호를 입력하세요",
     "placeholder_confirm_password": "비밀번호를 다시 입력하세요",
@@ -168,19 +173,19 @@
     "gender_female": "여성",
     "btn_create_account": "계정 생성",
     "btn_creating_account": "생성 중...",
-    "text_upload_instruction": "사진을 업로드하려면 버튼을 클릭하세요",
+    "text_upload_instruction": "사진을 추가하려면 업로드 버튼을 클릭하세요",
     "text_upload_limits": "(최대 5MB, JPG/PNG만 가능)",
     "text_nickname_hint": "다른 성도들에게 보여질 이름입니다",
     "text_already_have_account": "이미 계정이 있으신가요?",
     "link_sign_in": "로그인",
-    "error_file_size": "파일 크기는 5MB 이하여야 합니다.",
-    "error_invalid_image": "이미지 파일만 업로드 가능합니다.",
+    "error_file_size": "파일 크기는 5MB 미만이어야 합니다.",
+    "error_invalid_image": "이미지 파일만 허용됩니다.",
     "error_compression": "이미지 압축에 실패했습니다.",
     "error_nickname_required": "닉네임은 필수입니다.",
     "error_nickname_length": "닉네임은 최소 2글자 이상이어야 합니다.",
     "error_gender_required": "성별을 선택해주세요.",
     "error_password_match": "비밀번호가 일치하지 않습니다.",
-    "error_password_length": "비밀번호는 최소 6글자 이상이어야 합니다.",
+    "error_password_length": "비밀번호가 너무 짧습니다.",
     "success_registration": "회원가입이 완료되었습니다!"
   },
   "login": {
@@ -203,27 +208,27 @@
     "text_joined": "가입일:",
     "btn_logout": "로그아웃",
     "settings_title": "기본 정보",
-    "settings_desc": "닉네임 및 보안 설정을 관리합니다.",
+    "settings_desc": "표시 이름과 보안 정보를 관리합니다.",
     "gender_locked": "성별은 가입 후 변경할 수 없습니다.",
     "new_password": "새 비밀번호",
     "limit_30days_nickname": "닉네임은 30일에 한 번만 변경할 수 있습니다.",
     "limit_30days_password": "비밀번호는 30일에 한 번만 변경할 수 있습니다.",
-    "limit_available_after": "이후 변경 가능합니다.",
-    "verify_title": "계정 업그레이드",
-    "verify_description": "교회에서 발급받은 가입 코드를 입력하여 정회원 기능을 잠금 해제하세요.",
+    "limit_available_after": "이후에 변경 가능합니다.",
+    "verify_title": "계정 등급 업그레이드",
+    "verify_description": "가입 코드를 입력하면 정회원 기능을 사용할 수 있습니다.",
     "placeholder_code": "예: MEMBER-2025",
     "btn_verify": "인증하기",
     "btn_verifying": "인증 중...",
     "verified_status_title": "인증 완료",
-    "verified_status_desc": "정식 교인으로 인증되었습니다. 모든 기능을 자유롭게 이용하실 수 있습니다.",
+    "verified_status_desc": "이제 교회의 정회원으로 활동하실 수 있습니다.",
     "alert_enter_code": "코드를 입력해주세요.",
     "error_invalid_code": "유효하지 않은 코드입니다.",
-    "success_verify": "등급이 업그레이드되었습니다!",
+    "success_verify": "계정이 성공적으로 업그레이드되었습니다!",
     "error_password_different": "새 비밀번호는 현재 비밀번호와 달라야 합니다.",
     "modal_nickname_title": "닉네임을 변경하시겠습니까?",
     "modal_nickname_desc": "변경 후 30일 동안 다시 변경할 수 없습니다.",
     "modal_password_title": "비밀번호를 변경하시겠습니까?",
-    "modal_password_desc": "보안을 위해 변경 후 30일 동안 제한됩니다.",
+    "modal_password_desc": "보안을 위해 변경 후 30일 동안 다시 변경할 수 없습니다.",
     "alert": {
       "success_update": "성공적으로 업데이트되었습니다."
     }
@@ -232,109 +237,109 @@
     "ukrainian": {
       "hero": {
         "title": "우크라이나 어린이 사역",
-        "desc": "도움이 필요한 시기에 우크라이나 가족들에게 사랑과 희망, 실질적인 도움을 지원합니다."
+        "desc": "도움이 필요한 우크라이나 가족들에게 사랑과 희망, 실질적인 지원을 제공합니다."
       },
       "stats": {
-        "title": "우리의 영향력",
-        "stat1": { "number": "150+", "label": "가정 지원" },
+        "title": "사역 현황",
+        "stat1": { "number": "150+", "label": "도운 가정" },
         "stat2": { "number": "500+", "label": "식사 제공" },
-        "stat3": { "number": "75+", "label": "어린이 후원" },
+        "stat3": { "number": "75+", "label": "지원 아동" },
         "stat4": { "number": "25+", "label": "봉사자" }
       },
       "programs": {
-        "title": "운영 프로그램",
+        "title": "주요 프로그램",
         "program1": {
-          "title": "임시 보호소",
-          "desc": "난민 가족들에게 안전하고 따뜻한 임시 거처를 제공합니다.",
-          "stats": "가용 객실 20개"
+          "title": "쉘터 지원",
+          "desc": "난민 가족들이 안정을 찾을 수 있도록 안전하고 따뜻한 임시 거처를 제공합니다.",
+          "stats": "20개 방 운영"
         },
         "program2": {
           "title": "교육 지원",
-          "desc": "방과 후 학습을 통해 언어 습득과 학교 적응을 돕습니다.",
+          "desc": "언어 학습과 학교 적응을 위한 방과 후 수업을 지원합니다.",
           "stats": "주 5회 수업"
         },
         "program3": {
           "title": "의료 지원",
-          "desc": "기초 건강 검진 및 필수 의약품 제공, 병원 동행을 지원합니다.",
-          "stats": "주간 방문 검진"
+          "desc": "기본 건강 검진과 필수 의약품을 제공하며 병원 동행을 지원합니다.",
+          "stats": "주간 방문"
         },
         "program4": {
           "title": "푸드 뱅크",
-          "desc": "매주 신선한 식료품과 생필품을 필요한 가정에 배급합니다.",
-          "stats": "주간 500kg 배급"
+          "desc": "매주 도움이 필요한 가정에 신선한 식료품과 생필품을 배분합니다.",
+          "stats": "주 500kg 배분"
         },
         "program5": {
           "title": "심리 상담",
-          "desc": "전쟁 트라우마 치유를 위한 전문 심리 상담과 미술 치료를 제공합니다.",
+          "desc": "전쟁 트라우마 치유를 위한 전문 심리 상담과 미술 치료를 진행합니다.",
           "stats": "주 10회 세션"
         },
         "program6": {
-          "title": "의류 지원",
-          "desc": "계절에 맞는 의류와 침구류 등 필요한 물품을 나눕니다.",
-          "stats": "월 200벌 지원"
+          "title": "의류 나눔",
+          "desc": "계절 의류와 침구류를 필요한 이들에게 전달합니다.",
+          "stats": "월 200점"
         }
       },
       "foundation": {
         "title": "성경적 기초",
         "quote": "손님 대접하기를 잊지 말라 이로써 부지중에 천사들을 대접한 이들이 있었느니라",
         "reference": "히브리서 13:2",
-        "desc": "우리의 사역은 고통받는 이웃을 내 몸과 같이 사랑하고 섬기라는 그리스도의 부르심에 뿌리를 두고 있습니다."
+        "desc": "우리의 사역은 고통받는 이웃을 내 몸과 같이 사랑하라는 그리스도의 부르심에 뿌리를 두고 있습니다."
       },
       "testimonials": {
         "title": "희망의 이야기",
-        "testi1": { "quote": "낯선 땅에서 갈 곳이 없을 때 교회는 우리 가족에게 따뜻한 집이 되어주었습니다. 감사합니다." },
-        "testi2": { "quote": "한국어를 배우고 친구들을 만나서 정말 좋아요. 선생님들이 너무 친절해요!" },
-        "testi3": { "quote": "전쟁의 아픔 속에서도 하나님의 사랑이 국경을 넘어 우리와 함께하심을 느낍니다." }
+        "testi1": { "quote": "낯선 땅에서 갈 곳이 없었을 때, 교회는 우리 가족에게 따뜻한 집이 되어주었습니다. 감사합니다." },
+        "testi2": { "quote": "여기서 한국어도 배우고 친구들도 만나서 너무 좋아요. 선생님들이 정말 친절해요!" },
+        "testi3": { "quote": "전쟁의 아픔 속에서도 국경을 넘어 우리와 함께하시는 하나님의 사랑을 느낍니다." }
       },
       "help": {
-        "title": "도움의 손길",
+        "title": "함께하는 방법",
         "button": "지금 참여하기",
-        "card1": { "title": "기부하기", "desc": "난민 가족들의 정착과 어린이들의 교육을 위해 재정으로 후원해주세요." },
-        "card2": { "title": "봉사하기", "desc": "교육, 통역, 물품 정리 등 여러분의 재능으로 사역에 동참해주세요." },
-        "card3": { "title": "기도하기", "desc": "전쟁의 종식과 우크라이나의 평화, 그리고 사역자들을 위해 기도해주세요." }
+        "card1": { "title": "후원하기", "desc": "난민 가족의 정착과 아이들의 교육을 위해 재정적으로 후원해 주세요." },
+        "card2": { "title": "봉사하기", "desc": "교육, 통역, 물품 정리 등 여러분의 재능으로 사역에 동참해 주세요." },
+        "card3": { "title": "기도하기", "desc": "전쟁 종식과 우크라이나의 평화, 그리고 사역자들을 위해 기도해 주세요." }
       },
       "contact": {
         "title": "문의하기",
-        "desc": "우크라이나 사역에 대해 궁금한 점이 있으시거나 도움이 필요하신가요? 언제든 연락주세요.",
-        "email_button": "사역팀에 메일 보내기",
+        "desc": "우크라이나 사역에 대해 궁금한 점이 있거나 도움이 필요하시면 언제든 연락해 주세요.",
+        "email_button": "사역팀에 이메일 보내기",
         "home_button": "홈으로 돌아가기"
       }
     }
   },
   "word": {
     "hero": {
-      "title": "오늘의 말씀",
-      "desc": "매일 공급해주시는 하나님의 말씀으로 하루를 시작하세요."
+      "title": "매일의 묵상",
+      "desc": "매일 제공되는 하나님의 말씀으로 하루를 시작하세요."
     },
     "list": {
       "empty": "등록된 말씀이 없습니다.",
-      "empty_date": "선택한 날짜에 말씀이 없습니다.",
+      "empty_date": "이 날짜에 등록된 말씀이 없습니다.",
       "select_date": "달력에서 다른 날짜를 선택해주세요."
     },
     "button": {
       "download": "이미지 저장"
     },
     "calendar": {
-      "title": "말씀 달력"
+      "title": "달력"
     }
   },
   "prayer": {
     "hero": {
-      "title": "중보기도함",
-      "desc": "\"너희 죄를 서로 고백하며 병이 낫기를 위하여 서로 기도하라\" (약 5:16)"
+      "title": "기도 요청",
+      "desc": "너희 죄를 서로 고백하며 병이 낫기를 위하여 서로 기도하라 (야고보서 5:16)"
     },
     "button": {
-      "share": "기도 제목 나누기",
+      "share": "기도제목 나누기",
       "pray_together": "함께 기도하기",
       "edit_answer": "응답 수정",
       "write_answer": "응답 작성"
     },
     "category": {
-      "all": "전체 보기",
+      "all": "전체",
       "ukraine": "우크라이나",
       "church": "교회",
       "members": "성도",
-      "children": "다음 세대"
+      "children": "다음세대"
     },
     "status": {
       "answered": "응답됨"
@@ -343,8 +348,8 @@
       "answer_note": "응답 노트"
     },
     "modal": {
-      "title": "기도 제목 나누기",
-      "desc": "함께 기도하고 싶은 내용을 작성해주세요.",
+      "title": "기도제목 나누기",
+      "desc": "함께 기도하고 싶은 내용을 나누어 주세요.",
       "label": {
         "category": "카테고리",
         "title": "제목",
@@ -353,17 +358,17 @@
       "placeholder": {
         "title": "제목을 입력하세요",
         "content": "구체적인 기도 내용을 입력하세요",
-        "answer": "응답 내용을 적어주세요..."
+        "answer": "기도 응답 내용을 작성하세요..."
       },
       "button": {
-        "submit": "등록하기"
+        "submit": "등록"
       }
     },
     "alert": {
-      "success": "기도 제목이 등록되었습니다."
+      "success": "기도 요청이 등록되었습니다."
     },
     "list": {
-      "empty": "등록된 기도 제목이 없습니다."
+      "empty": "등록된 기도 요청이 없습니다."
     }
   },
   "thanks": {
@@ -378,32 +383,32 @@
     "category": {
       "grace": "은혜",
       "daily": "일상",
-      "family": "가정",
+      "family": "가족",
       "church": "교회"
     },
     "modal": {
-      "title": "감사 제목 나누기",
-      "desc": "삶 속에서 경험한 하나님의 은혜를 성도들과 나눠주세요.",
+      "title": "감사 나누기",
+      "desc": "삶에서 경험한 은혜와 감사를 나누어 주세요.",
       "label": {
         "category": "카테고리",
         "title": "제목",
-        "content": "감사 내용"
+        "content": "내용"
       },
       "placeholder": {
-        "title": "감사 제목을 입력하세요",
-        "content": "구체적인 감사 내용을 입력하세요"
+        "title": "제목을 입력하세요",
+        "content": "감사한 이야기를 나누어 주세요..."
       },
       "button": {
-        "submit": "등록하기"
+        "submit": "등록"
       }
     },
     "alert": {
       "required_fields": "제목과 내용을 모두 입력해주세요.",
-      "daily_limit": "하루에 3번까지만 감사 나눔을 작성할 수 있습니다. 내일 다시 나누어 주세요! 🙏",
+      "daily_limit": "감사 나눔은 하루에 3번까지만 가능합니다. 내일 또 나누어 주세요! 🙏",
       "success": "감사 나눔이 등록되었습니다."
     },
     "list": {
-      "empty": "등록된 감사 나눔이 없습니다."
+      "empty": "아직 등록된 글이 없습니다. 첫 번째 감사를 나누어 보세요!"
     }
   },
   "admin": {
@@ -413,70 +418,112 @@
       "uploading": "업로드 중..."
     },
     "tabs": {
-      "overview": "오버뷰",
-      "users": "유저 관리",
-      "contents": "콘텐츠 관리",
-      "words": "말씀 카드",
-      "events": "이벤트 관리"
+      "overview": "개요",
+      "users": "사용자",
+      "contents": "콘텐츠",
+      "words": "말씀",
+      "events": "행사"
     },
     "stats": {
-      "users": { "title": "전체 교인", "desc": "현재 등록된 활성 계정" },
-      "words": { "title": "등록된 말씀 카드", "desc": "누적 말씀 카드 수" },
-      "events": { "title": "예정된 이벤트", "desc": "진행 중 또는 예정된 행사" }
+      "users": { "title": "총 사용자", "desc": "활성 계정" },
+      "words": { "title": "말씀 포스트", "desc": "누적 포스트 수" },
+      "events": { "title": "행사", "desc": "진행 중 또는 예정된 행사" }
     },
     "recent_users": {
-      "title": "최근 가입 유저",
-      "desc": "가장 최근에 가입한 성도 명단입니다.",
+      "title": "최근 가입자",
+      "desc": "최근에 가입한 성도 목록입니다.",
       "no_name": "이름 없음"
     },
     "quick_actions": {
       "title": "빠른 작업",
-      "write_word": "말씀 카드 쓰기",
-      "add_event": "이벤트 등록"
+      "write_word": "새 말씀 작성",
+      "add_event": "새 행사 추가"
+    },
+    "users": {
+      "title": "사용자 관리",
+      "subtitle_all": "전체 사용자",
+      "filter": {
+        "role_placeholder": "역할",
+        "permission_placeholder": "권한",
+        "all_roles": "모든 역할",
+        "all_permissions": "모든 권한",
+        "allowed": "댓글 허용",
+        "blocked": "댓글 차단",
+        "no_results": "조건에 맞는 사용자가 없습니다."
+      },
+      "col_role": "역할",
+      "col_comment": "댓글 권한",
+      "col_change_role": "역할 변경",
+      "col_actions": "작업",
+      "status_allowed": "허용됨",
+      "status_blocked": "차단됨",
+      "select_role": "역할 선택",
+      "delete_confirm_prefix": "사용자 '",
+      "delete_confirm_suffix": "' 을(를) 영구 삭제합니다. 이 작업은 되돌릴 수 없습니다.",
+      "enter_admin_pw": "확인을 위해 관리자 비밀번호를 입력하세요.",
+      "admin_pw_placeholder": "관리자 비밀번호",
+      "fetch_error": "사용자 목록을 불러오는 중 오류가 발생했습니다.",
+      "permission_updated": "권한이 변경되었습니다.",
+      "permission_error": "권한 변경 중 오류가 발생했습니다.",
+      "role_updated": "역할이 변경되었습니다.",
+      "role_error": "역할 변경 중 오류가 발생했습니다.",
+      "deleted": "사용자가 삭제되었습니다.",
+      "delete_error": "사용자 삭제 중 오류가 발생했습니다."
+    },
+    "role": {
+      "admin": "관리자",
+      "user": "성도",
+      "guest": "게스트",
+      "child": "주일학교"
+    },
+    "bible": {
+      "select_book": "성경 선택",
+      "chapter": "장",
+      "verse": "절"
     },
     "contents": {
       "word": {
-        "recent_list_title": "최근 등록된 말씀 (삭제)",
-        "recent_list_empty": "목록 없음",
+        "recent_list_title": "최근 게시물 (삭제)",
+        "recent_list_empty": "게시물 없음",
         "card_title": "말씀 카드 작성",
-        "card_desc": "매일의 묵상을 업로드합니다.",
-        "section_title": "오늘의 말씀",
+        "card_desc": "매일의 묵상을 업로드하세요.",
+        "section_title": "매일의 묵상",
         "submit_button": "말씀 발행",
         "edit_title": "말씀 카드 수정",
-        "edit_desc": "오늘의 말씀을 수정합니다.",
-        "update_button": "수정 완료",
+        "edit_desc": "말씀 내용을 수정합니다.",
+        "update_button": "수정하기",
         "label": {
           "image": "배경 이미지",
           "title": "성경 구절 (제목)",
           "date": "날짜",
-          "content": "본문 내용"
+          "content": "내용"
         },
         "placeholder": {
           "title": "예: 시편 23:1",
-          "content": "말씀 본문을 입력하세요..."
+          "content": "성경 본문을 입력하세요..."
         },
         "preview": {
-          "title_placeholder": "구절 입력",
-          "content_placeholder": "본문 내용이 여기에 표시됩니다.",
+          "title_placeholder": "성경 구절",
+          "content_placeholder": "내용이 여기에 표시됩니다.",
           "mobile_label": "모바일 미리보기 (9:16)",
           "no_image": "이미지 없음"
         }
       },
       "event": {
-        "card_title": "이벤트 등록",
-        "card_desc": "교회 행사를 공지합니다.",
-        "section_title": "새 이벤트",
-        "submit_button": "이벤트 등록",
-        "edit_title": "이벤트 수정",
-        "edit_desc": "이벤트 내용을 수정합니다.",
-        "update_button": "이벤트 수정 완료",
-        "upload_hint": "클릭하여 이미지 업로드",
+        "card_title": "행사 추가",
+        "card_desc": "교회 행사를 알립니다.",
+        "section_title": "새 행사",
+        "submit_button": "행사 등록",
+        "edit_title": "행사 수정",
+        "edit_desc": "행사 정보를 수정합니다.",
+        "update_button": "행사 수정",
+        "upload_hint": "이미지 업로드 클릭",
         "label": {
-          "poster": "이벤트 포스터",
+          "poster": "행사 포스터",
           "title": "행사명",
-          "date": "일시",
+          "date": "날짜",
           "location": "장소",
-          "description": "상세 설명",
+          "description": "설명",
           "start_date": "시작일",
           "end_date": "종료일 (선택)"
         },
@@ -488,11 +535,12 @@
       }
     },
     "alert": {
-      "duplicate_date": "이미 해당 일에 제작된 말씀카드가 있습니다.",
+      "duplicate_date": "이 날짜에 이미 말씀 카드가 존재합니다.",
       "success": "성공적으로 등록되었습니다.",
-      "success_update": "성공적으로 수정되었습니다.",
+      "success_update": "성공적으로 업데이트되었습니다.",
       "error": "등록 실패",
-      "upload_error": "이미지 업로드 실패"
+      "upload_error": "이미지 업로드 실패",
+      "invalid_bible_ref": "유효하지 않은 장 또는 절입니다."
     }
   }
 }

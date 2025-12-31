@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { 
   LayoutDashboard, Users, Calendar, 
   Image as ImageIcon, Loader2, 
-  Save, Activity, BookOpen, Trash2, RefreshCw, Smartphone, Edit2, PlusCircle, Search
+  Save, Activity, BookOpen, Trash2, Smartphone, Edit2, PlusCircle, Search, RefreshCw
 } from "lucide-react";
 import { format } from "date-fns";
 import { ko, enUS, ru } from "date-fns/locale"; 
@@ -31,13 +31,10 @@ export default function AdminDashboard() {
   );
 
   const { t, language } = useLanguage(); 
-  const { user, userProfile } = useAuth(); 
+  const { user } = useAuth(); 
 
   const [activeTab, setActiveTab] = useState("overview");
-  
-  // [수정] 초기 로딩 상태 분리
-  const [initialLoading, setInitialLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const [stats, setStats] = useState({
     userCount: 0,
@@ -52,16 +49,18 @@ export default function AdminDashboard() {
   const [isImageUploading, setIsImageUploading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // ... (성경, 말씀, 이벤트 상태 변수들은 기존과 동일하게 유지)
+  // 성경 데이터 상태
   const [bibleData, setBibleData] = useState<any[]>([]);
   const [selectedBook, setSelectedBook] = useState("");
   const [selectedChapter, setSelectedChapter] = useState("1");
   const [selectedVerse, setSelectedVerse] = useState("1");
 
+  // 말씀 카드 생성 데이터
   const [wordData, setWordData] = useState({ title: "", content: "", date: format(new Date(), "yyyy-MM-dd"), imageUrl: "" });
   const [isEditWordOpen, setIsEditWordOpen] = useState(false);
   const [editingWord, setEditingWord] = useState<any>(null);
 
+  // 이벤트 데이터
   const [eventData, setEventData] = useState({ 
     title: "", description: "", startDate: format(new Date(), "yyyy-MM-dd"), endDate: "", location: "", imageUrl: "" 
   });
@@ -76,6 +75,7 @@ export default function AdminDashboard() {
     }
   };
 
+  // 성경 데이터 로드
   useEffect(() => {
     const loadBible = async () => {
       try {
@@ -89,11 +89,7 @@ export default function AdminDashboard() {
     loadBible();
   }, [language]);
 
-  // [수정] fetchData 함수: isRefresh 플래그를 받아 로딩 처리
-  const fetchData = useCallback(async (isRefresh = false) => {
-    if (isRefresh) setIsRefreshing(true);
-    // 초기 로딩은 데이터가 없을 때만 true로 유지하거나, useEffect에서 제어
-    
+  const fetchData = useCallback(async () => {
     const { data: users, count: userCount } = await supabase.from("users").select("*", { count: 'exact' }).order("created_at", { ascending: false });
     const { count: eventCount } = await supabase.from("events").select("*", { count: 'exact', head: true });
     const { count: wordCount } = await supabase.from("word_posts").select("*", { count: 'exact', head: true });
@@ -111,30 +107,220 @@ export default function AdminDashboard() {
       wordCount: wordCount || 0,
     });
 
-    if (isRefresh) setIsRefreshing(false);
-    setInitialLoading(false);
+    setLoading(false);
   }, [supabase]);
 
   useEffect(() => {
-    fetchData(false);
+    fetchData();
   }, [fetchData]);
 
-  // ... (handleImageUpload, applyBibleVerse, handleCreateWord 등 나머지 핸들러 함수들은 기존 코드 그대로 유지)
-  // 편의상 생략합니다. 기존 로직 그대로 두시면 됩니다.
-  const handleImageUpload = async (file: File, target: string) => { /* 기존 코드 유지 */ };
-  const applyBibleVerse = (isEdit = false) => { /* 기존 코드 유지 */ };
-  const handleCreateWord = async () => { /* 기존 코드 유지 */ };
-  const openEditWordModal = (post: any) => { /* 기존 코드 유지 */ };
-  const handleUpdateWord = async () => { /* 기존 코드 유지 */ };
-  const handleDeleteWord = async (id: string) => { /* 기존 코드 유지 */ };
-  const handleCreateEvent = async () => { /* 기존 코드 유지 */ };
-  const openEditEventModal = (event: any) => { /* 기존 코드 유지 */ };
-  const handleUpdateEvent = async () => { /* 기존 코드 유지 */ };
-  const handleDeleteEvent = async (id: string) => { /* 기존 코드 유지 */ };
+  const handleImageUpload = async (file: File, target: string) => {
+    if (!file) return;
+    setIsImageUploading(true);
+    
+    try {
+      const fileExt = file.name.split('.').pop();
+      const isEvent = target.includes('event');
+      const bucket = isEvent ? 'event-banners' : 'word-backgrounds';
+      const fileName = `${isEvent ? 'event' : 'word'}_${Date.now()}.${fileExt}`;
 
+      const { error: uploadError } = await supabase.storage
+        .from(bucket) 
+        .upload(fileName, file);
 
-  // [수정] 초기 로딩일 때만 전체 화면 로딩 표시
-  if (initialLoading) {
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from(bucket)
+        .getPublicUrl(fileName);
+
+      if (target === 'word') setWordData({ ...wordData, imageUrl: publicUrl });
+      else if (target === 'edit-word' && editingWord) setEditingWord({ ...editingWord, imageUrl: publicUrl });
+      else if (target === 'event') setEventData({ ...eventData, imageUrl: publicUrl });
+      else if (target === 'edit-event' && editingEvent) setEditingEvent({ ...editingEvent, imageUrl: publicUrl });
+
+    } catch (error: any) {
+      // [수정] 다국어 적용
+      alert(t('admin.alert.upload_error') + ": " + error.message);
+    } finally {
+      setIsImageUploading(false);
+    }
+  };
+
+  // 성경 구절 적용 함수
+  const applyBibleVerse = (isEdit = false) => {
+    const book = bibleData.find(b => b.abbrev === selectedBook);
+    if (!book) return;
+    try {
+      const verseText = book.chapters[parseInt(selectedChapter) - 1][parseInt(selectedVerse) - 1];
+      const titleText = `${book.name} ${selectedChapter}:${selectedVerse}`;
+      if (isEdit) {
+        setEditingWord({ 
+          ...editingWord, 
+          title: titleText, 
+          content: verseText, 
+          book_id: selectedBook, 
+          chapter_num: parseInt(selectedChapter), 
+          verse_num: parseInt(selectedVerse) 
+        });
+      } else {
+        setWordData({ ...wordData, title: titleText, content: verseText });
+      }
+    } catch (e) {
+      // [수정] 다국어 적용
+      alert(t('admin.alert.invalid_bible_ref') || "Invalid chapter or verse");
+    }
+  };
+
+  const handleCreateWord = async () => {
+    if (!user) return alert(t('common.login_required')); 
+    setIsSubmitting(true);
+
+    try {
+        const { error } = await supabase.from("word_posts").insert([{
+          title: wordData.title,
+          content: wordData.content,
+          word_date: wordData.date,
+          image_url: wordData.imageUrl,
+          author_id: user.id,
+          // user.nickname 사용
+          author_nickname: user.nickname || user.email?.split('@')[0] || "Admin",
+          book_id: selectedBook,
+          chapter_num: parseInt(selectedChapter),
+          verse_num: parseInt(selectedVerse)
+        }]);
+
+        if (error) throw error;
+        alert(t('admin.alert.success'));
+        setWordData({ title: "", content: "", date: format(new Date(), "yyyy-MM-dd"), imageUrl: "" });
+        fetchData(); 
+    } catch (err: any) {
+        alert(t('admin.alert.error') + ": " + err.message);
+    } finally {
+        setIsSubmitting(false);
+    }
+  };
+
+  const openEditWordModal = (post: any) => {
+    setEditingWord({
+      id: post.id,
+      title: post.title,
+      content: post.content,
+      date: post.word_date,
+      imageUrl: post.image_url || "",
+      book_id: post.book_id || "",
+      chapter_num: post.chapter_num || 1,
+      verse_num: post.verse_num || 1
+    });
+    setIsEditWordOpen(true);
+  };
+
+  const handleUpdateWord = async () => {
+    if (!user || !editingWord) return;
+    setIsSubmitting(true);
+    try {
+      const { error } = await supabase.from("word_posts").update({
+          title: editingWord.title,
+          content: editingWord.content,
+          word_date: editingWord.date,
+          image_url: editingWord.imageUrl,
+          book_id: editingWord.book_id,
+          chapter_num: editingWord.chapter_num,
+          verse_num: editingWord.verse_num
+        }).eq("id", editingWord.id);
+
+      if (error) throw error;
+      alert(t('admin.alert.success_update'));
+      setIsEditWordOpen(false);
+      fetchData();
+    } catch (error: any) {
+      alert(t('admin.alert.error') + ": " + error.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteWord = async (id: string) => {
+    if (!confirm(t('common.confirm_delete'))) return;
+    const { error } = await supabase.from("word_posts").delete().eq("id", id);
+    if (!error) {
+      // [수정] 다국어 적용 (t('common.delete_success') 등으로 대체 가능하나 구조 유지)
+      alert(t('common.delete') + " " + (t('common.completed') || "completed."));
+      fetchData();
+    }
+  };
+
+  const handleCreateEvent = async () => {
+    if (!user) return alert(t('common.login_required')); 
+    setIsSubmitting(true);
+    try {
+        const { error } = await supabase.from("events").insert([{
+          title: eventData.title,
+          description: eventData.description,
+          start_date: eventData.startDate,
+          end_date: eventData.endDate ? eventData.endDate : eventData.startDate,
+          location: eventData.location,
+          image_url: eventData.imageUrl
+        }]);
+
+        if (error) throw error;
+        alert(t('admin.alert.success'));
+        setEventData({ title: "", description: "", startDate: format(new Date(), "yyyy-MM-dd"), endDate: "", location: "", imageUrl: "" });
+        fetchData(); 
+    } catch (err: any) {
+        alert(t('admin.alert.error') + ": " + err.message);
+    } finally {
+        setIsSubmitting(false);
+    }
+  };
+
+  const openEditEventModal = (event: any) => {
+    setEditingEvent({
+        id: event.id,
+        title: event.title,
+        description: event.description || "",
+        startDate: event.start_date,
+        endDate: event.end_date || "",
+        location: event.location || "",
+        imageUrl: event.image_url || ""
+    });
+    setIsEditEventOpen(true);
+  };
+
+  const handleUpdateEvent = async () => {
+    if (!user || !editingEvent) return;
+    setIsSubmitting(true);
+    try {
+        const { error } = await supabase.from("events").update({
+          title: editingEvent.title,
+          description: editingEvent.description,
+          start_date: editingEvent.startDate,
+          end_date: editingEvent.endDate ? editingEvent.endDate : editingEvent.startDate,
+          location: editingEvent.location,
+          image_url: editingEvent.imageUrl
+        }).eq("id", editingEvent.id);
+
+        if (error) throw error;
+        alert(t('admin.alert.success_update'));
+        setIsEditEventOpen(false);
+        fetchData();
+    } catch (error: any) {
+        alert(t('admin.alert.error') + ": " + error.message);
+    } finally {
+        setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteEvent = async (id: string) => {
+    if (!confirm(t('common.confirm_delete'))) return;
+    const { error } = await supabase.from("events").delete().eq("id", id);
+    if (!error) {
+      alert(t('common.delete') + " " + (t('common.completed') || "completed."));
+      fetchData();
+    }
+  };
+
+  if (loading) {
     return <div className="min-h-screen flex items-center justify-center bg-gray-50"><Loader2 className="w-10 h-10 animate-spin text-gray-400" /></div>;
   }
 
@@ -150,11 +336,6 @@ export default function AdminDashboard() {
             <span className="font-bold text-lg tracking-tight">{t('admin.header.title')}</span>
           </div>
           <div className="flex items-center gap-4">
-            {/* [수정] 새로고침 버튼에 isRefreshing 상태 적용 */}
-            <Button variant="ghost" size="sm" onClick={() => fetchData(true)} className="text-gray-500" disabled={isRefreshing}>
-                <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} /> 
-                {isRefreshing ? t('Loading...') : t('admin.common.refresh')}
-            </Button>
             <div className="text-sm text-gray-500 font-medium">
                 {format(new Date(), "PP", { locale: getDateLocale() })}
             </div>
@@ -165,8 +346,7 @@ export default function AdminDashboard() {
       <main className="container mx-auto max-w-7xl px-4 py-8">
         <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab} className="space-y-8">
           
-          {/* ... (TabsList 부분 기존 코드 유지) ... */}
-           <TabsList className="bg-white p-1 h-12 border shadow-sm rounded-lg grid grid-cols-4 w-full max-w-2xl mx-auto">
+          <TabsList className="bg-white p-1 h-12 border shadow-sm rounded-lg grid grid-cols-4 w-full max-w-2xl mx-auto">
             <TabsTrigger value="overview" className="flex items-center gap-2 data-[state=active]:bg-gray-100 data-[state=active]:text-black">
               <LayoutDashboard className="w-4 h-4" /> {t('admin.tabs.overview')}
             </TabsTrigger>
@@ -182,14 +362,13 @@ export default function AdminDashboard() {
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
-             {/* ... (Overview 탭 내용 기존 코드 유지) ... */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <StatsCard title={t('admin.stats.users.title')} count={stats.userCount} icon={<Users className="w-6 h-6 text-blue-600" />} desc={t('admin.stats.users.desc')} />
               <StatsCard title={t('admin.stats.words.title')} count={stats.wordCount} icon={<BookOpen className="w-6 h-6 text-purple-600" />} desc={t('admin.stats.words.desc')} />
               <StatsCard title={t('admin.stats.events.title')} count={stats.eventCount} icon={<Calendar className="w-6 h-6 text-orange-600" />} desc={t('admin.stats.events.desc')} />
             </div>
-             {/* ... 나머지 overview 내용들 ... */}
-             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card>
                 <CardHeader><CardTitle>{t('admin.recent_users.title')}</CardTitle></CardHeader>
                 <CardContent>
@@ -232,13 +411,9 @@ export default function AdminDashboard() {
             <AdminUsersClient initialUsers={usersData} />
           </TabsContent>
 
-          {/* ... Words 탭, Events 탭 내용은 변경 없음 ... */}
           <TabsContent value="words">
-             {/* 기존 Words 탭 코드 그대로 */}
-             <div className="space-y-6">
-                 {/* ... 내용 ... */}
-                 {/* 편의를 위해 생략하지만 실제 파일에는 기존 코드가 있어야 합니다. */}
-                 <div className="flex items-center justify-between">
+            <div className="space-y-6">
+                <div className="flex items-center justify-between">
                     <h2 className="text-2xl font-bold flex items-center gap-2"><BookOpen className="w-6 h-6"/> {t('admin.contents.word.section_title')}</h2>
                     <Button 
                         onClick={handleCreateWord} 
@@ -249,65 +424,67 @@ export default function AdminDashboard() {
                         {t('admin.contents.word.submit_button')}
                     </Button>
                 </div>
-                 {/* ... words grid layout ... */}
-                 <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
-                    {/* ... */}
+
+                <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
                     <div className="xl:col-span-7">
                         <Card>
-                            <CardContent className="p-6 space-y-4">
-                                 {/* ... 입력 폼 ... */}
-                                  <div className="grid grid-cols-3 gap-2 p-4 bg-slate-50 rounded-xl border border-dashed">
-                                    {/* ... 성경 선택 ... */}
-                                      <div className="space-y-1">
-                                        <Label className="text-xs">Book</Label>
-                                        <Select value={selectedBook} onValueChange={setSelectedBook}>
-                                          <SelectTrigger className="h-9"><SelectValue placeholder="Select Book" /></SelectTrigger>
-                                          <SelectContent>
-                                            {bibleData.map(b => <SelectItem key={b.abbrev} value={b.abbrev}>{b.name}</SelectItem>)}
-                                          </SelectContent>
-                                        </Select>
-                                      </div>
-                                      <div className="space-y-1">
-                                        <Label className="text-xs">Chapter</Label>
-                                        <Input value={selectedChapter} onChange={e => setSelectedChapter(e.target.value)} className="h-9" type="number" />
-                                      </div>
-                                      <div className="space-y-1">
-                                        <Label className="text-xs">Verse</Label>
-                                        <div className="flex gap-1">
-                                          <Input value={selectedVerse} onChange={e => setSelectedVerse(e.target.value)} className="h-9" type="number" />
-                                          <Button size="icon" variant="secondary" className="h-9 w-9 shrink-0" onClick={() => applyBibleVerse(false)}><Search className="h-4 w-4"/></Button>
-                                        </div>
-                                      </div>
-                                  </div>
-                                  {/* ... 나머지 입력창들 ... */}
-                                  <div className="space-y-2">
-                                    <Label>{t('admin.contents.word.label.image')}</Label>
-                                    <div className="flex items-center gap-2">
-                                        <div className="relative w-full">
-                                            <Input type="file" onChange={(e) => e.target.files && handleImageUpload(e.target.files[0], 'word')} disabled={isImageUploading} />
-                                            {isImageUploading && <span className="absolute right-3 top-2 text-xs text-blue-600 flex items-center"><Loader2 className="w-3 h-3 animate-spin mr-1"/> {t('admin.common.uploading')}</span>}
-                                        </div>
-                                    </div>
-                                    </div>
-                                    <div className="space-y-2">
-                                    <Label>{t('admin.contents.word.label.title')}</Label>
-                                    <Input placeholder={t('admin.contents.word.placeholder.title')} value={wordData.title} onChange={e => setWordData({...wordData, title: e.target.value})} />
-                                    </div>
-                                    <div className="space-y-2">
-                                    <Label>{t('admin.contents.word.label.date')}</Label>
-                                    <Input type="date" value={wordData.date} onChange={e => setWordData({...wordData, date: e.target.value})} />
-                                    </div>
-                                    <div className="space-y-2">
-                                    <Label>{t('admin.contents.word.label.content')}</Label>
-                                    <Textarea className="min-h-[150px]" placeholder={t('admin.contents.word.placeholder.content')} value={wordData.content} onChange={e => setWordData({...wordData, content: e.target.value})} />
-                                    </div>
-                            </CardContent>
+                        <CardContent className="p-6 space-y-4">
+                            {/* 성경 선택 UI */}
+                            <div className="grid grid-cols-3 gap-2 p-4 bg-slate-50 rounded-xl border border-dashed">
+                              <div className="space-y-1">
+                                <Label className="text-xs">Book</Label>
+                                <Select value={selectedBook} onValueChange={setSelectedBook}>
+                                  <SelectTrigger className="h-9">
+                                    {/* [수정] Placeholder 번역 */}
+                                    <SelectValue placeholder={t('admin.bible.select_book') || "Select Book"} />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {bibleData.map(b => <SelectItem key={b.abbrev} value={b.abbrev}>{b.name}</SelectItem>)}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <div className="space-y-1">
+                                <Label className="text-xs">Chapter</Label>
+                                {/* [수정] Placeholder 번역 */}
+                                <Input value={selectedChapter} onChange={e => setSelectedChapter(e.target.value)} className="h-9" type="number" placeholder={t('admin.bible.chapter') || "Ch"} />
+                              </div>
+                              <div className="space-y-1">
+                                <Label className="text-xs">Verse</Label>
+                                <div className="flex gap-1">
+                                  {/* [수정] Placeholder 번역 */}
+                                  <Input value={selectedVerse} onChange={e => setSelectedVerse(e.target.value)} className="h-9" type="number" placeholder={t('admin.bible.verse') || "Vs"} />
+                                  <Button size="icon" variant="secondary" className="h-9 w-9 shrink-0" onClick={() => applyBibleVerse(false)}><Search className="h-4 w-4"/></Button>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="space-y-2">
+                            <Label>{t('admin.contents.word.label.image')}</Label>
+                            <div className="flex items-center gap-2">
+                                <div className="relative w-full">
+                                    <Input type="file" onChange={(e) => e.target.files && handleImageUpload(e.target.files[0], 'word')} disabled={isImageUploading} />
+                                    {isImageUploading && <span className="absolute right-3 top-2 text-xs text-blue-600 flex items-center"><Loader2 className="w-3 h-3 animate-spin mr-1"/> {t('admin.common.uploading')}</span>}
+                                </div>
+                            </div>
+                            </div>
+                            <div className="space-y-2">
+                            <Label>{t('admin.contents.word.label.title')}</Label>
+                            <Input placeholder={t('admin.contents.word.placeholder.title')} value={wordData.title} onChange={e => setWordData({...wordData, title: e.target.value})} />
+                            </div>
+                            <div className="space-y-2">
+                            <Label>{t('admin.contents.word.label.date')}</Label>
+                            <Input type="date" value={wordData.date} onChange={e => setWordData({...wordData, date: e.target.value})} />
+                            </div>
+                            <div className="space-y-2">
+                            <Label>{t('admin.contents.word.label.content')}</Label>
+                            <Textarea className="min-h-[150px]" placeholder={t('admin.contents.word.placeholder.content')} value={wordData.content} onChange={e => setWordData({...wordData, content: e.target.value})} />
+                            </div>
+                        </CardContent>
                         </Card>
                     </div>
-                    {/* ... preview area ... */}
+
                     <div className="xl:col-span-5 flex flex-col gap-6">
-                        {/* ... preview logic ... */}
-                         <div className="flex flex-col items-center">
+                        <div className="flex flex-col items-center">
                              <div className="text-sm font-bold text-gray-500 mb-2 flex items-center gap-1">
                                 <Smartphone className="w-4 h-4" /> {t('admin.contents.word.preview.mobile_label')}
                              </div>
@@ -364,119 +541,116 @@ export default function AdminDashboard() {
                             </CardContent>
                         </Card>
                     </div>
-                 </div>
-             </div>
+                </div>
+            </div>
           </TabsContent>
+
           <TabsContent value="events">
-             {/* ... Events 탭 내용 생략 (기존 코드 유지) ... */}
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                  {/* ... */}
-                  <div className="lg:col-span-5 space-y-6">
-                    <div className="flex items-center justify-between">
-                        <h2 className="text-2xl font-bold flex items-center gap-2">
-                            <Calendar className="w-6 h-6"/> {t('admin.contents.event.section_title')}
-                        </h2>
-                    </div>
-                    {/* ... 입력 폼 ... */}
-                    <Card>
-                        <CardContent className="p-6 space-y-4">
-                            {/* ... */}
-                            <div className="space-y-2">
-                                <Label>{t('admin.contents.event.label.poster')}</Label>
-                                <div className="border-2 border-dashed rounded-lg h-40 flex flex-col items-center justify-center text-gray-400 cursor-pointer hover:bg-gray-50 hover:border-gray-400 transition-colors relative">
-                                    {eventData.imageUrl ? (
-                                        <img src={eventData.imageUrl} className="absolute inset-0 w-full h-full object-cover rounded-lg" alt="event poster" />
-                                    ) : (
-                                        <>
-                                            {isImageUploading ? <Loader2 className="w-8 h-8 animate-spin mb-2"/> : <ImageIcon className="w-8 h-8 mb-2"/>}
-                                            <span className="text-xs">{isImageUploading ? t('admin.common.uploading') : t('admin.contents.event.upload_hint')}</span>
-                                        </>
-                                    )}
-                                    <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => e.target.files && handleImageUpload(e.target.files[0], 'event')} disabled={isImageUploading} />
-                                </div>
-                            </div>
-                             <div className="space-y-2">
-                                <Label>{t('admin.contents.event.label.title')}</Label>
-                                <Input value={eventData.title} onChange={e => setEventData({...eventData, title: e.target.value})} placeholder={t('admin.contents.event.placeholder.title')} />
-                            </div>
-                            
-                            <div className="grid grid-cols-2 gap-2">
-                                <div className="space-y-2">
-                                    <Label>{t('admin.contents.event.label.start_date')}</Label>
-                                    <Input type="date" value={eventData.startDate} onChange={e => setEventData({...eventData, startDate: e.target.value})} />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>{t('admin.contents.event.label.end_date')}</Label>
-                                    <Input type="date" value={eventData.endDate} onChange={e => setEventData({...eventData, endDate: e.target.value})} />
-                                </div>
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label>{t('admin.contents.event.label.location')}</Label>
-                                <Input value={eventData.location} onChange={e => setEventData({...eventData, location: e.target.value})} placeholder={t('admin.contents.event.placeholder.location')} />
-                            </div>
-                            <div className="space-y-2">
-                                <Label>{t('admin.contents.event.label.description')}</Label>
-                                <Textarea value={eventData.description} onChange={e => setEventData({...eventData, description: e.target.value})} placeholder={t('admin.contents.event.placeholder.description')} />
-                            </div>
-
-                            <Button onClick={handleCreateEvent} disabled={isImageUploading || isSubmitting} className="w-full bg-blue-600 hover:bg-blue-700">
-                                    {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2"/> : <PlusCircle className="w-4 h-4 mr-2"/>}
-                                    {t('admin.contents.event.submit_button')}
-                            </Button>
-                        </CardContent>
-                    </Card>
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+              <div className="lg:col-span-5 space-y-6">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-2xl font-bold flex items-center gap-2">
+                        <Calendar className="w-6 h-6"/> {t('admin.contents.event.section_title')}
+                    </h2>
                   </div>
-                  {/* ... 목록 ... */}
-                   <div className="lg:col-span-7 space-y-6">
-                      <h2 className="text-xl font-bold flex items-center gap-2 text-gray-700">
-                          {t('admin.tabs.events')} ({eventsList.length})
-                      </h2>
-                      <div className="grid gap-4">
-                          {eventsList.length === 0 ? (
-                              <div className="text-center py-10 bg-white rounded-lg border border-dashed text-gray-400">{t('word.list.empty')}</div>
-                          ) : (
-                              eventsList.map(event => (
-                                  <Card key={event.id} className="overflow-hidden hover:shadow-md transition-shadow">
-                                      <div className="flex">
-                                          <div className="w-32 h-32 bg-gray-100 flex-shrink-0 relative">
-                                              {event.image_url ? (
-                                                  <img src={event.image_url} className="w-full h-full object-cover" alt="poster"/>
-                                              ) : (
-                                                  <div className="w-full h-full flex items-center justify-center text-gray-400"><ImageIcon className="w-8 h-8"/></div>
-                                              )}
+                  
+                  <Card>
+                    <CardContent className="p-6 space-y-4">
+                       <div className="space-y-2">
+                          <Label>{t('admin.contents.event.label.poster')}</Label>
+                          <div className="border-2 border-dashed rounded-lg h-40 flex flex-col items-center justify-center text-gray-400 cursor-pointer hover:bg-gray-50 hover:border-gray-400 transition-colors relative">
+                             {eventData.imageUrl ? (
+                                 <img src={eventData.imageUrl} className="absolute inset-0 w-full h-full object-cover rounded-lg" alt="event poster" />
+                             ) : (
+                                 <>
+                                     {isImageUploading ? <Loader2 className="w-8 h-8 animate-spin mb-2"/> : <ImageIcon className="w-8 h-8 mb-2"/>}
+                                     <span className="text-xs">{isImageUploading ? t('admin.common.uploading') : t('admin.contents.event.upload_hint')}</span>
+                                 </>
+                             )}
+                             <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => e.target.files && handleImageUpload(e.target.files[0], 'event')} disabled={isImageUploading} />
+                          </div>
+                       </div>
+                       <div className="space-y-2">
+                          <Label>{t('admin.contents.event.label.title')}</Label>
+                          <Input value={eventData.title} onChange={e => setEventData({...eventData, title: e.target.value})} placeholder={t('admin.contents.event.placeholder.title')} />
+                       </div>
+                       
+                       <div className="grid grid-cols-2 gap-2">
+                          <div className="space-y-2">
+                             <Label>{t('admin.contents.event.label.start_date')}</Label>
+                             <Input type="date" value={eventData.startDate} onChange={e => setEventData({...eventData, startDate: e.target.value})} />
+                          </div>
+                          <div className="space-y-2">
+                             <Label>{t('admin.contents.event.label.end_date')}</Label>
+                             <Input type="date" value={eventData.endDate} onChange={e => setEventData({...eventData, endDate: e.target.value})} />
+                          </div>
+                       </div>
+
+                       <div className="space-y-2">
+                          <Label>{t('admin.contents.event.label.location')}</Label>
+                          <Input value={eventData.location} onChange={e => setEventData({...eventData, location: e.target.value})} placeholder={t('admin.contents.event.placeholder.location')} />
+                       </div>
+                       <div className="space-y-2">
+                          <Label>{t('admin.contents.event.label.description')}</Label>
+                          <Textarea value={eventData.description} onChange={e => setEventData({...eventData, description: e.target.value})} placeholder={t('admin.contents.event.placeholder.description')} />
+                       </div>
+
+                       <Button onClick={handleCreateEvent} disabled={isImageUploading || isSubmitting} className="w-full bg-blue-600 hover:bg-blue-700">
+                            {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2"/> : <PlusCircle className="w-4 h-4 mr-2"/>}
+                            {t('admin.contents.event.submit_button')}
+                       </Button>
+                    </CardContent>
+                  </Card>
+              </div>
+
+              <div className="lg:col-span-7 space-y-6">
+                  <h2 className="text-xl font-bold flex items-center gap-2 text-gray-700">
+                      {t('admin.tabs.events')} ({eventsList.length})
+                  </h2>
+                  <div className="grid gap-4">
+                      {eventsList.length === 0 ? (
+                          <div className="text-center py-10 bg-white rounded-lg border border-dashed text-gray-400">{t('word.list.empty')}</div>
+                      ) : (
+                          eventsList.map(event => (
+                              <Card key={event.id} className="overflow-hidden hover:shadow-md transition-shadow">
+                                  <div className="flex">
+                                      <div className="w-32 h-32 bg-gray-100 flex-shrink-0 relative">
+                                          {event.image_url ? (
+                                              <img src={event.image_url} className="w-full h-full object-cover" alt="poster"/>
+                                          ) : (
+                                              <div className="w-full h-full flex items-center justify-center text-gray-400"><ImageIcon className="w-8 h-8"/></div>
+                                          )}
+                                      </div>
+                                      <div className="p-4 flex-1 flex flex-col justify-between">
+                                          <div>
+                                              <h3 className="font-bold text-lg leading-tight">{event.title}</h3>
+                                              <div className="text-xs text-gray-500 mt-1 flex flex-wrap gap-2">
+                                                  <span className="bg-gray-100 px-2 py-0.5 rounded">{event.start_date} {event.end_date && `~ ${event.end_date}`}</span>
+                                                  <span>{event.location}</span>
+                                              </div>
                                           </div>
-                                          <div className="p-4 flex-1 flex flex-col justify-between">
-                                              <div>
-                                                  <h3 className="font-bold text-lg leading-tight">{event.title}</h3>
-                                                  <div className="text-xs text-gray-500 mt-1 flex flex-wrap gap-2">
-                                                      <span className="bg-gray-100 px-2 py-0.5 rounded">{event.start_date} {event.end_date && `~ ${event.end_date}`}</span>
-                                                      <span>{event.location}</span>
-                                                  </div>
-                                              </div>
-                                              <div className="flex justify-end gap-2 mt-2">
-                                                  <Button variant="outline" size="sm" onClick={() => openEditEventModal(event)} className="h-8">
-                                                      <Edit2 className="w-3 h-3 mr-1"/> {t('common.edit')}
-                                                  </Button>
-                                                  <Button variant="destructive" size="sm" onClick={() => handleDeleteEvent(event.id)} className="h-8">
-                                                      <Trash2 className="w-3 h-3 mr-1"/> {t('common.delete')}
-                                                  </Button>
-                                              </div>
+                                          <div className="flex justify-end gap-2 mt-2">
+                                              <Button variant="outline" size="sm" onClick={() => openEditEventModal(event)} className="h-8">
+                                                  <Edit2 className="w-3 h-3 mr-1"/> {t('common.edit')}
+                                              </Button>
+                                              <Button variant="destructive" size="sm" onClick={() => handleDeleteEvent(event.id)} className="h-8">
+                                                  <Trash2 className="w-3 h-3 mr-1"/> {t('common.delete')}
+                                              </Button>
                                           </div>
                                       </div>
-                                  </Card>
-                              ))
-                          )}
-                      </div>
+                                  </div>
+                              </Card>
+                          ))
+                      )}
                   </div>
               </div>
+            </div>
           </TabsContent>
 
         </Tabs>
       </main>
 
-      {/* ... Dialogs (EditWord, EditEvent) 기존 코드 유지 ... */}
-       <Dialog open={isEditWordOpen} onOpenChange={setIsEditWordOpen}>
+      <Dialog open={isEditWordOpen} onOpenChange={setIsEditWordOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>{t('admin.contents.word.edit_title')}</DialogTitle>
@@ -485,7 +659,7 @@ export default function AdminDashboard() {
           
           {editingWord && (
             <div className="grid gap-4 py-4">
-              {/* 수정 팝업 내 성경 선택 UI 추가  */}
+              {/* 수정 팝업 내 성경 선택 UI */}
               <div className="grid grid-cols-3 gap-2 p-3 bg-slate-50 rounded-lg">
                 <Select value={selectedBook} onValueChange={setSelectedBook}>
                   <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Book" /></SelectTrigger>
@@ -493,9 +667,11 @@ export default function AdminDashboard() {
                     {bibleData.map(b => <SelectItem key={b.abbrev} value={b.abbrev}>{b.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
-                <Input value={selectedChapter} onChange={e => setSelectedChapter(e.target.value)} className="h-8 text-xs" placeholder="Ch" />
+                {/* [수정] Placeholder 번역 */}
+                <Input value={selectedChapter} onChange={e => setSelectedChapter(e.target.value)} className="h-8 text-xs" placeholder={t('admin.bible.chapter') || "Ch"} />
                 <div className="flex gap-1">
-                  <Input value={selectedVerse} onChange={e => setSelectedVerse(e.target.value)} className="h-8 text-xs" placeholder="Vs" />
+                  {/* [수정] Placeholder 번역 */}
+                  <Input value={selectedVerse} onChange={e => setSelectedVerse(e.target.value)} className="h-8 text-xs" placeholder={t('admin.bible.verse') || "Vs"} />
                   <Button size="icon" variant="secondary" className="h-8 w-8 shrink-0" onClick={() => applyBibleVerse(true)}><Search className="h-3 w-3"/></Button>
                 </div>
               </div>
@@ -533,9 +709,9 @@ export default function AdminDashboard() {
       </Dialog>
 
       <Dialog open={isEditEventOpen} onOpenChange={setIsEditEventOpen}>
-        {/* ... Edit Event Dialog Content ... */}
-         <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
+            {/* [수정] 다국어 적용 */}
             <DialogTitle>{t('admin.contents.event.edit_title') || "Edit Event"}</DialogTitle>
             <DialogDescription>{t('admin.contents.event.edit_desc') || "Modify event details."}</DialogDescription>
           </DialogHeader>
@@ -578,11 +754,13 @@ export default function AdminDashboard() {
             <Button variant="outline" onClick={() => setIsEditEventOpen(false)}>{t('common.cancel')}</Button>
             <Button onClick={handleUpdateEvent} disabled={isSubmitting}>
               {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2"/> : null}
+              {/* [수정] 다국어 적용 */}
               {t('admin.contents.event.update_button') || "Update Event"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
     </div>
   );
 }
